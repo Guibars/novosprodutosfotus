@@ -23,6 +23,7 @@ export function Settings() {
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
@@ -68,14 +69,18 @@ export function Settings() {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (confirm("Tem certeza que deseja excluir este usuário? (Esta ação apenas remove o perfil, o usuário ainda poderá ter acesso se não for removido no painel de autenticação do Firebase.)")) {
-      try {
-        await deleteDoc(doc(db, 'profiles', userId));
-      } catch (error) {
-        console.error("Erro ao excluir usuário:", error);
-        alert("Erro ao excluir usuário. Verifique suas permissões.");
-      }
+  const handleDeleteUser = (userId: string) => {
+    setUserToDelete(userId);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      await deleteDoc(doc(db, 'profiles', userToDelete));
+      setUserToDelete(null);
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+      alert("Erro ao excluir usuário. Verifique suas permissões.");
     }
   };
 
@@ -207,6 +212,33 @@ export function Settings() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Excluir Usuário</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Tem certeza que deseja excluir este usuário? (Esta ação apenas remove o perfil da plataforma. O usuário ainda poderá ter acesso se não for removido no painel de autenticação do Firebase.)
+            </p>
+            
+            <div className="flex items-center justify-end gap-3 mt-8">
+              <button 
+                onClick={() => setUserToDelete(null)}
+                className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmDeleteUser}
+                className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-red-500/30"
+              >
+                Excluir Definitivamente
+              </button>
+            </div>
           </div>
         </div>
       )}

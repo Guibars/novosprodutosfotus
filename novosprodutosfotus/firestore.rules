@@ -22,6 +22,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId) || isAdmin();
       allow update: if isAdmin() || (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'email', 'full_name', 'avatar_url']));
+      allow delete: if isAdmin();
     }
     
     match /projetos/{projectId} {
