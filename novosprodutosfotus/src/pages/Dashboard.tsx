@@ -54,9 +54,9 @@ export function Dashboard() {
   const [newReminderTime, setNewReminderTime] = useState("");
 
   const totalProjects = projects.length;
-  const finishedProjects = projects.filter(p => p.status === 'Concluído').length;
-  const runningProjects = projects.filter(p => p.status === 'Em Progresso').length;
-  const pendingProjects = projects.filter(p => p.status === 'Planejamento' || p.status === 'Pendente').length;
+  const finishedProjects = projects.filter(p => p.progress === 100 && p.tasks.length > 0).length;
+  const runningProjects = projects.filter(p => p.progress < 100 && p.tasks.length > 0).length;
+  const pendingProjects = projects.filter(p => p.tasks.length === 0).length;
 
   const handleAddReminder = (e: React.FormEvent) => {
     e.preventDefault();
