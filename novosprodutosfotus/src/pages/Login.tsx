@@ -54,7 +54,7 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-hidden relative">
+    <div className="min-h-[125vh] bg-gray-50 flex overflow-hidden relative">
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-3xl"></div>
@@ -93,16 +93,17 @@ export function Login() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-full max-w-md bg-white shadow-2xl border-l border-gray-100 z-20 flex flex-col justify-center p-12 absolute right-0 h-full"
+            className="w-full max-w-md bg-white shadow-2xl border-l border-gray-100 z-20 flex flex-col p-8 sm:p-12 absolute right-0 h-full overflow-y-auto"
           >
-            <div className="mb-10">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {isRegistering ? "Criar uma conta" : "Bem-vindo de volta"}
-              </h2>
-              <p className="text-gray-500">
-                {isRegistering ? "Preencha os dados para se cadastrar." : "Insira suas credenciais para acessar."}
-              </p>
-            </div>
+            <div className="my-auto">
+              <div className="mb-10">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  {isRegistering ? "Criar uma conta" : "Bem-vindo de volta"}
+                </h2>
+                <p className="text-gray-500">
+                  {isRegistering ? "Preencha os dados para se cadastrar." : "Insira suas credenciais para acessar."}
+                </p>
+              </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
               {error && (
@@ -188,6 +189,7 @@ export function Login() {
               <ArrowLeft className="w-4 h-4" />
               Voltar
             </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

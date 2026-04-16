@@ -20,11 +20,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50">Carregando...</div>;
+    return <div className="min-h-[125vh] flex items-center justify-center bg-gray-50">Carregando...</div>;
   }
   
-  // If not logged in and Supabase is configured, redirect to login
-  if (!user && import.meta.env.VITE_SUPABASE_URL) {
+  // If not logged in, redirect to login
+  if (!user) {
     return <Navigate to="/" replace />;
   }
   

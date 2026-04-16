@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, CheckSquare, Calendar, BarChart2, Users, Settings, HelpCircle, LogOut } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { useAuth } from "../../contexts/AuthContext";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -16,6 +17,8 @@ const generalItems = [
 ];
 
 export function Sidebar({ isOpen }: { isOpen: boolean }) {
+  const { signOut } = useAuth();
+
   return (
     <aside className={cn(
       "fixed left-4 top-4 bottom-4 transition-all duration-300 z-30",
@@ -79,7 +82,10 @@ export function Sidebar({ isOpen }: { isOpen: boolean }) {
                   )}
                 </NavLink>
               ))}
-              <button className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-red-500 hover:bg-red-50/50 transition-all mt-2">
+              <button 
+                onClick={signOut}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-red-500 hover:bg-red-50/50 transition-all mt-2"
+              >
                 <LogOut className="w-5 h-5" />
                 Sair
               </button>

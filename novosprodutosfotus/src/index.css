@@ -17,9 +17,10 @@
 @layer base {
   html {
     zoom: 0.8;
+    min-height: 125vh;
   }
   body {
-    @apply text-gray-900 font-sans antialiased min-h-screen;
+    @apply text-gray-900 font-sans antialiased min-h-[125vh];
     background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
     background-image: radial-gradient(at 0% 0%, hsla(42,96%,53%,0.15) 0px, transparent 50%),
                       radial-gradient(at 100% 100%, hsla(208,83%,30%,0.15) 0px, transparent 50%);
