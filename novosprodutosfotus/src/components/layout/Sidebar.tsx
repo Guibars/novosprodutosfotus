@@ -4,7 +4,7 @@ import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/AuthContext";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: LayoutDashboard, label: "Dashboard Novos Produtos", path: "/dashboard" },
   { icon: CheckSquare, label: "Projetos", path: "/projects" },
   { icon: Calendar, label: "Calendário", path: "/calendar" },
   { icon: BarChart2, label: "Analytics", path: "/analytics" },

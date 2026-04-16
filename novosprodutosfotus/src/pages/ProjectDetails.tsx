@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Calendar as CalendarIcon, CheckCircle2, Circle, Users, Tag, Link as LinkIcon, MessageSquare, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Calendar as CalendarIcon, CheckCircle2, Circle, Users, Tag, Link as LinkIcon, MessageSquare, ExternalLink, Trash2, Edit2, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { useProjects, Task, ProjectLink } from "../contexts/ProjectContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -42,6 +43,18 @@ export function ProjectDetails() {
   const [messageRecipientEmail, setMessageRecipientEmail] = useState("");
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
+  const [expandedObservationTaskId, setExpandedObservationTaskId] = useState<string | null>(null);
+  const [observationText, setObservationText] = useState("");
+
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [taskDeletePassword, setTaskDeletePassword] = useState("");
+  const [taskDeleteError, setTaskDeleteError] = useState("");
+
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState("");
+  const [editTaskSector, setEditTaskSector] = useState("");
+  const [editTaskDate, setEditTaskDate] = useState("");
+
   useEffect(() => {
     const fetchTeam = async () => {
       try {
@@ -65,6 +78,34 @@ export function ProjectDetails() {
 
   const toggleTask = (taskId: string) => {
     setTasks(tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
+  };
+
+  const saveObservation = (taskId: string) => {
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, observation: observationText } : t));
+    setExpandedObservationTaskId(null);
+  };
+
+  const confirmDeleteTask = () => {
+    if (taskDeletePassword === "Fotus" || taskDeletePassword === "fotus") {
+      setTasks(tasks.filter(t => t.id !== taskToDelete));
+      setTaskToDelete(null);
+      setTaskDeletePassword("");
+      setTaskDeleteError("");
+    } else {
+      setTaskDeleteError("Senha incorreta!");
+    }
+  };
+
+  const saveEditTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTask) return;
+    setTasks(tasks.map(t => t.id === editingTask.id ? { 
+      ...t, 
+      title: editTaskTitle,
+      sector: editTaskSector,
+      dueDate: editTaskDate
+    } : t));
+    setEditingTask(null);
   };
 
   const addTask = (phase: string) => {
@@ -228,38 +269,114 @@ export function ProjectDetails() {
                   )}
 
                   {phaseTasks.map((task) => (
-                    <div key={task.id} className={cn("p-4 flex items-center gap-4 hover:bg-white/50 transition-colors", task.completed && "bg-white/30")}>
-                      <button onClick={() => toggleTask(task.id)} className="shrink-0 text-gray-400 hover:text-secondary transition-colors">
-                        {task.completed ? <CheckCircle2 className="w-6 h-6 text-success" /> : <Circle className="w-6 h-6" />}
-                      </button>
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className={cn("font-medium text-gray-900 truncate", task.completed && "text-gray-500 line-through")}>
-                          {task.title}
-                        </p>
-                        <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                          <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {task.sector}</span>
-                          <span className="flex items-center gap-1"><CalendarIcon className="w-3 h-3" /> {task.dueDate}</span>
+                    <div key={task.id} className="group relative border-b border-white/10 last:border-0 rounded-2xl overflow-hidden transition-all">
+                      <div className={cn("p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:bg-white/50 transition-colors z-10 relative", task.completed && "bg-white/30")}>
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                          <button onClick={() => toggleTask(task.id)} className="shrink-0 text-gray-400 hover:text-secondary transition-colors">
+                            {task.completed ? <CheckCircle2 className="w-6 h-6 text-success" /> : <Circle className="w-6 h-6" />}
+                          </button>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className={cn("font-medium text-gray-900 truncate", task.completed && "text-gray-500 line-through")}>
+                              {task.title}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                              <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {task.sector}</span>
+                              <span className="flex items-center gap-1"><CalendarIcon className="w-3 h-3" /> {task.dueDate}</span>
+                              {task.observation && (
+                                <span className="flex items-center gap-1 text-primary"><FileText className="w-3 h-3" /> Com observação</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+                          {task.assignee ? (
+                            <div className="flex items-center gap-2 bg-white/50 px-3 py-1.5 rounded-lg border border-white/50">
+                              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                                {task.assignee.charAt(0)}
+                              </div>
+                              <span className="text-sm font-medium text-gray-700 hidden sm:inline">{task.assignee.split(' ')[0]}</span>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => setAssigningTask(task.id)}
+                              className="text-sm font-medium text-primary hover:text-primary/80 bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                              Atribuir
+                            </button>
+                          )}
+
+                          <button 
+                            onClick={() => {
+                              if (expandedObservationTaskId === task.id) {
+                                setExpandedObservationTaskId(null);
+                              } else {
+                                setExpandedObservationTaskId(task.id);
+                                setObservationText(task.observation || "");
+                              }
+                            }}
+                            className={cn("p-2 rounded-lg transition-colors ml-2", expandedObservationTaskId === task.id ? "bg-primary text-white" : "text-gray-400 hover:text-primary hover:bg-white/50")}
+                            title="Observação"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
+
+                          <button 
+                            onClick={() => {
+                              setEditingTask(task);
+                              setEditTaskTitle(task.title);
+                              setEditTaskSector(task.sector);
+                              setEditTaskDate(task.dueDate);
+                            }}
+                            className="p-2 text-gray-400 hover:text-primary rounded-lg transition-colors hover:bg-white/50"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          
+                          <button 
+                            onClick={() => setTaskToDelete(task.id)}
+                            className="p-2 text-gray-400 hover:text-red-500 rounded-lg transition-colors hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="shrink-0 flex items-center gap-3">
-                        {task.assignee ? (
-                          <div className="flex items-center gap-2 bg-white/50 px-3 py-1.5 rounded-lg border border-white/50">
-                            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
-                              {task.assignee.charAt(0)}
-                            </div>
-                            <span className="text-sm font-medium text-gray-700 hidden sm:inline">{task.assignee.split(' ')[0]}</span>
-                          </div>
-                        ) : (
-                          <button 
-                            onClick={() => setAssigningTask(task.id)}
-                            className="text-sm font-medium text-primary hover:text-primary/80 bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
+                      <AnimatePresence>
+                        {expandedObservationTaskId === task.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
                           >
-                            Atribuir
-                          </button>
+                            <div className="p-4 bg-white/20 backdrop-blur-md border-t border-white/20 relative">
+                              <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-transparent pointer-events-none"></div>
+                              <textarea
+                                value={observationText}
+                                onChange={(e) => setObservationText(e.target.value)}
+                                placeholder="Adicione uma observação para esta tarefa..."
+                                className="w-full glass-input p-3 rounded-xl text-sm min-h-[80px] resize-y mb-3 relative z-10 bg-white/50"
+                              />
+                              <div className="flex justify-end gap-2 relative z-10">
+                                <button
+                                  onClick={() => setExpandedObservationTaskId(null)}
+                                  className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  onClick={() => saveObservation(task.id)}
+                                  className="px-3 py-1.5 text-xs font-medium bg-primary text-white hover:bg-primary-hover shadow-sm shadow-primary/20 rounded-lg transition-colors"
+                                >
+                                  Salvar Observação
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
                         )}
-                      </div>
+                      </AnimatePresence>
                     </div>
                   ))}
                 </div>
@@ -425,6 +542,102 @@ export function ProjectDetails() {
                   className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors shadow-lg shadow-primary/30"
                 >
                   Enviar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Task Confirmation Modal */}
+      {taskToDelete && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Excluir Tarefa</h2>
+            <p className="text-sm text-gray-600 mb-6">Digite a senha para confirmar a exclusão desta tarefa.</p>
+            
+            <div className="space-y-5">
+              <div>
+                <input 
+                  type="password" 
+                  value={taskDeletePassword}
+                  onChange={(e) => setTaskDeletePassword(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl focus:ring-red-500/30"
+                  placeholder="Senha"
+                />
+                {taskDeleteError && <p className="text-red-500 text-xs mt-2">{taskDeleteError}</p>}
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 mt-8">
+                <button 
+                  onClick={() => setTaskToDelete(null)}
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmDeleteTask}
+                  className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-red-500/30"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Editar Tarefa</h2>
+            <form onSubmit={saveEditTask} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Título da tarefa</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editTaskTitle}
+                  onChange={(e) => setEditTaskTitle(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl"
+                  placeholder="Título"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Setor</label>
+                <select 
+                  required
+                  value={editTaskSector}
+                  onChange={(e) => setEditTaskSector(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl"
+                >
+                  {sectors.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Data de conclusão</label>
+                <input 
+                  type="date" 
+                  required
+                  value={editTaskDate}
+                  onChange={(e) => setEditTaskDate(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-3 mt-8">
+                <button 
+                  type="button" 
+                  onClick={() => setEditingTask(null)}
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
+                >
+                  Salvar
                 </button>
               </div>
             </form>

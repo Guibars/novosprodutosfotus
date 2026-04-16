@@ -1,20 +1,35 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, Clock } from "lucide-react";
+import { Plus, Trash2, Clock, Edit2 } from "lucide-react";
 import { useProjects } from "../contexts/ProjectContext";
 
 export function Projects() {
   const navigate = useNavigate();
-  const { projects, deleteProject, setIsProjectModalOpen, searchQuery } = useProjects();
+  const { projects, deleteProject, updateProject, setIsProjectModalOpen, searchQuery } = useProjects();
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
+
+  const [editingProject, setEditingProject] = useState<any | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editColor, setEditColor] = useState("");
+
+  const colors = ["bg-blue-500", "bg-teal-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-primary", "bg-secondary", "bg-red-500", "bg-orange-500", "bg-indigo-500"];
 
   const handleDeleteClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setProjectToDelete(id);
     setDeletePassword("");
     setDeleteError("");
+  };
+
+  const handleEditClick = (e: React.MouseEvent, project: any) => {
+    e.stopPropagation();
+    setEditingProject(project);
+    setEditName(project.name);
+    setEditDate(project.dueDate);
+    setEditColor(project.color);
   };
 
   const confirmDelete = () => {
@@ -24,6 +39,18 @@ export function Projects() {
     } else {
       setDeleteError("Senha incorreta!");
     }
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+
+    await updateProject(editingProject.id, {
+      name: editName,
+      dueDate: editDate,
+      color: editColor
+    });
+    setEditingProject(null);
   };
 
   return (
@@ -58,12 +85,20 @@ export function Projects() {
               <div className={`w-12 h-12 rounded-xl ${project.color} flex items-center justify-center text-white font-bold text-xl`}>
                 {project.name.charAt(0)}
               </div>
-              <button 
-                className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all" 
-                onClick={(e) => handleDeleteClick(e, project.id)}
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  className="p-2 text-gray-400 hover:text-primary rounded-lg hover:bg-white/50 opacity-0 group-hover:opacity-100 transition-all" 
+                  onClick={(e) => handleEditClick(e, project)}
+                >
+                  <Edit2 className="w-5 h-5" />
+                </button>
+                <button 
+                  className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all" 
+                  onClick={(e) => handleDeleteClick(e, project.id)}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             
             <h3 className="font-bold text-lg text-gray-900 mb-1">{project.name}</h3>
@@ -129,6 +164,66 @@ export function Projects() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {editingProject && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Editar Projeto</h2>
+            <form onSubmit={handleSaveEdit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl"
+                  placeholder="Nome do projeto"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Prazo</label>
+                <input 
+                  type="date" 
+                  required
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cor do Projeto</label>
+                <div className="flex flex-wrap gap-3">
+                  {colors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setEditColor(color)}
+                      className={`w-8 h-8 rounded-full ${color} transition-all ${editColor === color ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-110'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 mt-8">
+                <button 
+                  type="button" 
+                  onClick={() => setEditingProject(null)}
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
+                >
+                  Salvar Alterações
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -12,6 +12,7 @@ import { Projects } from "./pages/Projects";
 import { ProjectDetails } from "./pages/ProjectDetails";
 import { Team } from "./pages/Team";
 import { Settings } from "./pages/Settings";
+import { Calendar } from "./pages/Calendar";
 import { ProjectProvider } from "./contexts/ProjectContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -44,8 +45,8 @@ export default function App() {
               <Route path="/projects/:id" element={<ProjectDetails />} />
               <Route path="/team" element={<Team />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/calendar" element={<Calendar />} />
               {/* Fallback routes for other menu items */}
-              <Route path="/calendar" element={<div className="p-8 text-gray-500">Calendário em breve...</div>} />
               <Route path="/analytics" element={<div className="p-8 text-gray-500">Analytics em breve...</div>} />
               <Route path="/help" element={<div className="p-8 text-gray-500">Ajuda em breve...</div>} />
             </Route>

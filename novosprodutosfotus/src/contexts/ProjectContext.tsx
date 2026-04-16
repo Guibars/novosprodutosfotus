@@ -12,6 +12,7 @@ export type Task = {
   assignee?: string;
   project_id?: string;
   phase?: string;
+  observation?: string;
 };
 
 export type ProjectLink = {
@@ -35,6 +36,7 @@ export type Project = {
 type ProjectContextType = {
   projects: Project[];
   addProject: (project: Omit<Project, 'id' | 'progress' | 'tasks'>) => Promise<void>;
+  updateProject: (id: string, updates: Partial<Omit<Project, 'id' | 'tasks' | 'progress'>>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   updateProjectTasks: (projectId: string, tasks: Task[]) => Promise<void>;
   updateProjectLinks: (projectId: string, links: ProjectLink[]) => Promise<void>;
@@ -129,6 +131,19 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateProject = async (id: string, updates: Partial<Omit<Project, 'id' | 'tasks' | 'progress'>>) => {
+    if (user) {
+      try {
+        await setDoc(doc(db, 'projetos', id), updates, { merge: true });
+        if (updates.name) {
+          await notify(`${user.displayName || user.email} atualizou o projeto para "${updates.name}"`);
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar projeto:", error);
+      }
+    }
+  };
+
   const updateProjectTasks = async (projectId: string, newTasks: Task[]) => {
     if (user) {
       try {
@@ -156,7 +171,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             assignee: t.assignee || null,
             project_id: projectId,
             user_id: user.uid,
-            phase: t.phase || null
+            phase: t.phase || null,
+            observation: t.observation || null
           }, { merge: true });
 
           // Check for assignment changes
@@ -204,6 +220,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     <ProjectContext.Provider value={{ 
       projects, 
       addProject, 
+      updateProject,
       deleteProject, 
       updateProjectTasks,
       updateProjectLinks,
