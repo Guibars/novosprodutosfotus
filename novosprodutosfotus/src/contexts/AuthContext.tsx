@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
 type AuthContextType = {
   user: User | null;
+  profile: any | null;
   loading: boolean;
   signOut: () => Promise<void>;
 };
@@ -13,6 +14,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   const updateProfile = async (currentUser: User) => {
@@ -33,6 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser);
       if (currentUser) {
         updateProfile(currentUser);
+      } else {
+        setProfile(null);
       }
       setLoading(false);
     });
@@ -40,12 +44,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  // Listen to profile changes
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribeProfile = onSnapshot(doc(db, 'profiles', user.uid), (doc) => {
+      if (doc.exists()) {
+        setProfile(doc.data());
+      }
+    });
+    return () => unsubscribeProfile();
+  }, [user]);
+
   const signOut = async () => {
     await firebaseSignOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

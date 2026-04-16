@@ -11,6 +11,13 @@ export type Task = {
   completed: boolean;
   assignee?: string;
   project_id?: string;
+  phase?: string;
+};
+
+export type ProjectLink = {
+  id: string;
+  title: string;
+  url: string;
 };
 
 export type Project = {
@@ -22,6 +29,7 @@ export type Project = {
   dueDate: string;
   color: string;
   user_id?: string;
+  links?: ProjectLink[];
 };
 
 type ProjectContextType = {
@@ -29,6 +37,7 @@ type ProjectContextType = {
   addProject: (project: Omit<Project, 'id' | 'progress' | 'tasks'>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   updateProjectTasks: (projectId: string, tasks: Task[]) => Promise<void>;
+  updateProjectLinks: (projectId: string, links: ProjectLink[]) => Promise<void>;
   isProjectModalOpen: boolean;
   setIsProjectModalOpen: (isOpen: boolean) => void;
   searchQuery: string;
@@ -44,14 +53,23 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setProjects([]);
+      return;
+    }
+
+    let unsubscribeTasks: () => void;
 
     // Listen to projects (all projects for the team)
     const unsubscribeProjects = onSnapshot(collection(db, 'projetos'), (projectsSnapshot) => {
       const projectsData = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       
       // Listen to tasks (all tasks for the team)
-      const unsubscribeTasks = onSnapshot(collection(db, 'tarefas'), (tasksSnapshot) => {
+      if (unsubscribeTasks) {
+        unsubscribeTasks();
+      }
+      
+      unsubscribeTasks = onSnapshot(collection(db, 'tarefas'), (tasksSnapshot) => {
         const tasksData = tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
         
         // Combine projects and tasks
@@ -73,13 +91,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         console.error("Erro ao buscar tarefas:", error);
       });
 
-      return () => unsubscribeTasks();
     }, (error) => {
       console.error("Erro ao buscar projetos:", error);
     });
 
     return () => {
       unsubscribeProjects();
+      if (unsubscribeTasks) {
+        unsubscribeTasks();
+      }
     };
   }, [user]);
 
@@ -135,7 +155,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             completed: t.completed,
             assignee: t.assignee || null,
             project_id: projectId,
-            user_id: user.uid
+            user_id: user.uid,
+            phase: t.phase || null
           }, { merge: true });
 
           // Check for assignment changes
@@ -159,6 +180,16 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateProjectLinks = async (projectId: string, links: ProjectLink[]) => {
+    if (user) {
+      try {
+        await setDoc(doc(db, 'projetos', projectId), { links }, { merge: true });
+      } catch (error) {
+        console.error("Erro ao atualizar links:", error);
+      }
+    }
+  };
+
   const deleteProject = async (id: string) => {
     if (user) {
       try {
@@ -175,6 +206,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       addProject, 
       deleteProject, 
       updateProjectTasks,
+      updateProjectLinks,
       isProjectModalOpen, 
       setIsProjectModalOpen,
       searchQuery,

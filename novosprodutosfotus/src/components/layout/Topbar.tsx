@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Bell, Mail, Menu, LogOut, Check, Trash2 } from "lucide-react";
+import { Search, Bell, Mail, Menu, LogOut, Check, Trash2, MessageSquare } from "lucide-react";
 import { useProjects } from "../../contexts/ProjectContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -7,32 +7,50 @@ import { db } from "../../lib/firebase";
 
 export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
   const { searchQuery, setSearchQuery } = useProjects();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     
     // Listen for notifications directed to the user or broadcasted to 'all'
-    const q = query(
+    const qNotifs = query(
       collection(db, 'notifications'),
       orderBy('created_at', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeNotifs = onSnapshot(qNotifs, (snapshot) => {
       const notifs = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as any))
         .filter(n => n.recipient_email === 'all' || n.recipient_email === user.email);
       setNotifications(notifs);
     });
 
-    return () => unsubscribe();
+    // Listen for messages directed to the user
+    const qMsgs = query(
+      collection(db, 'messages'),
+      where('recipient_email', '==', user.email),
+      orderBy('created_at', 'desc')
+    );
+
+    const unsubscribeMsgs = onSnapshot(qMsgs, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      setMessages(msgs);
+    });
+
+    return () => {
+      unsubscribeNotifs();
+      unsubscribeMsgs();
+    };
   }, [user]);
 
-  const unreadCount = notifications.filter(n => !n.read_by?.includes(user?.uid)).length;
+  const unreadNotifsCount = notifications.filter(n => !n.read_by?.includes(user?.uid)).length;
+  const unreadMsgsCount = messages.filter(m => !m.read).length;
 
-  const markAsRead = async (notificationId: string, currentReadBy: string[]) => {
+  const markNotifAsRead = async (notificationId: string, currentReadBy: string[]) => {
     if (!user) return;
     try {
       await updateDoc(doc(db, 'notifications', notificationId), {
@@ -49,6 +67,24 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
       await deleteDoc(doc(db, 'notifications', notificationId));
     } catch (error) {
       console.error("Erro ao deletar notificação", error);
+    }
+  };
+
+  const markMsgAsRead = async (messageId: string) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'messages', messageId), { read: true });
+    } catch (error) {
+      console.error("Erro ao marcar mensagem como lida", error);
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'messages', messageId));
+    } catch (error) {
+      console.error("Erro ao deletar mensagem", error);
     }
   };
 
@@ -80,16 +116,79 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors relative">
-          <Mail className="w-5 h-5" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowMessages(!showMessages)}
+            className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors relative"
+          >
+            <MessageSquare className="w-5 h-5" />
+            {unreadMsgsCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white/50"></span>
+            )}
+          </button>
+
+          {showMessages && (
+            <div className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50">
+              <div className="p-4 border-b border-white/50 flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900">Mensagens</h3>
+                <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadMsgsCount} novas</span>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                {messages.length > 0 ? (
+                  messages.map(msg => (
+                    <div 
+                      key={msg.id} 
+                      className={`p-4 border-b border-white/50 hover:bg-white/50 transition-colors flex gap-3 ${!msg.read ? 'bg-primary/5' : ''}`}
+                    >
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-primary mb-1">De: {msg.sender_name}</p>
+                        <p className={`text-sm ${!msg.read ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
+                          {msg.content}
+                        </p>
+                        {msg.project_name && (
+                          <p className="text-xs text-secondary mt-1 font-medium">Projeto: {msg.project_name}</p>
+                        )}
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(msg.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        {!msg.read && (
+                          <button 
+                            onClick={() => markMsgAsRead(msg.id)}
+                            className="text-primary hover:bg-primary/10 p-1.5 rounded-lg h-fit transition-colors"
+                            title="Marcar como lido"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => deleteMessage(msg.id)}
+                          className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg h-fit transition-colors"
+                          title="Excluir mensagem"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-gray-500 text-sm">
+                    Nenhuma mensagem no momento.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
             className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors relative"
           >
             <Bell className="w-5 h-5" />
-            {unreadCount > 0 && (
+            {unreadNotifsCount > 0 && (
               <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white/50"></span>
             )}
           </button>
@@ -98,7 +197,7 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
             <div className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50">
               <div className="p-4 border-b border-white/50 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900">Notificações</h3>
-                <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadCount} novas</span>
+                <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadNotifsCount} novas</span>
               </div>
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length > 0 ? (
@@ -120,7 +219,7 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
                         <div className="flex flex-col items-center gap-1">
                           {!isRead && (
                             <button 
-                              onClick={() => markAsRead(notification.id, notification.read_by)}
+                              onClick={() => markNotifAsRead(notification.id, notification.read_by)}
                               className="text-primary hover:bg-primary/10 p-1.5 rounded-lg h-fit transition-colors"
                               title="Marcar como lido"
                             >
@@ -159,7 +258,7 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
           />
           <div className="hidden md:block">
             <p className="text-sm font-semibold text-gray-900">{user?.displayName || user?.email?.split('@')[0] || 'Usuário'}</p>
-            <p className="text-xs text-gray-500">{user?.email || 'Não logado'}</p>
+            <p className="text-[10px] font-medium text-primary uppercase tracking-wider">{profile?.role || 'Membro'}</p>
           </div>
         </div>
         

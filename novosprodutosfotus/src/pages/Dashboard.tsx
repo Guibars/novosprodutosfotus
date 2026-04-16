@@ -3,14 +3,20 @@ import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square, Edit2 } from 
 import { BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
 import { cn } from "../lib/utils";
 import { useProjects } from "../contexts/ProjectContext";
+import { useAuth } from "../contexts/AuthContext";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
 export function Dashboard() {
   const { projects, setIsProjectModalOpen, searchQuery } = useProjects();
+  const { user } = useAuth();
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!user) {
+      setTeamMembers([]);
+      return;
+    }
     const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
       const members = snapshot.docs.map(doc => doc.data());
       setTeamMembers(members);
@@ -18,10 +24,10 @@ export function Dashboard() {
       console.error("Erro ao buscar time:", error);
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // Calculate dynamic analytics data based on tasks per sector
-  const sectors = ["Gestão", "Novos Produtos", "Desenvolvimento", "Marketing", "Pricing"];
+  const sectors = ["Gerência", "Coordenação", "Desenvolvimento", "Novos Produtos", "Marketing", "Pricing", "TI"];
   const analyticsData = sectors.map(sector => {
     let totalTasks = 0;
     let completedTasks = 0;
@@ -260,7 +266,7 @@ export function Dashboard() {
                   <img src={member.avatar_url} alt={member.full_name} className="w-10 h-10 rounded-full object-cover border border-white/50" referrerPolicy="no-referrer" />
                   <div>
                     <h4 className="font-medium text-sm text-gray-900">{member.full_name}</h4>
-                    <p className="text-xs text-gray-500 truncate w-32 sm:w-48">{member.email}</p>
+                    <p className="text-xs text-gray-500 truncate w-32 sm:w-48">{member.role || 'Membro'}</p>
                   </div>
                 </div>
                 <span className="text-[10px] font-medium px-2 py-1 rounded-md bg-green-50 text-green-600">

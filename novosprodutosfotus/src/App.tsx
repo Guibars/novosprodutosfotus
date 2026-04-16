@@ -10,6 +10,8 @@ import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Projects } from "./pages/Projects";
 import { ProjectDetails } from "./pages/ProjectDetails";
+import { Team } from "./pages/Team";
+import { Settings } from "./pages/Settings";
 import { ProjectProvider } from "./contexts/ProjectContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -40,11 +42,11 @@ export default function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/:id" element={<ProjectDetails />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/settings" element={<Settings />} />
               {/* Fallback routes for other menu items */}
               <Route path="/calendar" element={<div className="p-8 text-gray-500">Calendário em breve...</div>} />
               <Route path="/analytics" element={<div className="p-8 text-gray-500">Analytics em breve...</div>} />
-              <Route path="/team" element={<div className="p-8 text-gray-500">Time em breve...</div>} />
-              <Route path="/settings" element={<div className="p-8 text-gray-500">Configurações em breve...</div>} />
               <Route path="/help" element={<div className="p-8 text-gray-500">Ajuda em breve...</div>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

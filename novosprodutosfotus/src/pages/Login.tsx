@@ -77,10 +77,10 @@ export function Login() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setShowForm(true)}
-              className="bg-secondary/80 backdrop-blur-md border border-white/30 hover:bg-secondary text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl shadow-secondary/20 transition-all hover:scale-105 flex items-center gap-3 mx-auto"
+              className="bg-secondary/80 backdrop-blur-md border border-white/30 hover:bg-secondary text-white px-6 py-3 rounded-full font-bold text-base shadow-xl shadow-secondary/20 transition-all hover:scale-105 flex items-center gap-2 mx-auto"
             >
               Acessar Plataforma
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
             </motion.button>
           )}
         </div>
