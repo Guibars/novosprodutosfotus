@@ -1,49 +1,82 @@
-import React, { useState } from "react";
-import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square } from "lucide-react";
-import { BarChart, Bar, XAxis, ResponsiveContainer, Cell } from "recharts";
+import React, { useState, useEffect } from "react";
+import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square, Edit2 } from "lucide-react";
+import { BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
 import { cn } from "../lib/utils";
 import { useProjects } from "../contexts/ProjectContext";
-
-const analyticsData = [
-  { name: 'S', value: 40, active: false },
-  { name: 'M', value: 60, active: false },
-  { name: 'T', value: 74, active: true },
-  { name: 'W', value: 85, active: false },
-  { name: 'T', value: 50, active: false },
-  { name: 'F', value: 65, active: false },
-  { name: 'S', value: 45, active: false },
-];
-
-const teamMembers = [
-  { name: "Alexandra Deff", role: "Trabalhando no Repositório do Projeto", status: "Concluído", avatar: "https://picsum.photos/seed/alex/100/100" },
-  { name: "Edwin Adenike", role: "Trabalhando no Sistema de Autenticação", status: "Em Progresso", avatar: "https://picsum.photos/seed/edwin/100/100" },
-  { name: "Isaac Oluwatemilorun", role: "Trabalhando na Funcionalidade de Busca", status: "Pendente", avatar: "https://picsum.photos/seed/isaac/100/100" },
-  { name: "David Oshodi", role: "Trabalhando no Layout Responsivo", status: "Em Progresso", avatar: "https://picsum.photos/seed/david/100/100" },
-];
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 export function Dashboard() {
-  const { projects, addProject } = useProjects();
-  const [isAddingProject, setIsAddingProject] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [newProjectDate, setNewProjectDate] = useState("");
+  const { projects, setIsProjectModalOpen, searchQuery } = useProjects();
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
-  const handleAddProject = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newProjectName || !newProjectDate) return;
-    
-    const colors = ["bg-blue-500", "bg-teal-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-primary", "bg-secondary"];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-    addProject({
-      name: newProjectName,
-      dueDate: newProjectDate,
-      status: "Planejamento",
-      color: randomColor
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
+      const members = snapshot.docs.map(doc => doc.data());
+      setTeamMembers(members);
+    }, (error) => {
+      console.error("Erro ao buscar time:", error);
     });
+    return () => unsubscribe();
+  }, []);
 
-    setIsAddingProject(false);
-    setNewProjectName("");
-    setNewProjectDate("");
+  // Calculate dynamic analytics data based on tasks per sector
+  const sectors = ["Gestão", "Novos Produtos", "Desenvolvimento", "Marketing", "Pricing"];
+  const analyticsData = sectors.map(sector => {
+    let totalTasks = 0;
+    let completedTasks = 0;
+    projects.forEach(p => {
+      p.tasks.forEach(t => {
+        if (t.sector === sector) {
+          totalTasks++;
+          if (t.completed) completedTasks++;
+        }
+      });
+    });
+    return {
+      name: sector.substring(0, 3), // Short name for X-axis
+      fullName: sector,
+      value: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      active: totalTasks > 0
+    };
+  });
+
+  const [reminders, setReminders] = useState<{id: number, title: string, time: string}[]>([]);
+  const [isAddingReminder, setIsAddingReminder] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<number | null>(null);
+  const [newReminderTitle, setNewReminderTitle] = useState("");
+  const [newReminderTime, setNewReminderTime] = useState("");
+
+  const totalProjects = projects.length;
+  const finishedProjects = projects.filter(p => p.status === 'Concluído').length;
+  const runningProjects = projects.filter(p => p.status === 'Em Progresso').length;
+  const pendingProjects = projects.filter(p => p.status === 'Planejamento' || p.status === 'Pendente').length;
+
+  const handleAddReminder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReminderTitle || !newReminderTime) return;
+    
+    if (editingReminder) {
+      setReminders(reminders.map(r => r.id === editingReminder ? { ...r, title: newReminderTitle, time: newReminderTime } : r));
+      setEditingReminder(null);
+    } else {
+      setReminders([...reminders, {
+        id: Date.now(),
+        title: newReminderTitle,
+        time: newReminderTime
+      }]);
+    }
+    
+    setIsAddingReminder(false);
+    setNewReminderTitle("");
+    setNewReminderTime("");
+  };
+
+  const handleEditReminder = (reminder: {id: number, title: string, time: string}) => {
+    setEditingReminder(reminder.id);
+    setNewReminderTitle(reminder.title);
+    setNewReminderTime(reminder.time);
+    setIsAddingReminder(true);
   };
 
   return (
@@ -55,22 +88,18 @@ export function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setIsAddingProject(true)}
+            onClick={() => setIsProjectModalOpen(true)}
             className="flex items-center gap-2 bg-secondary hover:bg-secondary-hover text-white px-4 py-2 rounded-xl font-medium transition-colors"
           >
             <Plus className="w-5 h-5" />
             Adicionar Projeto
-          </button>
-          <button className="flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl font-medium transition-colors">
-            <Download className="w-5 h-5" />
-            Importar Dados
           </button>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-secondary text-white rounded-2xl p-6 relative overflow-hidden">
+        <div className="bg-secondary/90 backdrop-blur-xl border border-white/20 text-white rounded-[2rem] p-6 relative overflow-hidden shadow-2xl shadow-secondary/20">
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-medium text-white/80">Total de Projetos</h3>
@@ -78,49 +107,31 @@ export function Dashboard() {
                 <ArrowUpRight className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-4xl font-bold mb-4">24</p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="bg-success/20 text-success px-2 py-0.5 rounded flex items-center gap-1 font-medium">
-                <ArrowUpRight className="w-3 h-3" /> 5
-              </span>
-              <span className="text-white/60">Aumento no último mês</span>
-            </div>
+            <p className="text-4xl font-bold mb-4">{totalProjects}</p>
           </div>
           <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
         {[
-          { title: "Projetos Finalizados", value: "10", increase: "6", label: "Aumento no último mês" },
-          { title: "Projetos em Execução", value: "12", increase: "2", label: "Aumento no último mês" },
-          { title: "Projetos Pendentes", value: "2", increase: null, label: "Em discussão" },
+          { title: "Projetos Finalizados", value: finishedProjects },
+          { title: "Projetos em Execução", value: runningProjects },
+          { title: "Projetos Pendentes", value: pendingProjects },
         ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div key={i} className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="font-medium text-gray-500">{stat.title}</h3>
-              <div className="p-1.5 bg-gray-50 rounded-lg text-gray-400">
+              <h3 className="font-medium text-gray-600">{stat.title}</h3>
+              <div className="p-1.5 bg-white/50 rounded-lg text-gray-500">
                 <ArrowUpRight className="w-4 h-4" />
               </div>
             </div>
             <p className="text-4xl font-bold text-gray-900 mb-4">{stat.value}</p>
-            <div className="flex items-center gap-2 text-sm">
-              {stat.increase ? (
-                <>
-                  <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex items-center gap-1 font-medium">
-                    <ArrowUpRight className="w-3 h-3" /> {stat.increase}
-                  </span>
-                  <span className="text-gray-400">{stat.label}</span>
-                </>
-              ) : (
-                <span className="text-gray-400">{stat.label}</span>
-              )}
-            </div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Analytics Chart */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm lg:col-span-1">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 shadow-xl shadow-black/5">
           <h3 className="font-semibold text-gray-900 mb-6">Analytics de Projetos</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
@@ -137,29 +148,88 @@ export function Dashboard() {
         </div>
 
         {/* Reminders */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm lg:col-span-1 flex flex-col">
-          <h3 className="font-semibold text-gray-900 mb-4">Lembretes</h3>
-          <div className="flex-1 flex flex-col justify-center">
-            <h4 className="text-xl font-bold text-gray-900 mb-2">Reunião com a Equipe Arc</h4>
-            <p className="text-gray-500 text-sm mb-6">Horário : 14:00 - 16:00</p>
-            <button className="w-full bg-secondary hover:bg-secondary-hover text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors">
-              <Video className="w-5 h-5" />
-              Iniciar Reunião
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 flex flex-col shadow-xl shadow-black/5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900">Lembretes</h3>
+            <button 
+              onClick={() => {
+                setEditingReminder(null);
+                setNewReminderTitle("");
+                setNewReminderTime("");
+                setIsAddingReminder(true);
+              }}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 border border-white/50 bg-white/30 px-3 py-1 rounded-lg transition-colors"
+            >
+              + Novo
             </button>
+          </div>
+          <div className="flex-1 flex flex-col gap-4 overflow-y-auto max-h-48">
+            {reminders.map(reminder => (
+              <div key={reminder.id} className="p-4 bg-white/40 rounded-xl border border-white/50 relative group">
+                <button 
+                  onClick={() => handleEditReminder(reminder)}
+                  className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 rounded-md"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <h4 className="text-sm font-bold text-gray-900 mb-1 pr-6">{reminder.title}</h4>
+                <p className="text-gray-600 text-xs mb-3">Horário : {reminder.time}</p>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <a 
+                      href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(reminder.title)}&details=${encodeURIComponent('Lembrete do Fotus Novos Produtos')}`}
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-[10px] font-medium text-blue-600 hover:underline bg-blue-50 px-2 py-1 rounded"
+                    >
+                      + Google Calendar
+                    </a>
+                    <a 
+                      href={`https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(reminder.title)}`}
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-[10px] font-medium text-sky-600 hover:underline bg-sky-50 px-2 py-1 rounded"
+                    >
+                      + Outlook
+                    </a>
+                  </div>
+                  <a 
+                    href="https://meet.google.com/new" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="w-full bg-secondary hover:bg-secondary-hover text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors shadow-sm"
+                  >
+                    <Video className="w-4 h-4" />
+                    Iniciar Meet
+                  </a>
+                </div>
+              </div>
+            ))}
+            {reminders.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">Nenhum lembrete.</p>
+            )}
           </div>
         </div>
 
         {/* Open Projects */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm lg:col-span-1 row-span-2">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 row-span-2 shadow-xl shadow-black/5">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-gray-900">Projetos em Aberto</h3>
-            <button className="text-sm font-medium text-gray-500 hover:text-gray-900 border border-gray-200 px-3 py-1 rounded-lg">
+            <button 
+              onClick={() => setIsProjectModalOpen(true)}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 border border-white/50 bg-white/30 px-3 py-1 rounded-lg transition-colors"
+            >
               + Novo
             </button>
           </div>
           <div className="space-y-4">
-            {projects.map((project) => (
-              <div key={project.id} className="flex items-start gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+            {projects
+              .filter(p => 
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                p.tasks.some(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+              )
+              .map((project) => (
+                <div key={project.id} className="flex items-start gap-4 p-3 hover:bg-white/50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-white/50">
                 <div className={`w-10 h-10 rounded-xl ${project.color} flex items-center justify-center shrink-0`}>
                   <div className="w-4 h-4 bg-white/30 rounded-sm"></div>
                 </div>
@@ -176,38 +246,36 @@ export function Dashboard() {
         </div>
 
         {/* Team Collaboration */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm lg:col-span-1">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 shadow-xl shadow-black/5">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-gray-900">Colaboração do Time</h3>
-            <button className="text-sm font-medium text-gray-500 hover:text-gray-900 border border-gray-200 px-3 py-1 rounded-lg">
-              + Membro
+            <button className="text-sm font-medium text-gray-600 hover:text-gray-900 border border-white/50 bg-white/30 px-3 py-1 rounded-lg transition-colors">
+              Ver Todos
             </button>
           </div>
           <div className="space-y-4">
             {teamMembers.map((member, i) => (
               <div key={i} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={member.avatar_url} alt={member.full_name} className="w-10 h-10 rounded-full object-cover border border-white/50" referrerPolicy="no-referrer" />
                   <div>
-                    <h4 className="font-medium text-sm text-gray-900">{member.name}</h4>
-                    <p className="text-xs text-gray-500 truncate w-32 sm:w-48">{member.role}</p>
+                    <h4 className="font-medium text-sm text-gray-900">{member.full_name}</h4>
+                    <p className="text-xs text-gray-500 truncate w-32 sm:w-48">{member.email}</p>
                   </div>
                 </div>
-                <span className={cn(
-                  "text-[10px] font-medium px-2 py-1 rounded-md",
-                  member.status === 'Concluído' ? "bg-green-50 text-green-600" :
-                  member.status === 'Em Progresso' ? "bg-yellow-50 text-yellow-600" :
-                  "bg-red-50 text-red-600"
-                )}>
-                  {member.status}
+                <span className="text-[10px] font-medium px-2 py-1 rounded-md bg-green-50 text-green-600">
+                  Ativo
                 </span>
               </div>
             ))}
+            {teamMembers.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">Nenhum membro cadastrado ainda.</p>
+            )}
           </div>
         </div>
 
         {/* Project Progress */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm lg:col-span-1 flex flex-col items-center justify-center">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 flex flex-col items-center justify-center shadow-xl shadow-black/5">
           <h3 className="font-semibold text-gray-900 w-full mb-4">Progresso dos Projetos</h3>
           <div className="relative w-48 h-48 flex items-center justify-center">
             {/* Simple CSS Donut Chart representation */}
@@ -221,7 +289,7 @@ export function Dashboard() {
               />
               <path
                 className="text-secondary"
-                strokeDasharray="41, 100"
+                strokeDasharray={`${totalProjects > 0 ? (finishedProjects / totalProjects) * 100 : 0}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
                 stroke="currentColor"
@@ -229,7 +297,9 @@ export function Dashboard() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl font-bold text-gray-900">41%</span>
+              <span className="text-4xl font-bold text-gray-900">
+                {totalProjects > 0 ? Math.round((finishedProjects / totalProjects) * 100) : 0}%
+              </span>
               <span className="text-xs text-gray-500">Projetos Finalizados</span>
             </div>
           </div>
@@ -239,68 +309,52 @@ export function Dashboard() {
             <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-gray-200"></div> Pendente</div>
           </div>
         </div>
-        
-        {/* Time Tracker */}
-        <div className="bg-dark rounded-2xl p-6 text-white relative overflow-hidden lg:col-span-1">
-          <div className="relative z-10 flex flex-col h-full">
-            <h3 className="font-medium text-white/80 mb-auto">Rastreador de Tempo</h3>
-            <div className="text-center my-6">
-              <p className="text-5xl font-mono font-light tracking-wider">01:24:08</p>
-            </div>
-            <div className="flex items-center justify-center gap-4">
-              <button className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors">
-                <Pause className="w-5 h-5" />
-              </button>
-              <button className="w-12 h-12 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors">
-                <Square className="w-4 h-4 fill-current" />
-              </button>
-            </div>
-          </div>
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-success via-dark to-dark"></div>
-        </div>
-
       </div>
 
-      {/* Add Project Modal */}
-      {isAddingProject && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Novo Projeto</h2>
-            <form onSubmit={handleAddProject} className="space-y-4">
+      {/* Add Reminder Modal */}
+      {isAddingReminder && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingReminder ? "Editar Lembrete" : "Novo Lembrete"}</h2>
+            <form onSubmit={handleAddReminder} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
                 <input 
                   type="text" 
                   required
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  placeholder="Ex: Novo App Mobile"
+                  value={newReminderTitle}
+                  onChange={(e) => setNewReminderTitle(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl"
+                  placeholder="Ex: Reunião de Alinhamento"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prazo</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Horário</label>
                 <input 
-                  type="date" 
+                  type="text" 
                   required
-                  value={newProjectDate}
-                  onChange={(e) => setNewProjectDate(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  value={newReminderTime}
+                  onChange={(e) => setNewReminderTime(e.target.value)}
+                  className="w-full px-4 py-3 glass-input rounded-xl"
+                  placeholder="Ex: 14:00 - 15:00"
                 />
               </div>
-              <div className="flex items-center justify-end gap-3 mt-6">
+              <div className="flex items-center justify-end gap-3 mt-8">
                 <button 
                   type="button" 
-                  onClick={() => setIsAddingProject(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors"
+                  onClick={() => {
+                    setIsAddingReminder(false);
+                    setEditingReminder(null);
+                  }}
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors"
+                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
                 >
-                  Criar Projeto
+                  {editingReminder ? "Salvar" : "Criar Lembrete"}
                 </button>
               </div>
             </form>

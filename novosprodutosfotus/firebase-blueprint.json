@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Profile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "email": { "type": "string", "format": "email" },
+        "full_name": { "type": "string" },
+        "avatar_url": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A project containing tasks",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "status": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "color": { "type": "string" },
+        "user_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "status", "user_id"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task within a project",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "sector": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "assignee": { "type": "string" },
+        "project_id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "sector", "project_id", "user_id"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/Profile" },
+      "description": "User profiles"
+    },
+    "/projetos/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Projects"
+    },
+    "/tarefas/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Tasks"
+    }
+  }
+}
