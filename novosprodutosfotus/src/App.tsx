@@ -13,6 +13,8 @@ import { ProjectDetails } from "./pages/ProjectDetails";
 import { Team } from "./pages/Team";
 import { Settings } from "./pages/Settings";
 import { Calendar } from "./pages/Calendar";
+import { Analytics } from "./pages/Analytics";
+import { Help } from "./pages/Help";
 import { ProjectProvider } from "./contexts/ProjectContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -46,9 +48,8 @@ export default function App() {
               <Route path="/team" element={<Team />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/calendar" element={<Calendar />} />
-              {/* Fallback routes for other menu items */}
-              <Route path="/analytics" element={<div className="p-8 text-gray-500">Analytics em breve...</div>} />
-              <Route path="/help" element={<div className="p-8 text-gray-500">Ajuda em breve...</div>} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/help" element={<Help />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -13,7 +13,7 @@ const menuItems = [
 
 const generalItems = [
   { icon: Settings, label: "Configurações", path: "/settings" },
-  { icon: HelpCircle, label: "Ajuda", path: "/help" },
+  { icon: HelpCircle, label: "Versão 1.0 Beta", path: "/help" },
 ];
 
 export function Sidebar({ isOpen }: { isOpen: boolean }) {

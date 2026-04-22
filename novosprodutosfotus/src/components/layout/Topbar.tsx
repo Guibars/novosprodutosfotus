@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, Bell, Mail, Menu, LogOut, Check, Trash2, MessageSquare } from "lucide-react";
+import { Search, Bell, Mail, Menu, LogOut, Check, Trash2, MessageSquare, X, CheckSquare } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { useProjects } from "../../contexts/ProjectContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -88,6 +89,24 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
     }
   };
 
+  const deleteAllNotifications = async () => {
+    if (!user) return;
+    try {
+      await Promise.all(notifications.map(n => deleteDoc(doc(db, 'notifications', n.id))));
+    } catch (error) {
+      console.error("Erro ao deletar todas notificações", error);
+    }
+  };
+
+  const deleteAllMessages = async () => {
+    if (!user) return;
+    try {
+      await Promise.all(messages.map(m => deleteDoc(doc(db, 'messages', m.id))));
+    } catch (error) {
+      console.error("Erro ao deletar todas mensagens", error);
+    }
+  };
+
   return (
     <div className="px-4 pt-4 sticky top-0 z-20">
       <header className="h-20 glass border border-white/50 rounded-[2rem] flex items-center justify-between px-8 shadow-xl shadow-black/5">
@@ -127,11 +146,37 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
             )}
           </button>
 
+          <AnimatePresence>
           {showMessages && (
-            <div className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50">
-              <div className="p-4 border-b border-white/50 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">Mensagens</h3>
-                <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadMsgsCount} novas</span>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50"
+            >
+              <div className="p-4 border-b border-white/50 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900">Mensagens</h3>
+                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadMsgsCount} novas</span>
+                  </div>
+                  <button 
+                    onClick={() => setShowMessages(false)}
+                    className="p-1 hover:bg-white/50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                {messages.length > 0 && (
+                  <button 
+                    onClick={deleteAllMessages}
+                    className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center justify-center gap-1 w-full bg-white/50 hover:bg-red-50 py-1.5 rounded-lg transition-colors border border-white/50"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Apagar todas
+                  </button>
+                )}
               </div>
               <div className="max-h-96 overflow-y-auto">
                 {messages.length > 0 ? (
@@ -178,8 +223,9 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         <div className="relative">
@@ -193,11 +239,37 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
             )}
           </button>
 
+          <AnimatePresence>
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50">
-              <div className="p-4 border-b border-white/50 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">Notificações</h3>
-                <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadNotifsCount} novas</span>
+            <motion.div 
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50"
+            >
+              <div className="p-4 border-b border-white/50 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900">Notificações</h3>
+                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadNotifsCount} novas</span>
+                  </div>
+                  <button 
+                    onClick={() => setShowNotifications(false)}
+                    className="p-1 hover:bg-white/50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                {notifications.length > 0 && (
+                  <button 
+                    onClick={deleteAllNotifications}
+                    className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center justify-center gap-1 w-full bg-white/50 hover:bg-red-50 py-1.5 rounded-lg transition-colors border border-white/50"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Apagar todas
+                  </button>
+                )}
               </div>
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length > 0 ? (
@@ -243,8 +315,9 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
         
         <div className="h-8 w-px bg-white/50 mx-2"></div>
