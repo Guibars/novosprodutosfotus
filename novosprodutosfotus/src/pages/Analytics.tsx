@@ -1,26 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { useProjects } from "../contexts/ProjectContext";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-  LineChart, Line, AreaChart, Area, CartesianGrid, Legend
+  LineChart, Line, AreaChart, Area, CartesianGrid, Legend, PieChart, Pie
 } from "recharts";
 import { 
   FolderGit2, CheckCircle2, Clock, PauseCircle,
-  AlertCircle, LayoutList, Target, TrendingUp, Users, Calendar
+  AlertCircle, LayoutList, Target, TrendingUp, Users, Calendar, ShoppingCart
 } from "lucide-react";
 import { cn } from "../lib/utils";
+
+const PRODUCTS = ["Inversores Híbridos", "Bateria", "Drive", "RSD", "Carregador"];
 
 export function Analytics() {
   const { projects } = useProjects();
   const [teamMembersCount, setTeamMembersCount] = useState(0);
+  const [salesMetrics, setSalesMetrics] = useState<any>({});
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
       setTeamMembersCount(snapshot.size);
     });
-    return () => unsubscribe();
+    
+    // Fetch current month's sales metrics
+    const today = new Date();
+    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const unsubscribeMetrics = onSnapshot(doc(db, 'sales_metrics', key), (docSnap) => {
+      if (docSnap.exists()) {
+        setSalesMetrics(docSnap.data());
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeMetrics();
+    };
   }, []);
 
   // 📦 Dados de Projetos
@@ -148,6 +164,44 @@ export function Analytics() {
           subtitle="Colaboradores no sistema" 
           icon={Users} 
         />
+      </div>
+
+      {/* 🚀 Métricas de Vendas (Integração) */}
+      <div className="bg-gradient-to-br from-white/60 to-white/30 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
+        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <ShoppingCart className="w-6 h-6 text-orange-500" />
+          Acompanhamento de Vendas (Este Mês)
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {PRODUCTS.map(product => {
+            const data = salesMetrics[product] || { metaMensal: 0, quantidadeVendida: 0 };
+            const percentage = data.metaMensal > 0 ? Math.min(100, Math.round((data.quantidadeVendida / data.metaMensal) * 100)) : 0;
+            return (
+              <div key={product} className="bg-white/60 p-4 rounded-2xl border border-white/50 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 h-1 bg-gray-200 w-full">
+                  <div className={cn("h-full", percentage >= 100 ? "bg-success" : "bg-orange-500")} style={{ width: `${percentage}%` }}></div>
+                </div>
+                <h4 className="font-bold text-gray-900 mb-2 truncate" title={product}>{product}</h4>
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase font-medium">Vendido</p>
+                    <p className="text-2xl font-bold text-gray-900">{data.quantidadeVendida}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500 uppercase font-medium">Meta</p>
+                    <p className="text-sm font-semibold text-gray-600">{data.metaMensal}</p>
+                  </div>
+                </div>
+                <div className="mt-3 text-right">
+                  <span className={cn("text-xs font-bold px-2 py-1 rounded-md", percentage >= 100 ? "bg-success/10 text-success" : "bg-orange-50 text-orange-600")}>
+                    {percentage}% Atingido
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

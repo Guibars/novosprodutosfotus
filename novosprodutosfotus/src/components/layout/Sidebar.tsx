@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, CheckSquare, Calendar, BarChart2, Users, Settings, HelpCircle, LogOut } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Calendar, BarChart2, Target, Palmtree, Users, Settings, HelpCircle, LogOut } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -8,6 +8,8 @@ const menuItems = [
   { icon: CheckSquare, label: "Projetos", path: "/projects" },
   { icon: Calendar, label: "Calendário", path: "/calendar" },
   { icon: BarChart2, label: "Analytics", path: "/analytics" },
+  { icon: Target, label: "Métricas", path: "/metrics" },
+  { icon: Palmtree, label: "Férias", path: "/vacations" },
   { icon: Users, label: "Time", path: "/team" },
 ];
 

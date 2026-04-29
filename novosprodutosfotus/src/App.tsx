@@ -15,6 +15,8 @@ import { Settings } from "./pages/Settings";
 import { Calendar } from "./pages/Calendar";
 import { Analytics } from "./pages/Analytics";
 import { Help } from "./pages/Help";
+import { Metrics } from "./pages/Metrics";
+import { Vacations } from "./pages/Vacations";
 import { ProjectProvider } from "./contexts/ProjectContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -49,6 +51,8 @@ export default function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/metrics" element={<Metrics />} />
+              <Route path="/vacations" element={<Vacations />} />
               <Route path="/help" element={<Help />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
