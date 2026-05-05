@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square, Edit2 } from "lucide-react";
-import { BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip } from "recharts";
+import { BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip, AreaChart, Area, YAxis } from "recharts";
 import { cn } from "../lib/utils";
 import { useProjects } from "../contexts/ProjectContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -137,18 +137,28 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Analytics Chart */}
-        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 shadow-xl shadow-black/5">
-          <h3 className="font-semibold text-gray-900 mb-6">Analytics de Projetos</h3>
-          <div className="h-48">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 shadow-xl shadow-black/5 flex flex-col justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-1">Tendência de Entregas</h3>
+            <p className="text-xs text-gray-500 mb-6">Taxa de conclusão por setor</p>
+          </div>
+          <div className="h-44 -ml-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analyticsData}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} dy={10} />
-                <Bar dataKey="value" radius={[20, 20, 20, 20]} barSize={32}>
-                  {analyticsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.active ? '#0D518E' : '#f3f4f6'} />
-                  ))}
-                </Bar>
-              </BarChart>
+              <AreaChart data={analyticsData}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0D518E" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#0D518E" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} dy={5} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ fontSize: '14px', fontWeight: 500 }}
+                  labelStyle={{ display: 'none' }}
+                />
+                <Area type="monotone" dataKey="value" stroke="#0D518E" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -234,17 +244,23 @@ export function Dashboard() {
                 p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                 p.tasks.some(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
               )
-              .map((project) => (
-                <div key={project.id} className="flex items-start gap-4 p-3 hover:bg-white/50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-white/50">
-                <div className={`w-10 h-10 rounded-xl ${project.color} flex items-center justify-center shrink-0`}>
-                  <div className="w-4 h-4 bg-white/30 rounded-sm"></div>
+              .map((project, index) => (
+                <div key={project.id} className="flex items-start gap-4 p-3 hover:bg-white/50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-white/50 hover:shadow-md hover:-translate-y-0.5">
+                  <div className={`w-10 h-10 rounded-xl ${project.color} flex items-center justify-center shrink-0 shadow-inner`}>
+                    <div className="w-4 h-4 bg-white/30 rounded-sm"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <h4 className="font-medium text-gray-900 truncate">{project.name}</h4>
+                      <span className="text-xs font-bold text-secondary">{project.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1.5 overflow-hidden">
+                      <div className="bg-secondary h-1.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${project.progress}%` }}></div>
+                    </div>
+                    <p className="text-xs text-gray-500">Prazo: {new Date(project.dueDate + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">{project.name}</h4>
-                  <p className="text-xs text-gray-500 mt-1">Prazo: {project.dueDate}</p>
-                </div>
-              </div>
-            ))}
+              ))}
             {projects.length === 0 && (
               <p className="text-sm text-gray-500 text-center py-4">Nenhum projeto em aberto.</p>
             )}
@@ -282,7 +298,7 @@ export function Dashboard() {
 
         {/* Project Progress */}
         <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 flex flex-col items-center justify-center shadow-xl shadow-black/5">
-          <h3 className="font-semibold text-gray-900 w-full mb-4">Progresso dos Projetos</h3>
+          <h3 className="font-semibold text-gray-900 w-full mb-4">Progresso Geral</h3>
           <div className="relative w-48 h-48 flex items-center justify-center">
             {/* Simple CSS Donut Chart representation */}
             <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
@@ -295,7 +311,7 @@ export function Dashboard() {
               />
               <path
                 className="text-secondary"
-                strokeDasharray={`${totalProjects > 0 ? (finishedProjects / totalProjects) * 100 : 0}, 100`}
+                strokeDasharray={`${totalProjects > 0 ? Math.round(projects.reduce((acc, p) => acc + p.progress, 0) / totalProjects) : 0}, 100`}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
                 stroke="currentColor"
@@ -304,15 +320,14 @@ export function Dashboard() {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-4xl font-bold text-gray-900">
-                {totalProjects > 0 ? Math.round((finishedProjects / totalProjects) * 100) : 0}%
+                {totalProjects > 0 ? Math.round(projects.reduce((acc, p) => acc + p.progress, 0) / totalProjects) : 0}%
               </span>
-              <span className="text-xs text-gray-500">Projetos Finalizados</span>
+              <span className="text-xs text-gray-500">Média dos Projetos</span>
             </div>
           </div>
-          <div className="flex items-center gap-4 mt-6 text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-4 mt-6 text-xs text-gray-500 w-full">
             <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-secondary"></div> Concluído</div>
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary"></div> Em Progresso</div>
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-gray-200"></div> Pendente</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-gray-200"></div> Restante</div>
           </div>
         </div>
       </div>

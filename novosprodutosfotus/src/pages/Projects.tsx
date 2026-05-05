@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, Clock, Edit2 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { useProjects } from "../contexts/ProjectContext";
 
 export function Projects() {
@@ -69,18 +70,29 @@ export function Projects() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects
-          .filter(p => 
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-            p.tasks.some(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
-          )
-          .map((project) => (
-          <div 
-            key={project.id} 
-            onClick={() => navigate(`/projects/${project.id}`)}
-            className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 hover:bg-white/60 hover:shadow-2xl hover:shadow-black/5 transition-all duration-300 cursor-pointer group relative"
-          >
+      <motion.div 
+        layout
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <AnimatePresence mode="popLayout">
+          {projects
+            .filter(p => 
+              p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              p.tasks.some(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+            )
+            .map((project, index) => (
+            <motion.div 
+              layout
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              whileHover={{ y: -5 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.2) }}
+              key={project.id} 
+              onClick={() => navigate(`/projects/${project.id}`)}
+              className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 hover:bg-white/60 hover:shadow-2xl hover:shadow-black/5 transition-all duration-300 cursor-pointer group relative"
+            >
             <div className="flex justify-between items-start mb-4">
               <div className={`w-12 h-12 rounded-xl ${project.color} flex items-center justify-center text-white font-bold text-xl`}>
                 {project.name.charAt(0)}
@@ -126,9 +138,10 @@ export function Projects() {
               </div>
               <span className="text-sm font-medium text-gray-500">{project.tasks.length} Tarefas</span>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+        </AnimatePresence>
+      </motion.div>
 
       {/* Delete Confirmation Modal */}
       {projectToDelete && (

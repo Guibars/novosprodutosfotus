@@ -64,13 +64,13 @@ export function Login() {
       <div className="flex-1 flex flex-col items-center justify-center z-10 p-8 transition-all duration-500" style={{ transform: showForm ? 'translateX(-10%)' : 'translateX(0)' }}>
         <div className="text-center max-w-md">
           <img 
-            src="https://res.cloudinary.com/ddtpuucfi/image/upload/v1776262898/LOGO_Fotus_1A_r2m41s.png" 
+            src="https://res.cloudinary.com/dsctpzqvy/image/upload/v1776688963/LOGO_Fotus_1A_jzdytt.png" 
             alt="Logo Fotus" 
             className="w-64 mx-auto mb-2 object-contain drop-shadow-xl"
             referrerPolicy="no-referrer"
           />
           
-          <h2 className="text-lg uppercase tracking-widest font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-12 mt-6">Novos Produtos</h2>
+          <h2 className="text-lg uppercase tracking-widest font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-12 mt-20">Novos Produtos</h2>
           
           {!showForm && (
             <motion.button
@@ -93,7 +93,7 @@ export function Login() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-full max-w-md bg-white shadow-2xl border-l border-gray-100 z-20 flex flex-col p-8 sm:p-12 absolute right-0 h-full overflow-y-auto"
+            className="w-full max-w-md bg-white/70 backdrop-blur-2xl rounded-[3rem] shadow-[10px_10px_30px_rgba(0,0,0,0.05),-10px_-10px_30px_rgba(255,255,255,0.8)] border border-white/60 z-20 flex flex-col p-8 sm:p-12 absolute right-4 md:right-12 top-12 bottom-12 overflow-y-auto"
           >
             <div className="my-auto">
               <div className="mb-10">

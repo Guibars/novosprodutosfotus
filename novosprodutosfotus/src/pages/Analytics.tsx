@@ -17,27 +17,58 @@ const PRODUCTS = ["Inversores Híbridos", "Bateria", "Drive", "RSD", "Carregador
 export function Analytics() {
   const { projects } = useProjects();
   const [teamMembersCount, setTeamMembersCount] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [salesMetrics, setSalesMetrics] = useState<any>({});
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
       setTeamMembersCount(snapshot.size);
     });
-    
-    // Fetch current month's sales metrics
-    const today = new Date();
-    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    const unsubscribeMetrics = onSnapshot(doc(db, 'sales_metrics', key), (docSnap) => {
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribeMetrics = onSnapshot(doc(db, 'sales_metrics', selectedDate), (docSnap) => {
       if (docSnap.exists()) {
         setSalesMetrics(docSnap.data());
+      } else {
+        setSalesMetrics({});
       }
     });
 
-    return () => {
-      unsubscribe();
-      unsubscribeMetrics();
-    };
-  }, []);
+    return () => unsubscribeMetrics();
+  }, [selectedDate]);
+
+  const [selYear, selMonthStr] = selectedDate.split('-');
+  const selMonth = parseInt(selMonthStr, 10) - 1;
+
+  const getBusinessDays = (y: number, m: number) => {
+    let days = [];
+    const date = new Date(y, m, 1);
+    while (date.getMonth() === m) {
+      const day = date.getDay();
+      if (day !== 0 && day !== 6) {
+        days.push(new Date(date));
+      }
+      date.setDate(date.getDate() + 1);
+    }
+    return days;
+  };
+
+  const businessDays = getBusinessDays(parseInt(selYear), selMonth);
+  const totalBusinessDays = businessDays.length;
+
+  const todayActual = new Date();
+  const isCurrentMonth = todayActual.getFullYear() === parseInt(selYear) && todayActual.getMonth() === selMonth;
+  const isPastMonth = todayActual > new Date(parseInt(selYear), selMonth, 1);
+  
+  const passedBusinessDays = isCurrentMonth 
+    ? businessDays.filter(d => d.getDate() <= todayActual.getDate()).length 
+    : (isPastMonth ? totalBusinessDays : 0);
 
   // 📦 Dados de Projetos
   const totalProjects = projects.length;
@@ -168,33 +199,59 @@ export function Analytics() {
 
       {/* 🚀 Métricas de Vendas (Integração) */}
       <div className="bg-gradient-to-br from-white/60 to-white/30 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <ShoppingCart className="w-6 h-6 text-orange-500" />
-          Acompanhamento de Vendas (Este Mês)
-        </h2>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <ShoppingCart className="w-6 h-6 text-orange-500" />
+            Acompanhamento de Vendas
+          </h2>
+          <input 
+            type="month" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-white/50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700 w-full md:w-auto"
+          />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {PRODUCTS.map(product => {
             const data = salesMetrics[product] || { metaMensal: 0, quantidadeVendida: 0 };
             const percentage = data.metaMensal > 0 ? Math.min(100, Math.round((data.quantidadeVendida / data.metaMensal) * 100)) : 0;
+            
+            // Projection
+            let projecao = 0;
+            if (passedBusinessDays > 0) {
+              const metaDiariaReal = data.quantidadeVendida / passedBusinessDays;
+              projecao = isCurrentMonth ? Math.round(data.quantidadeVendida + (metaDiariaReal * (totalBusinessDays - passedBusinessDays))) : data.quantidadeVendida;
+            }
+
             return (
               <div key={product} className="bg-white/60 p-4 rounded-2xl border border-white/50 relative overflow-hidden group">
                 <div className="absolute top-0 left-0 h-1 bg-gray-200 w-full">
                   <div className={cn("h-full", percentage >= 100 ? "bg-success" : "bg-orange-500")} style={{ width: `${percentage}%` }}></div>
                 </div>
                 <h4 className="font-bold text-gray-900 mb-2 truncate" title={product}>{product}</h4>
-                <div className="flex justify-between items-end">
+                <div className="flex justify-between items-end mb-2">
                   <div>
-                    <p className="text-xs text-gray-500 uppercase font-medium">Vendido</p>
-                    <p className="text-2xl font-bold text-gray-900">{data.quantidadeVendida}</p>
+                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Real</p>
+                    <p className="text-2xl font-bold text-gray-900 leading-none">{data.quantidadeVendida}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 uppercase font-medium">Meta</p>
-                    <p className="text-sm font-semibold text-gray-600">{data.metaMensal}</p>
+                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Meta</p>
+                    <p className="text-sm font-semibold text-gray-600 leading-none">{data.metaMensal}</p>
                   </div>
                 </div>
+                
+                {isCurrentMonth && data.metaMensal > 0 && (
+                  <div className="flex justify-between items-center text-xs mt-3 pt-3 border-t border-gray-200/60 pb-1">
+                    <span className="text-gray-500 font-medium">Projeção Mês:</span>
+                    <span className={cn("font-bold", projecao >= data.metaMensal ? "text-success" : "text-gray-900")}>
+                      {projecao}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="mt-3 text-right">
-                  <span className={cn("text-xs font-bold px-2 py-1 rounded-md", percentage >= 100 ? "bg-success/10 text-success" : "bg-orange-50 text-orange-600")}>
+                  <span className={cn("text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 rounded-lg border", percentage >= 100 ? "bg-success/10 text-success border-success/20" : "bg-orange-50 text-orange-600 border-orange-500/20")}>
                     {percentage}% Atingido
                   </span>
                 </div>
@@ -278,24 +335,33 @@ export function Analytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
           <h3 className="font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-secondary" />
-            Cronograma de Entregas (Projetos por Mês)
+            <TrendingUp className="w-5 h-5 text-secondary" />
+            Tendência de Atividade Mensal
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={projectTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={projectTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorAbertos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0D518E" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#0D518E" stopOpacity={0.1}/>
+                  </linearGradient>
+                  <linearGradient id="colorConcluidos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
                 <Tooltip 
-                  cursor={{ fill: '#f3f4f6' }}
-                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ fontSize: '14px', fontWeight: 500 }}
+                  contentStyle={{ borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)' }}
+                  itemStyle={{ fontSize: '14px', fontWeight: 600 }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-                <Bar dataKey="Concluídos" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={24} />
-                <Bar dataKey="Abertos" fill="#0D518E" radius={[4, 4, 0, 0]} maxBarSize={24} />
-              </BarChart>
+                <Area type="monotone" dataKey="Concluídos" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorConcluidos)" />
+                <Area type="monotone" dataKey="Abertos" stroke="#0D518E" strokeWidth={3} fillOpacity={1} fill="url(#colorAbertos)" />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>

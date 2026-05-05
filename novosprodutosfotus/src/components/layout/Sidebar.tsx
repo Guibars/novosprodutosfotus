@@ -15,7 +15,6 @@ const menuItems = [
 
 const generalItems = [
   { icon: Settings, label: "Configurações", path: "/settings" },
-  { icon: HelpCircle, label: "Versão 1.0 Beta", path: "/help" },
 ];
 
 export function Sidebar({ isOpen }: { isOpen: boolean }) {
@@ -29,14 +28,14 @@ export function Sidebar({ isOpen }: { isOpen: boolean }) {
       <div className="glass h-full rounded-[2rem] border border-white/50 flex flex-col shadow-2xl shadow-black/10 overflow-hidden">
         <div className="p-6 flex items-center justify-center border-b border-white/10">
           <img 
-            src="https://res.cloudinary.com/ddtpuucfi/image/upload/v1776262898/LOGO_Fotus_1A_r2m41s.png" 
+            src="https://res.cloudinary.com/dsctpzqvy/image/upload/v1776688852/Design_sem_nome_2_hx7e0j.png" 
             alt="Fotus Logo" 
             className="h-7 object-contain"
             referrerPolicy="no-referrer"
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-8">
+        <div className="flex-1 overflow-y-auto scrollbar-hide py-6 px-4 flex flex-col gap-8">
           <div>
             <p className="text-[10px] font-bold text-gray-400 mb-4 px-3 uppercase tracking-[0.2em]">Menu</p>
             <nav className="flex flex-col gap-1.5">

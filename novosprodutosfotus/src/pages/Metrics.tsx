@@ -9,11 +9,14 @@ const PRODUCTS = ["Inversores Híbridos", "Bateria", "Drive", "RSD", "Carregador
 export function Metrics() {
   const [metricsData, setMetricsData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [currentMonthKey, setCurrentMonthKey] = useState("");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  });
 
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const [selYearStr, selMonthStr] = selectedDate.split('-');
+  const year = parseInt(selYearStr, 10);
+  const month = parseInt(selMonthStr, 10) - 1;
 
   // Calculate business days in the current month
   const getBusinessDays = (y: number, m: number) => {
@@ -32,13 +35,16 @@ export function Metrics() {
   const businessDays = getBusinessDays(year, month);
   const totalBusinessDays = businessDays.length;
 
-  const passedBusinessDays = businessDays.filter(d => d.getDate() <= today.getDate()).length;
+  const todayActual = new Date();
+  const isCurrentMonth = todayActual.getFullYear() === year && todayActual.getMonth() === month;
+  const isPastMonth = todayActual > new Date(year, month, 1);
+  
+  const passedBusinessDays = isCurrentMonth 
+    ? businessDays.filter(d => d.getDate() <= todayActual.getDate()).length 
+    : (isPastMonth ? totalBusinessDays : 0);
 
   useEffect(() => {
-    const key = `${year}-${String(month + 1).padStart(2, '0')}`;
-    setCurrentMonthKey(key);
-
-    const unsubscribe = onSnapshot(doc(db, 'sales_metrics', key), (docSnap) => {
+    const unsubscribe = onSnapshot(doc(db, 'sales_metrics', selectedDate), (docSnap) => {
       if (docSnap.exists()) {
         setMetricsData(docSnap.data());
       } else {
@@ -51,7 +57,7 @@ export function Metrics() {
     });
 
     return () => unsubscribe();
-  }, [year, month]);
+  }, [selectedDate]);
 
   const handleInputChange = (product: string, field: string, value: string) => {
     const numValue = Number(value) || 0;
@@ -67,7 +73,7 @@ export function Metrics() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await setDoc(doc(db, 'sales_metrics', currentMonthKey), metricsData, { merge: true });
+      await setDoc(doc(db, 'sales_metrics', selectedDate), metricsData, { merge: true });
     } catch (error) {
       console.error("Erro ao salvar métricas:", error);
     }
@@ -76,7 +82,7 @@ export function Metrics() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-10">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Target className="w-8 h-8 text-primary" />
@@ -84,13 +90,21 @@ export function Metrics() {
           </h1>
           <p className="text-gray-500 mt-1">Acompanhe as metas do setor, previsto vs realizado, e calendário focado.</p>
         </div>
-        <button 
-          onClick={handleSave}
-          className="bg-secondary hover:bg-secondary-hover text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg shadow-secondary/20"
-        >
-          <Save className="w-5 h-5" />
-          {isSaving ? "Salvando..." : "Salvar Alterações"}
-        </button>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <input 
+            type="month" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-white/50 backdrop-blur-md border border-white/60 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700 w-full sm:w-auto"
+          />
+          <button 
+            onClick={handleSave}
+            className="bg-secondary w-full sm:w-auto hover:bg-secondary-hover text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-secondary/20"
+          >
+            <Save className="w-5 h-5" />
+            {isSaving ? "Salvando..." : "Salvar Alterações"}
+          </button>
+        </div>
       </div>
 
       {/* Tabela/Cards de Metas */}
@@ -167,8 +181,8 @@ export function Metrics() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-3">
           {businessDays.map((date, idx) => {
-            const isToday = date.getDate() === today.getDate();
-            const isPast = date.getDate() < today.getDate();
+            const isToday = date.getDate() === todayActual.getDate() && date.getMonth() === todayActual.getMonth() && date.getFullYear() === todayActual.getFullYear();
+            const isPast = date < todayActual && !isToday;
             return (
               <div 
                 key={idx} 
