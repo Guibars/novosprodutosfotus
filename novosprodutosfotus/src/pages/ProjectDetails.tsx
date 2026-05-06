@@ -271,16 +271,16 @@ export function ProjectDetails() {
                   {phaseTasks.map((task) => (
                     <div key={task.id} className="group relative border-b border-white/10 last:border-0 rounded-2xl overflow-hidden transition-all">
                       <div className={cn("p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:bg-white/50 transition-colors z-10 relative", task.completed && "bg-white/30")}>
-                        <div className="flex items-center gap-4 w-full sm:w-auto">
-                          <button onClick={() => toggleTask(task.id)} className="shrink-0 text-gray-400 hover:text-secondary transition-colors">
+                        <div className="flex items-start gap-4 w-full sm:flex-1 min-w-0">
+                          <button onClick={() => toggleTask(task.id)} className="shrink-0 mt-0.5 text-gray-400 hover:text-secondary transition-colors">
                             {task.completed ? <CheckCircle2 className="w-6 h-6 text-success" /> : <Circle className="w-6 h-6" />}
                           </button>
                           
                           <div className="flex-1 min-w-0">
-                            <p className={cn("font-medium text-gray-900 truncate", task.completed && "text-gray-500 line-through")}>
+                            <p className={cn("font-medium text-gray-900 break-words", task.completed && "text-gray-500 line-through")}>
                               {task.title}
                             </p>
-                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-gray-500">
                               <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {task.sector}</span>
                               <span className="flex items-center gap-1"><CalendarIcon className="w-3 h-3" /> {task.dueDate}</span>
                               {task.observation && (
@@ -290,7 +290,7 @@ export function ProjectDetails() {
                           </div>
                         </div>
 
-                        <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+                        <div className="shrink-0 flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:ml-auto mt-3 sm:mt-0 pt-3 border-t border-white/50 sm:border-t-0 sm:pt-0">
                           {task.assignee ? (
                             <div className="flex items-center gap-2 bg-white/50 px-3 py-1.5 rounded-lg border border-white/50">
                               <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
