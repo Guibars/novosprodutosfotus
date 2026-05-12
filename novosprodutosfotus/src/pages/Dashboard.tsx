@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square, Edit2 } from "lucide-react";
+import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square, Edit2, Trash2 } from "lucide-react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip, AreaChart, Area, YAxis } from "recharts";
 import { cn } from "../lib/utils";
 import { useProjects } from "../contexts/ProjectContext";
 import { useAuth } from "../contexts/AuthContext";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, doc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
 export function Dashboard() {
   const { projects, setIsProjectModalOpen, searchQuery } = useProjects();
   const { user } = useAuth();
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [salesMetrics, setSalesMetrics] = useState<any>({});
 
   useEffect(() => {
     if (!user) {
@@ -23,34 +24,42 @@ export function Dashboard() {
     }, (error) => {
       console.error("Erro ao buscar time:", error);
     });
-    return () => unsubscribe();
+    
+    // Fetch current month's sales metrics
+    const today = new Date();
+    const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const unsubscribeMetrics = onSnapshot(doc(db, 'sales_metrics', currentMonthKey), (docSnap) => {
+      if (docSnap.exists()) {
+        setSalesMetrics(docSnap.data());
+      } else {
+        setSalesMetrics({});
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeMetrics();
+    };
   }, [user]);
 
-  // Calculate dynamic analytics data based on tasks per sector
-  const sectors = ["Gerência", "Coordenação", "Desenvolvimento", "Novos Produtos", "Marketing", "Pricing", "TI"];
-  const analyticsData = sectors.map(sector => {
-    let totalTasks = 0;
-    let completedTasks = 0;
-    projects.forEach(p => {
-      p.tasks.forEach(t => {
-        if (t.sector === sector) {
-          totalTasks++;
-          if (t.completed) completedTasks++;
-        }
-      });
+  // Transform project data for the chart: completed tasks in open projects
+  const openProjectsData = projects
+    .filter(p => p.progress < 100 && p.tasks.length > 0)
+    .map(p => {
+      const completedTasks = p.tasks.filter(t => t.completed).length;
+      return {
+        name: p.name.substring(0, 10) + (p.name.length > 10 ? '...' : ''), // Short name for X-axis
+        fullName: p.name,
+        Concluídas: completedTasks,
+      };
     });
-    return {
-      name: sector.substring(0, 3), // Short name for X-axis
-      fullName: sector,
-      value: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
-      active: totalTasks > 0
-    };
-  });
 
-  const [reminders, setReminders] = useState<{id: number, title: string, time: string}[]>([]);
+  const [reminders, setReminders] = useState<{id: number, title: string, observation?: string, date?: string, time?: string}[]>([]);
   const [isAddingReminder, setIsAddingReminder] = useState(false);
   const [editingReminder, setEditingReminder] = useState<number | null>(null);
   const [newReminderTitle, setNewReminderTitle] = useState("");
+  const [newReminderObservation, setNewReminderObservation] = useState("");
+  const [newReminderDate, setNewReminderDate] = useState("");
   const [newReminderTime, setNewReminderTime] = useState("");
 
   const totalProjects = projects.length;
@@ -60,29 +69,49 @@ export function Dashboard() {
 
   const handleAddReminder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newReminderTitle || !newReminderTime) return;
+    if (!newReminderTitle) return;
     
     if (editingReminder) {
-      setReminders(reminders.map(r => r.id === editingReminder ? { ...r, title: newReminderTitle, time: newReminderTime } : r));
+      setReminders(reminders.map(r => r.id === editingReminder ? { 
+        ...r, 
+        title: newReminderTitle, 
+        observation: newReminderObservation,
+        date: newReminderDate,
+        time: newReminderTime 
+      } : r));
       setEditingReminder(null);
     } else {
       setReminders([...reminders, {
         id: Date.now(),
         title: newReminderTitle,
+        observation: newReminderObservation,
+        date: newReminderDate,
         time: newReminderTime
       }]);
     }
     
     setIsAddingReminder(false);
-    setNewReminderTitle("");
-    setNewReminderTime("");
+    resetReminderForm();
   };
 
-  const handleEditReminder = (reminder: {id: number, title: string, time: string}) => {
+  const handleEditReminder = (reminder: {id: number, title: string, observation?: string, date?: string, time?: string}) => {
     setEditingReminder(reminder.id);
     setNewReminderTitle(reminder.title);
-    setNewReminderTime(reminder.time);
+    setNewReminderObservation(reminder.observation || "");
+    setNewReminderDate(reminder.date || "");
+    setNewReminderTime(reminder.time || "");
     setIsAddingReminder(true);
+  };
+  
+  const handleDeleteReminder = (id: number) => {
+    setReminders(reminders.filter(r => r.id !== id));
+  };
+  
+  const resetReminderForm = () => {
+    setNewReminderTitle("");
+    setNewReminderObservation("");
+    setNewReminderDate("");
+    setNewReminderTime("");
   };
 
   return (
@@ -139,39 +168,39 @@ export function Dashboard() {
         {/* Analytics Chart */}
         <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 shadow-xl shadow-black/5 flex flex-col justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900 mb-1">Tendência de Entregas</h3>
-            <p className="text-xs text-gray-500 mb-6">Taxa de conclusão por setor</p>
+            <h3 className="font-semibold text-gray-900 mb-1">Tarefas Concluídas por Projeto</h3>
+            <p className="text-xs text-gray-500 mb-6">Projetos em aberto</p>
           </div>
           <div className="h-44 -ml-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analyticsData}>
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0D518E" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#0D518E" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} dy={5} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ fontSize: '14px', fontWeight: 500 }}
-                  labelStyle={{ display: 'none' }}
-                />
-                <Area type="monotone" dataKey="value" stroke="#0D518E" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {openProjectsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={openProjectsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} dy={5} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontSize: '14px', fontWeight: 500 }}
+                    labelStyle={{ display: 'none' }}
+                  />
+                  <Bar dataKey="Concluídas" radius={[4, 4, 0, 0]} barSize={24} fill="#0D518E" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                <p className="text-sm">Nenhum projeto em aberto com tarefas</p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Reminders */}
-        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 flex flex-col shadow-xl shadow-black/5">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 flex flex-col shadow-xl shadow-black/5 h-[340px]">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900">Lembretes</h3>
             <button 
               onClick={() => {
                 setEditingReminder(null);
-                setNewReminderTitle("");
-                setNewReminderTime("");
+                resetReminderForm();
                 setIsAddingReminder(true);
               }}
               className="text-sm font-medium text-gray-600 hover:text-gray-900 border border-white/50 bg-white/30 px-3 py-1 rounded-lg transition-colors"
@@ -179,21 +208,39 @@ export function Dashboard() {
               + Novo
             </button>
           </div>
-          <div className="flex-1 flex flex-col gap-4 overflow-y-auto max-h-48">
+          <div className="flex-1 flex flex-col gap-4 overflow-y-auto scrollbar-minimal pr-2">
             {reminders.map(reminder => (
-              <div key={reminder.id} className="p-4 bg-white/40 rounded-xl border border-white/50 relative group">
-                <button 
-                  onClick={() => handleEditReminder(reminder)}
-                  className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 rounded-md"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <h4 className="text-sm font-bold text-gray-900 mb-1 pr-6">{reminder.title}</h4>
-                <p className="text-gray-600 text-xs mb-3">Horário : {reminder.time}</p>
-                <div className="flex flex-col gap-2">
+              <div key={reminder.id} className="p-4 bg-white/40 rounded-xl border border-white/50 relative group flex flex-col justify-between">
+                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => handleEditReminder(reminder)}
+                    className="p-1.5 text-gray-400 hover:text-primary bg-white/50 rounded-md"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteReminder(reminder.id)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 bg-white/50 rounded-md"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900 mb-1 pr-14">{reminder.title}</h4>
+                  {reminder.observation && (
+                    <p className="text-gray-600 text-[11px] mb-2 leading-tight">{reminder.observation}</p>
+                  )}
+                  {(reminder.date || reminder.time) && (
+                    <p className="text-gray-500 text-xs mb-3 font-medium">
+                      {reminder.date && <span>{new Date(reminder.date + 'T12:00:00').toLocaleDateString('pt-BR')} </span>}
+                      {reminder.time && <span>às {reminder.time}</span>}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 mt-auto">
                   <div className="flex items-center gap-2 mb-1">
                     <a 
-                      href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(reminder.title)}&details=${encodeURIComponent('Lembrete do Fotus Novos Produtos')}`}
+                      href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(reminder.title)}&details=${encodeURIComponent(reminder.observation || 'Lembrete do Fotus Novos Produtos')}${reminder.date ? `&dates=${reminder.date.replace(/-/g, '')}/${reminder.date.replace(/-/g, '')}` : ''}`}
                       target="_blank" 
                       rel="noreferrer" 
                       className="text-[10px] font-medium text-blue-600 hover:underline bg-blue-50 px-2 py-1 rounded"
@@ -201,7 +248,7 @@ export function Dashboard() {
                       + Google Calendar
                     </a>
                     <a 
-                      href={`https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(reminder.title)}`}
+                      href={`https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(reminder.title)}&body=${encodeURIComponent(reminder.observation || '')}`}
                       target="_blank" 
                       rel="noreferrer" 
                       className="text-[10px] font-medium text-sky-600 hover:underline bg-sky-50 px-2 py-1 rounded"
@@ -209,15 +256,6 @@ export function Dashboard() {
                       + Outlook
                     </a>
                   </div>
-                  <a 
-                    href="https://meet.google.com/new" 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="w-full bg-secondary hover:bg-secondary-hover text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors shadow-sm"
-                  >
-                    <Video className="w-4 h-4" />
-                    Iniciar Meet
-                  </a>
                 </div>
               </div>
             ))}
@@ -334,46 +372,68 @@ export function Dashboard() {
 
       {/* Add Reminder Modal */}
       {isAddingReminder && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white/90 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingReminder ? "Editar Lembrete" : "Novo Lembrete"}</h2>
-            <form onSubmit={handleAddReminder} className="space-y-5">
+            <form onSubmit={handleAddReminder} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
                 <input 
                   type="text" 
                   required
                   value={newReminderTitle}
                   onChange={(e) => setNewReminderTitle(e.target.value)}
-                  className="w-full px-4 py-3 glass-input rounded-xl"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all"
                   placeholder="Ex: Reunião de Alinhamento"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Horário</label>
-                <input 
-                  type="text" 
-                  required
-                  value={newReminderTime}
-                  onChange={(e) => setNewReminderTime(e.target.value)}
-                  className="w-full px-4 py-3 glass-input rounded-xl"
-                  placeholder="Ex: 14:00 - 15:00"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Observações (Opcional)</label>
+                <textarea 
+                  value={newReminderObservation}
+                  onChange={(e) => setNewReminderObservation(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all min-h-[80px] resize-none"
+                  placeholder="Anotações ou links importantes..."
                 />
               </div>
-              <div className="flex items-center justify-end gap-3 mt-8">
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Data (Opcional)</label>
+                  <input 
+                    type="date" 
+                    value={newReminderDate}
+                    onChange={(e) => setNewReminderDate(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hora (Opcional)</label>
+                  <input 
+                    type="time" 
+                    value={newReminderTime}
+                    onChange={(e) => setNewReminderTime(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-8 pt-4">
                 <button 
                   type="button" 
                   onClick={() => {
                     setIsAddingReminder(false);
                     setEditingReminder(null);
+                    resetReminderForm();
                   }}
-                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
+                  className="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
+                  className="px-5 py-2 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
                 >
                   {editingReminder ? "Salvar" : "Criar Lembrete"}
                 </button>

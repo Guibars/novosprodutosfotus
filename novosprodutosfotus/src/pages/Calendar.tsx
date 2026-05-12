@@ -36,6 +36,19 @@ export function Calendar() {
         }
       });
     });
+
+    const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    if (dateObj.getDay() === 1) { // 1 = Monday
+      tasksForDay.unshift({
+        title: "PSV - REUNIÃO RESULTADO",
+        fullTitle: "PSV - REUNIÃO DE MOSTRAR COMO FOI O RESULTADO",
+        projectName: "Evento Fixo",
+        projectColor: "bg-[#eab308]", // Amarelo
+        completed: false,
+        isEvent: true
+      });
+    }
+
     return tasksForDay;
   };
 
@@ -114,8 +127,8 @@ export function Calendar() {
                 </div>
                 <div className="flex-1 flex flex-col gap-1 overflow-auto no-scrollbar">
                   {tasks.slice(0, 3).map((t, i) => (
-                    <div key={i} className={cn("text-[10px] truncate px-1.5 py-0.5 rounded font-medium text-white", t.projectColor)}>
-                      {t.title}
+                    <div key={i} className={cn("text-[10px] truncate px-1.5 py-0.5 rounded font-medium", t.projectColor, t.isEvent ? "text-white shadow-sm" : "text-white")}>
+                      {t.isEvent ? t.fullTitle : t.title}
                     </div>
                   ))}
                   {tasks.length > 3 && (
@@ -144,14 +157,22 @@ export function Calendar() {
               <div className="overflow-y-auto pr-2 space-y-4">
                 {selectedDateTasks.tasks.map((task, idx) => (
                   <div key={idx} className="bg-white/60 p-4 rounded-xl border border-white/40 shadow-sm flex items-center gap-3">
-                    {task.completed ? <CheckCircle2 className="w-5 h-5 text-success shrink-0" /> : <Circle className="w-5 h-5 text-gray-400 shrink-0" />}
+                    {task.isEvent ? (
+                      <div className="w-5 h-5 flex items-center justify-center bg-[#eab308] rounded-full shrink-0 shadow-inner">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                    ) : (
+                      task.completed ? <CheckCircle2 className="w-5 h-5 text-success shrink-0" /> : <Circle className="w-5 h-5 text-gray-400 shrink-0" />
+                    )}
                     <div className="min-w-0">
-                      <p className={cn("font-semibold text-gray-900 truncate", task.completed && "line-through text-gray-500")}>{task.title}</p>
+                      <p className={cn("font-semibold text-gray-900 truncate flex items-center gap-2", task.completed && "line-through text-gray-500")}>
+                        {task.fullTitle || task.title}
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={cn("text-[10px] uppercase font-bold text-white px-2 py-0.5 rounded-full inline-block", task.projectColor)}>
                           {task.projectName}
                         </span>
-                        <span className="text-xs text-gray-500">{task.sector}</span>
+                        {!task.isEvent && <span className="text-xs text-gray-500">{task.sector}</span>}
                       </div>
                     </div>
                   </div>

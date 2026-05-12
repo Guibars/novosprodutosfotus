@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { 
   FolderGit2, CheckCircle2, Clock, PauseCircle,
-  AlertCircle, LayoutList, Target, TrendingUp, Users, Calendar, ShoppingCart
+  AlertCircle, LayoutList, Target, TrendingUp, Users, Calendar, ShoppingCart, Info, Filter
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -21,27 +21,28 @@ export function Analytics() {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   });
-  const [salesMetrics, setSalesMetrics] = useState<any>({});
-
+  const [salesMetricsMap, setSalesMetricsMap] = useState<Record<string, any>>({});
+  const [isQuarterView, setIsQuarterView] = useState(false);
+  const [selectedProductTrend, setSelectedProductTrend] = useState(PRODUCTS[0]);
+  
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
       setTeamMembersCount(snapshot.size);
     });
 
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribeMetrics = onSnapshot(doc(db, 'sales_metrics', selectedDate), (docSnap) => {
-      if (docSnap.exists()) {
-        setSalesMetrics(docSnap.data());
-      } else {
-        setSalesMetrics({});
-      }
+    const unsubscribeMetrics = onSnapshot(collection(db, 'sales_metrics'), (snapshot) => {
+      const metricsMap: Record<string, any> = {};
+      snapshot.forEach(docSnap => {
+        metricsMap[docSnap.id] = docSnap.data();
+      });
+      setSalesMetricsMap(metricsMap);
     });
 
-    return () => unsubscribeMetrics();
-  }, [selectedDate]);
+    return () => {
+      unsubscribe();
+      unsubscribeMetrics();
+    };
+  }, []);
 
   const [selYear, selMonthStr] = selectedDate.split('-');
   const selMonth = parseInt(selMonthStr, 10) - 1;
@@ -104,45 +105,49 @@ export function Analytics() {
   const pendingTasks = totalTasks - completedTasks;
   const overallCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // 📊 Histórico e Distribuição
-  // Cronograma de Entregas (Projetos por Mês)
-  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  
-  const projectTrendData = months.map((month, index) => {
-    const monthProjects = projects.filter(p => {
-      if (!p.dueDate) return false;
-      const d = new Date(p.dueDate + 'T12:00:00');
-      return d.getMonth() === index;
-    });
-
-    return {
-      name: month,
-      Abertos: monthProjects.filter(p => p.progress < 100).length,
-      Concluídos: monthProjects.filter(p => p.progress === 100).length,
-    };
-  });
-
-  // Desempenho de Tarefas por Setor
-  const sectorsMap = new Map();
-  projects.forEach(p => {
-    p.tasks.forEach(t => {
-      const sec = t.sector || "Sem Setor";
-      if (!sectorsMap.has(sec)) {
-        sectorsMap.set(sec, { name: sec.substring(0, 3).toUpperCase(), fullName: sec, Pendentes: 0, Concluídas: 0 });
-      }
-      const data = sectorsMap.get(sec);
-      if (t.completed) data.Concluídas++;
-      else data.Pendentes++;
-    });
-  });
-  const taskSectorData = Array.from(sectorsMap.values());
-
   // ⚡ Métricas de Performance
-  // Taxa de entrega no prazo: Percentage of completed tasks that weren't overdue (estimated)
   const onTimeDeliveryRate = totalTasks > 0 ? Math.max(0, 100 - Math.round((overdueTasks / totalTasks) * 100)) : 100;
+  const avgDeliveryDays = 14;
+
+  // 📈 Cálculos de Vendas
+  const quarterIndex = Math.floor(selMonth / 3);
+  const quarterMonths = [quarterIndex * 3, quarterIndex * 3 + 1, quarterIndex * 3 + 2];
+  const quarterKeys = quarterMonths.map(m => `${selYear}-${String(m + 1).padStart(2, '0')}`);
   
-  // Prazo médio de entrega estimado
-  const avgDeliveryDays = 14; // Default estimate as we don't have creation dates for tasks yet.
+  // Chart Product Trend (Bar chart Mês Anterior, Mês Atual, Trimestre)
+  let prevMonth = selMonth - 1;
+  let prevYear = parseInt(selYear);
+  if (prevMonth < 0) {
+      prevMonth = 11;
+      prevYear--;
+  }
+  const prevMonthKey = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}`;
+
+  const c_cmDb = salesMetricsMap[selectedDate];
+  const c_cmSold = c_cmDb?.[selectedProductTrend]?.quantidadeVendida || 0;
+  const c_cmGoal = c_cmDb?.[selectedProductTrend]?.metaMensal || 0;
+
+  const c_pmDb = salesMetricsMap[prevMonthKey];
+  const c_pmSold = c_pmDb?.[selectedProductTrend]?.quantidadeVendida || 0;
+  const c_pmGoal = c_pmDb?.[selectedProductTrend]?.metaMensal || 0;
+
+  let c_qSold = 0;
+  let c_qGoal = 0;
+  quarterKeys.forEach(k => {
+    const dbObj = salesMetricsMap[k];
+    if (dbObj && dbObj[selectedProductTrend]) {
+      c_qSold += (dbObj[selectedProductTrend].quantidadeVendida || 0);
+      c_qGoal += (dbObj[selectedProductTrend].metaMensal || 0);
+    }
+  });
+
+  const monthsLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+  const productTrendBarData = [
+    { name: monthsLabels[prevMonth], Realizado: c_pmSold, Meta: c_pmGoal },
+    { name: monthsLabels[selMonth] + ' (Atual)', Realizado: c_cmSold, Meta: c_cmGoal },
+    { name: `Tri (Q${quarterIndex + 1})`, Realizado: c_qSold, Meta: c_qGoal },
+  ];
 
   const MetricCard = ({ title, value, subtitle, icon: Icon, colorClass, highlight }: any) => (
     <div className={cn("bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 relative overflow-hidden", highlight && "text-white " + colorClass)}>
@@ -200,28 +205,63 @@ export function Analytics() {
       {/* 🚀 Métricas de Vendas (Integração) */}
       <div className="bg-gradient-to-br from-white/60 to-white/30 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6 text-orange-500" />
-            Acompanhamento de Vendas
-          </h2>
-          <input 
-            type="month" 
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-white/50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700 w-full md:w-auto"
-          />
+          <div className="flex flex-col">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <ShoppingCart className="w-6 h-6 text-orange-500" />
+              Acompanhamento de Vendas
+            </h2>
+            <p className="text-sm text-gray-500 ml-8">Vendas baseadas no filtro abaixo</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <input 
+              type="month" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-white/50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700 w-full sm:w-auto"
+            />
+            <div className="bg-white/50 border border-gray-200 rounded-xl p-1 flex items-center shrink-0 w-full sm:w-auto overflow-hidden">
+              <button 
+                onClick={() => setIsQuarterView(false)}
+                className={cn("flex-1 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors", !isQuarterView ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-white")}
+              >
+                Mês
+              </button>
+              <button 
+                onClick={() => setIsQuarterView(true)}
+                className={cn("flex-1 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors", isQuarterView ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-white")}
+              >
+                Trimestre
+              </button>
+            </div>
+          </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {PRODUCTS.map(product => {
-            const data = salesMetrics[product] || { metaMensal: 0, quantidadeVendida: 0 };
-            const percentage = data.metaMensal > 0 ? Math.min(100, Math.round((data.quantidadeVendida / data.metaMensal) * 100)) : 0;
+            let sold = 0;
+            let goal = 0;
+            
+            if (isQuarterView) {
+              quarterKeys.forEach(k => {
+                const dbObj = salesMetricsMap[k];
+                if (dbObj && dbObj[product]) {
+                  sold += (dbObj[product].quantidadeVendida || 0);
+                  goal += (dbObj[product].metaMensal || 0);
+                }
+              });
+            } else {
+              const cmDb = salesMetricsMap[selectedDate];
+              sold = cmDb?.[product]?.quantidadeVendida || 0;
+              goal = cmDb?.[product]?.metaMensal || 0;
+            }
+
+            const percentage = goal > 0 ? Math.min(100, Math.round((sold / goal) * 100)) : 0;
             
             // Projection
             let projecao = 0;
-            if (passedBusinessDays > 0) {
-              const metaDiariaReal = data.quantidadeVendida / passedBusinessDays;
-              projecao = isCurrentMonth ? Math.round(data.quantidadeVendida + (metaDiariaReal * (totalBusinessDays - passedBusinessDays))) : data.quantidadeVendida;
+            if (!isQuarterView && passedBusinessDays > 0) {
+              const metaDiariaReal = sold / passedBusinessDays;
+              projecao = isCurrentMonth ? Math.round(sold + (metaDiariaReal * (totalBusinessDays - passedBusinessDays))) : sold;
             }
 
             return (
@@ -229,28 +269,36 @@ export function Analytics() {
                 <div className="absolute top-0 left-0 h-1 bg-gray-200 w-full">
                   <div className={cn("h-full", percentage >= 100 ? "bg-success" : "bg-orange-500")} style={{ width: `${percentage}%` }}></div>
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2 truncate" title={product}>{product}</h4>
+                <h4 className="font-bold text-gray-900 mb-2 truncate" title={product}>
+                  {product} {isQuarterView ? `(Tri)` : ``}
+                </h4>
                 <div className="flex justify-between items-end mb-2">
                   <div>
                     <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Real</p>
-                    <p className="text-2xl font-bold text-gray-900 leading-none">{data.quantidadeVendida}</p>
+                    <p className="text-2xl font-bold text-gray-900 leading-none">{sold}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Meta</p>
-                    <p className="text-sm font-semibold text-gray-600 leading-none">{data.metaMensal}</p>
+                    <p className="text-sm font-semibold text-gray-600 leading-none">{goal}</p>
                   </div>
                 </div>
                 
-                {isCurrentMonth && data.metaMensal > 0 && (
+                {!isQuarterView && isCurrentMonth && goal > 0 && (
                   <div className="flex justify-between items-center text-xs mt-3 pt-3 border-t border-gray-200/60 pb-1">
-                    <span className="text-gray-500 font-medium">Projeção Mês:</span>
-                    <span className={cn("font-bold", projecao >= data.metaMensal ? "text-success" : "text-gray-900")}>
+                    <span className="text-gray-500 font-medium flex items-center gap-1 group/info relative cursor-help">
+                      Projeção Mês
+                      <Info className="w-3 h-3 text-gray-400" />
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-gray-900 text-white text-[11px] rounded-lg opacity-0 invisible group-hover/info:opacity-100 group-hover/info:visible transition-all shadow-xl z-[60] leading-tight">
+                        A projeção é calculada dividindo as vendas atuais pelos dias úteis passados, e multiplicando pela quantidade total de dias úteis no mês.
+                      </div>
+                    </span>
+                    <span className={cn("font-bold relative z-10", projecao >= goal ? "text-success" : "text-gray-900")}>
                       {projecao}
                     </span>
                   </div>
                 )}
                 
-                <div className="mt-3 text-right">
+                <div className="mt-3 text-right relative z-10">
                   <span className={cn("text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 rounded-lg border", percentage >= 100 ? "bg-success/10 text-success border-success/20" : "bg-orange-50 text-orange-600 border-orange-500/20")}>
                     {percentage}% Atingido
                   </span>
@@ -331,59 +379,38 @@ export function Analytics() {
         </div>
       </div>
 
-      {/* 📊 Histórico e Tendência */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 📊 Tendência do Produto */}
+      <div className="grid grid-cols-1 gap-6">
         <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
-          <h3 className="font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-secondary" />
-            Tendência de Atividade Mensal
-          </h3>
-          <div className="h-64">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-secondary" />
+              Tendência de Vendas por Equipamento
+            </h3>
+            <select
+              value={selectedProductTrend}
+              onChange={(e) => setSelectedProductTrend(e.target.value)}
+              className="bg-white/50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700"
+            >
+              {PRODUCTS.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={projectTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorAbertos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0D518E" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#0D518E" stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="colorConcluidos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
+              <BarChart data={productTrendBarData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#4B5563', fontWeight: 500 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)' }}
+                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                  contentStyle={{ borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}
                   itemStyle={{ fontSize: '14px', fontWeight: 600 }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-                <Area type="monotone" dataKey="Concluídos" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorConcluidos)" />
-                <Area type="monotone" dataKey="Abertos" stroke="#0D518E" strokeWidth={3} fillOpacity={1} fill="url(#colorAbertos)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
-          <h3 className="font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            Produtividade: Tarefas por Setor
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={taskSectorData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
-                <Tooltip 
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-                <Bar dataKey="Concluídas" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={24} />
-                <Bar dataKey="Pendentes" fill="#F59E0B" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="Realizado" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                <Bar dataKey="Meta" fill="#0D518E" radius={[4, 4, 0, 0]} maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -392,3 +419,4 @@ export function Analytics() {
     </div>
   );
 }
+
