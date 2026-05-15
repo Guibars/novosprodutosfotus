@@ -18,7 +18,7 @@ export function Login() {
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      navigate("/analytics");
     }
   }, [user, navigate]);
 
@@ -34,7 +34,7 @@ export function Login() {
         setIsRegistering(false);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
-        navigate("/dashboard");
+        navigate("/analytics");
       }
     } catch (err: any) {
       setError(err.message || "Erro ao processar solicitação");
@@ -47,7 +47,7 @@ export function Login() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      navigate("/dashboard");
+      navigate("/analytics");
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login com Google");
     }

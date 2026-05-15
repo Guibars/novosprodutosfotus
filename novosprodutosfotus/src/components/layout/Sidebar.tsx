@@ -4,11 +4,11 @@ import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/AuthContext";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard Novos Produtos", path: "/dashboard" },
-  { icon: CheckSquare, label: "Projetos", path: "/projects" },
-  { icon: Calendar, label: "Calendário", path: "/calendar" },
-  { icon: BarChart2, label: "Analytics", path: "/analytics" },
+  { icon: BarChart2, label: "Cockpit Comercial", path: "/analytics" },
   { icon: Target, label: "Métricas", path: "/metrics" },
+  { icon: CheckSquare, label: "Projetos", path: "/projects" },
+  { icon: LayoutDashboard, label: "Visão Projetos", path: "/dashboard" },
+  { icon: Calendar, label: "Calendário", path: "/calendar" },
   { icon: Palmtree, label: "Férias", path: "/vacations" },
   { icon: Users, label: "Time", path: "/team" },
 ];

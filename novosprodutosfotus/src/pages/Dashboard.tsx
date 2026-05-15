@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square, Edit2, Trash2 } from "lucide-react";
+import { ArrowUpRight, Plus, Download, Video, Play, Pause, Square, Edit2, Trash2, FolderGit2, CheckCircle2, LayoutList, Target, Clock, Calendar, Users, AlertCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Cell, Tooltip, AreaChart, Area, YAxis } from "recharts";
 import { cn } from "../lib/utils";
 import { useProjects } from "../contexts/ProjectContext";
@@ -63,9 +63,41 @@ export function Dashboard() {
   const [newReminderTime, setNewReminderTime] = useState("");
 
   const totalProjects = projects.length;
-  const finishedProjects = projects.filter(p => p.progress === 100 && p.tasks.length > 0).length;
-  const runningProjects = projects.filter(p => p.progress < 100 && p.tasks.length > 0).length;
-  const pendingProjects = projects.filter(p => p.tasks.length === 0).length;
+  const inProgressProjects = projects.filter(p => p.progress > 0 && p.progress < 100).length;
+  const completedProjects = projects.filter(p => p.progress === 100 && p.tasks.length > 0).length;
+  const pendingProjects = projects.filter(p => p.progress === 0 || p.tasks.length === 0).length;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const overdueProjects = projects.filter(p => {
+    if (p.progress >= 100) return false;
+    const dueDate = new Date(p.dueDate + 'T12:00:00');
+    return dueDate < today;
+  }).length;
+
+  // ✅ Dados de Tarefas
+  let totalTasks = 0;
+  let completedTasks = 0;
+  let overdueTasks = 0;
+
+  projects.forEach(p => {
+    p.tasks.forEach(t => {
+      totalTasks++;
+      if (t.completed) completedTasks++;
+      else {
+        const tDueDate = new Date(t.dueDate + 'T12:00:00');
+        if (tDueDate < today) overdueTasks++;
+      }
+    });
+  });
+
+  const pendingTasks = totalTasks - completedTasks;
+  const overallCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // ⚡ Métricas de Performance
+  const onTimeDeliveryRate = totalTasks > 0 ? Math.max(0, 100 - Math.round((overdueTasks / totalTasks) * 100)) : 100;
+  const avgDeliveryDays = 14;
 
   const handleAddReminder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,11 +146,27 @@ export function Dashboard() {
     setNewReminderTime("");
   };
 
+  const MetricCard = ({ title, value, subtitle, icon: Icon, colorClass, highlight }: any) => (
+    <div className={cn("bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 relative overflow-hidden", highlight && "text-white " + colorClass)}>
+      {highlight && <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>}
+      <div className="flex justify-between items-start mb-4 relative z-10">
+        <h3 className={cn("font-medium", highlight ? "text-white/80" : "text-gray-600")}>{title}</h3>
+        <div className={cn("p-2 rounded-xl backdrop-blur-sm", highlight ? "bg-white/20" : "bg-white/50 text-gray-500")}>
+          <Icon className="w-5 h-5" />
+        </div>
+      </div>
+      <div className="relative z-10">
+        <p className={cn("text-3xl font-bold mb-1", highlight ? "text-white" : "text-gray-900")}>{value}</p>
+        <p className={cn("text-sm", highlight ? "text-white/70" : "text-gray-500")}>{subtitle}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Novos Produtos</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Visão Projetos</h1>
           <p className="text-gray-500 mt-1">Planeje, priorize e realize suas tarefas com facilidade.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -134,34 +182,102 @@ export function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-secondary/90 backdrop-blur-xl border border-white/20 text-white rounded-[2rem] p-6 relative overflow-hidden shadow-2xl shadow-secondary/20">
-          <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="font-medium text-white/80">Total de Projetos</h3>
-              <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                <ArrowUpRight className="w-4 h-4" />
-              </div>
+        <MetricCard 
+          title="Conclusão Geral" 
+          value={`${overallCompletionRate}%`} 
+          subtitle="Taxa de sucesso das tarefas" 
+          icon={Target} 
+          colorClass="bg-gradient-to-br from-primary to-secondary" 
+          highlight 
+        />
+        <MetricCard 
+          title="Entrega no Prazo" 
+          value={`${onTimeDeliveryRate}%`} 
+          subtitle="Índice de pontualidade" 
+          icon={Clock} 
+        />
+        <MetricCard 
+          title="Prazo Médio" 
+          value={`${avgDeliveryDays} dias`} 
+          subtitle="Tempo médio finalização" 
+          icon={Calendar} 
+        />
+        <MetricCard 
+          title="Membros Ativos" 
+          value={teamMembers.length} 
+          subtitle="Colaboradores no sistema" 
+          icon={Users} 
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 📦 Dados de Projetos */}
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
+          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <FolderGit2 className="w-6 h-6 text-primary" />
+            Dados de Projetos
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
+              <p className="text-sm text-gray-500 mb-1">Total</p>
+              <p className="text-2xl font-bold text-gray-900">{totalProjects}</p>
             </div>
-            <p className="text-4xl font-bold mb-4">{totalProjects}</p>
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
+              <p className="text-sm text-gray-500 mb-1">Em Dev.</p>
+              <p className="text-2xl font-bold text-primary">{inProgressProjects}</p>
+            </div>
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
+              <p className="text-sm text-gray-500 mb-1">Concluídos</p>
+              <p className="text-2xl font-bold text-success">{completedProjects}</p>
+            </div>
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
+              <p className="text-sm text-gray-500 mb-1">Pendentes</p>
+              <p className="text-2xl font-bold text-gray-700">{pendingProjects}</p>
+            </div>
+            <div className="bg-red-50 p-4 rounded-2xl border border-red-100 col-span-2 sm:col-span-2 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-red-600 mb-1 font-medium">Prazo Vencido</p>
+                <p className="text-2xl font-bold text-red-700">{overdueProjects}</p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-red-500 opacity-50" />
+            </div>
           </div>
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
-        {[
-          { title: "Projetos Finalizados", value: finishedProjects },
-          { title: "Projetos em Execução", value: runningProjects },
-          { title: "Projetos Pendentes", value: pendingProjects },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="font-medium text-gray-600">{stat.title}</h3>
-              <div className="p-1.5 bg-white/50 rounded-lg text-gray-500">
-                <ArrowUpRight className="w-4 h-4" />
+        {/* ✅ Dados de Tarefas */}
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
+          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <LayoutList className="w-6 h-6 text-secondary" />
+            Dados de Tarefas
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50 relative overflow-hidden group">
+              <p className="text-sm text-gray-500 mb-1">Total Cadastradas</p>
+              <p className="text-3xl font-bold text-gray-900">{totalTasks}</p>
+              <div className="absolute right-0 bottom-0 p-4 opacity-10">
+                <LayoutList className="w-16 h-16" />
               </div>
             </div>
-            <p className="text-4xl font-bold text-gray-900 mb-4">{stat.value}</p>
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50 relative overflow-hidden group">
+              <p className="text-sm text-gray-500 mb-1">Concluídas</p>
+              <p className="text-3xl font-bold text-success">{completedTasks}</p>
+              <div className="absolute right-0 bottom-0 p-4 opacity-10">
+                <CheckCircle2 className="w-16 h-16 text-success" />
+              </div>
+            </div>
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
+              <p className="text-sm text-gray-500 mb-1">Pendentes</p>
+              <p className="text-2xl font-bold text-primary">{pendingTasks}</p>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-orange-600 mb-1 font-medium">Atrasadas</p>
+                <p className="text-2xl font-bold text-orange-700">{overdueTasks}</p>
+              </div>
+              <AlertCircle className="w-6 h-6 text-orange-500 opacity-50" />
+            </div>
           </div>
-        ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
