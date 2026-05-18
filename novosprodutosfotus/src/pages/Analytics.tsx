@@ -283,7 +283,7 @@ export function Analytics() {
 
                 <div className="bg-orange-50/50 rounded-xl p-3 border border-orange-100/50 mb-auto relative z-10">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-orange-600/80 uppercase tracking-wider">Propostas Aceitas</span>
+                    <span className="text-[11px] font-bold text-orange-600/80 uppercase tracking-wider">Unidades em aberto</span>
                     <span className="text-lg font-black text-orange-600 leading-none">{propostaAceita}</span>
                   </div>
                 </div>
