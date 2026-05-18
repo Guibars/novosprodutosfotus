@@ -134,7 +134,7 @@ export function QuickInventory() {
      if (isNaN(qty) || qty <= 0) return;
 
      const currentQtyForCD = currentStock[updateCD] || 0;
-     const newQtyForCD = updateType === 'add' ? currentQtyForCD + qty : Math.max(0, currentQtyForCD - qty);
+     const newQtyForCD = updateType === 'add' ? currentQtyForCD + qty : currentQtyForCD - qty;
 
      await setDoc(doc(db, 'inventory_stocks', selectedProductId), {
         [updateCD]: newQtyForCD,
@@ -344,7 +344,7 @@ export function QuickInventory() {
                     {CDs.map(cd => (
                       <div key={cd} className="bg-gray-50 rounded-2xl p-4 flex flex-col items-center justify-center border border-gray-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2 whitespace-nowrap">{cd}</span>
-                        <span className="text-3xl font-black text-gray-900 tracking-tighter">
+                        <span className={cn("text-3xl font-black tracking-tighter", (currentStock[cd] || 0) <= 0 ? "text-red-500" : "text-gray-900")}>
                           {currentStock[cd] || 0}
                         </span>
                       </div>
@@ -431,7 +431,7 @@ export function QuickInventory() {
                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Quantidade</label>
                   <input type="number" min="1" value={updateQuantity} onChange={e => setUpdateQuantity(e.target.value)} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none text-lg font-bold" placeholder="0" />
-                  <p className="text-xs text-gray-500 mt-1 font-medium">Estoque atual neste CD: <strong className="text-gray-900">{currentStock[updateCD] || 0}</strong></p>
+                  <p className="text-xs text-gray-500 mt-1 font-medium">Estoque atual neste CD: <strong className={cn((currentStock[updateCD] || 0) <= 0 ? "text-red-500" : "text-gray-900")}>{currentStock[updateCD] || 0}</strong></p>
                </div>
                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Observações / Motivo</label>
