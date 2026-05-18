@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
+import { QuickInventory } from "./pages/QuickInventory";
 import { Projects } from "./pages/Projects";
 import { ProjectDetails } from "./pages/ProjectDetails";
 import { Team } from "./pages/Team";
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/metrics" element={<Metrics />} />
+              <Route path="/inventory" element={<QuickInventory />} />
               <Route path="/vacations" element={<Vacations />} />
               <Route path="/help" element={<Help />} />
             </Route>
