@@ -230,7 +230,7 @@ export function Analytics() {
           {PRODUCTS.map(product => {
             let sold = 0;
             let goal = 0;
-            let emAberto = 0;
+            let propostaAceita = 0;
             
             if (isQuarterView) {
               quarterKeys.forEach(k => {
@@ -238,14 +238,14 @@ export function Analytics() {
                 if (dbObj && dbObj[product]) {
                   sold += (dbObj[product].quantidadeVendida || 0);
                   goal += (dbObj[product].metaMensal || 0);
-                  emAberto += (dbObj[product].emAberto || 0);
+                  propostaAceita += (dbObj[product].propostaAceita || dbObj[product].emAberto || 0);
                 }
               });
             } else {
               const cmDb = salesMetricsMap[selectedDate];
               sold = cmDb?.[product]?.quantidadeVendida || 0;
               goal = cmDb?.[product]?.metaMensal || 0;
-              emAberto = cmDb?.[product]?.emAberto || 0;
+              propostaAceita = (cmDb?.[product]?.propostaAceita || cmDb?.[product]?.emAberto || 0);
             }
 
             const percentage = goal > 0 ? Math.min(100, Math.round((sold / goal) * 100)) : 0;
@@ -283,8 +283,8 @@ export function Analytics() {
 
                 <div className="bg-orange-50/50 rounded-xl p-3 border border-orange-100/50 mb-auto relative z-10">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-orange-600/80 uppercase tracking-wider">Em Aberto</span>
-                    <span className="text-lg font-black text-orange-600 leading-none">{emAberto}</span>
+                    <span className="text-[11px] font-bold text-orange-600/80 uppercase tracking-wider">Propostas Aceitas</span>
+                    <span className="text-lg font-black text-orange-600 leading-none">{propostaAceita}</span>
                   </div>
                 </div>
 
@@ -308,17 +308,17 @@ export function Analytics() {
                   )}
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-600 font-semibold flex items-center gap-1 group/info2 relative cursor-help">
-                      Previsão Final
+                      Proposta Aceita
                       <Info className="w-3.5 h-3.5 text-gray-400" />
                       <div className={cn("absolute bottom-full mb-2 w-60 p-4 bg-gray-900 border border-gray-700 text-white rounded-2xl opacity-0 invisible group-hover/info2:opacity-100 group-hover/info2:visible transition-all shadow-2xl z-[9999] leading-relaxed", (product === 'RSD' || product === 'Carregador') ? "right-[-20px]" : "left-[-20px]")}>
-                        <p className="font-semibold text-[13px] mb-1 text-white">Previsão Efetiva de Fechamento</p>
-                        <p className="text-gray-300 text-xs shadow-none whitespace-normal leading-relaxed">Considera as vendas já realizadas ({sold}) mais a base em aberto ({emAberto}) que ainda deve ser fechada.</p>
-                        <div className="mt-3 bg-black/50 p-2 rounded-lg font-mono text-white/70 text-[10px] border border-white/10 break-all whitespace-normal">Calc: {sold} + {emAberto}</div>
+                        <p className="font-semibold text-[13px] mb-1 text-white">Proposta Aceita</p>
+                        <p className="text-gray-300 text-xs shadow-none whitespace-normal leading-relaxed">Considera as vendas já realizadas ({sold}) mais a base de propostas aceitas ({propostaAceita}).</p>
+                        <div className="mt-3 bg-black/50 p-2 rounded-lg font-mono text-white/70 text-[10px] border border-white/10 break-all whitespace-normal">Calc: {sold} + {propostaAceita}</div>
                         <div className={cn("absolute -bottom-1.5 w-3 h-3 bg-gray-900 border-b border-r border-gray-700 rotate-45", (product === 'RSD' || product === 'Carregador') ? "right-8" : "left-8")}></div>
                       </div>
                     </span>
-                    <span className={cn("font-black text-[14px]", (sold + emAberto) >= goal ? "text-success" : "text-gray-900")}>
-                      {sold + emAberto}
+                    <span className={cn("font-black text-[14px]", (sold + propostaAceita) >= goal ? "text-success" : "text-gray-900")}>
+                      {sold + propostaAceita}
                     </span>
                   </div>
                 </div>

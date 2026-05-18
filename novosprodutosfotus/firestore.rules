@@ -48,5 +48,13 @@ service cloud.firestore {
     match /vacations/{vacationId} {
       allow read, write: if isAuthenticated();
     }
+
+    match /inventory_products/{id} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /inventory_stock/{id} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }

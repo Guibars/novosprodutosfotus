@@ -49,7 +49,7 @@ export function Metrics() {
         setMetricsData(docSnap.data());
       } else {
         const initialData = PRODUCTS.reduce((acc, p) => {
-          acc[p] = { metaMensal: 0, metaTrimestral: 0, quantidadeVendida: 0, emAberto: 0 };
+          acc[p] = { metaMensal: 0, metaTrimestral: 0, quantidadeVendida: 0, propostaAceita: 0 };
           return acc;
         }, {} as any);
         setMetricsData(initialData);
@@ -110,7 +110,7 @@ export function Metrics() {
       {/* Tabela/Cards de Metas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {PRODUCTS.map(product => {
-          const data = metricsData[product] || { metaMensal: 0, metaTrimestral: 0, quantidadeVendida: 0, emAberto: 0 };
+          const data = metricsData[product] || { metaMensal: 0, metaTrimestral: 0, quantidadeVendida: 0, propostaAceita: 0 };
           const metaDiaria = totalBusinessDays > 0 ? (data.metaMensal / totalBusinessDays) : 0;
           const previstoAcumulado = metaDiaria * passedBusinessDays;
           const realAcumulado = data.quantidadeVendida;
@@ -151,11 +151,11 @@ export function Metrics() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Em Aberto (Para Ganho)</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Proposta Aceita</label>
                   <input 
                     type="number" 
-                    value={data.emAberto || ""}
-                    onChange={(e) => handleInputChange(product, "emAberto", e.target.value)}
+                    value={data.propostaAceita !== undefined ? data.propostaAceita : (data.emAberto || "")}
+                    onChange={(e) => handleInputChange(product, "propostaAceita", e.target.value)}
                     className="w-full bg-orange-50 border border-orange-200 text-orange-600 rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-orange-400 outline-none"
                     placeholder="0"
                   />
@@ -180,7 +180,7 @@ export function Metrics() {
                 <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-100">
                   <span className="text-gray-700 font-medium">Previsão (Fechamento):</span>
                   <span className="font-bold text-primary text-base">
-                    {(data.quantidadeVendida || 0) + (data.emAberto || 0)}
+                    {(data.quantidadeVendida || 0) + (data.propostaAceita || data.emAberto || 0)}
                   </span>
                 </div>
               </div>
