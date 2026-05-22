@@ -33,6 +33,7 @@ export function TransferBoard() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
+  const [draggedStageId, setDraggedStageId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubProfiles = onSnapshot(collection(db, 'profiles'), (snapshot) => {
@@ -132,22 +133,54 @@ export function TransferBoard() {
   };
 
   const handleDragStart = (e: React.DragEvent, cardId: string) => {
+    e.stopPropagation();
     setDraggedCardId(cardId);
-    e.dataTransfer.setData("text/plain", cardId);
+    e.dataTransfer.setData("type", "card");
+    e.dataTransfer.setData("id", cardId);
+  };
+
+  const handleStageDragStart = (e: React.DragEvent, stageId: string) => {
+    e.stopPropagation();
+    setDraggedStageId(stageId);
+    e.dataTransfer.setData("type", "stage");
+    e.dataTransfer.setData("id", stageId);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  const handleDrop = async (e: React.DragEvent, stageId: string) => {
+  const handleDrop = async (e: React.DragEvent, targetStageId: string) => {
     e.preventDefault();
-    if (!draggedCardId) return;
+    const dragType = e.dataTransfer.getData("type");
+    const dragId = e.dataTransfer.getData("id");
 
-    const card = cards.find(c => c.id === draggedCardId);
-    if (card && card.stageId !== stageId) {
-      await updateDoc(doc(db, 'transfer_cards', draggedCardId), {
-        stageId: stageId
+    if (dragType === "stage") {
+      if (dragId && dragId !== targetStageId) {
+        const draggedIndex = stages.findIndex(s => s.id === dragId);
+        const targetIndex = stages.findIndex(s => s.id === targetStageId);
+        
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+          const newStages = [...stages];
+          const [draggedStage] = newStages.splice(draggedIndex, 1);
+          newStages.splice(targetIndex, 0, draggedStage);
+          
+          await Promise.all(newStages.map((s, idx) => 
+            updateDoc(doc(db, 'transfer_stages', s.id), { order: idx })
+          ));
+        }
+      }
+      setDraggedStageId(null);
+      return;
+    }
+
+    const cardIdToMove = dragId || draggedCardId;
+    if (!cardIdToMove) return;
+
+    const card = cards.find(c => c.id === cardIdToMove);
+    if (card && card.stageId !== targetStageId) {
+      await updateDoc(doc(db, 'transfer_cards', cardIdToMove), {
+        stageId: targetStageId
       });
     }
     setDraggedCardId(null);
@@ -288,8 +321,11 @@ export function TransferBoard() {
           return (
             <div 
               key={stage.id} 
+              draggable
+              onDragStart={(e) => handleStageDragStart(e, stage.id)}
               className={cn(
-                "rounded-2xl w-80 shrink-0 flex flex-col max-h-[70vh] border-2 transition-all shadow-sm",
+                "rounded-2xl w-80 shrink-0 flex flex-col max-h-[70vh] border-2 transition-all shadow-sm cursor-grab active:cursor-grabbing",
+                draggedStageId === stage.id ? "opacity-30 border-dashed scale-95" : "",
                 stage.isCompletedStage ? "border-emerald-200 bg-emerald-50/50" : "border-transparent bg-gray-100"
               )}
               onDragOver={handleDragOver}
