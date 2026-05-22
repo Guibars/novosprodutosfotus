@@ -86,7 +86,7 @@ export function Metrics() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Target className="w-8 h-8 text-primary" />
-            Métricas e Metas de Venda
+            Unidades em Aberto
           </h1>
           <p className="text-gray-500 mt-1">Acompanhe as metas do setor, previsto vs realizado, e calendário focado.</p>
         </div>
@@ -151,7 +151,7 @@ export function Metrics() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Proposta Aceita</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Unidades em Aberto</label>
                   <input 
                     type="number" 
                     value={data.propostaAceita !== undefined ? data.propostaAceita : (data.emAberto || "")}

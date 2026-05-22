@@ -4,12 +4,12 @@ import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/AuthContext";
 
 const menuItems = [
-  { icon: BarChart2, label: "Cockpit Comercial", path: "/analytics" },
+  { icon: BarChart2, label: "Cockpit Novos Produtos", path: "/analytics" },
   { icon: Target, label: "Métricas", path: "/metrics" },
   { icon: CheckSquare, label: "Projetos", path: "/projects" },
   { icon: LayoutDashboard, label: "Visão Projetos", path: "/dashboard" },
+  { icon: Package, label: "Quadro de Transferência", path: "/transfer-board" },
   { icon: Calendar, label: "Calendário", path: "/calendar" },
-  { icon: Package, label: "Estoque Rápido", path: "/inventory" },
   { icon: Palmtree, label: "Férias", path: "/vacations" },
   { icon: Users, label: "Time", path: "/team" },
 ];

@@ -188,8 +188,8 @@ export function Analytics() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Cockpit Comercial</h1>
-        <p className="text-gray-500 mt-1">Visão detalhada do desempenho da equipe, projetos e tarefas.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Cockpit Novos Produtos</h1>
+        <p className="text-gray-500 mt-1">Visão detalhada do desempenho da equipe, acompanhamento de produtos.</p>
       </div>
 
       {/* 🚀 Métricas de Vendas (Integração) */}

@@ -60,5 +60,12 @@ service cloud.firestore {
     match /inventory_history/{id} {
       allow read, write: if isAuthenticated();
     }
+    match /transfer_stages/{id} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /transfer_cards/{id} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }
