@@ -125,7 +125,8 @@ export function TransferBoard() {
       await addDoc(collection(db, 'transfer_cards'), {
         ...cardData,
         stageId: addingToStageId,
-        createdBy: user?.name || user?.email || 'Unknown',
+        createdBy: user?.displayName || user?.email || 'Unknown',
+        createdByUid: user?.uid || null,
         createdAt: serverTimestamp()
       });
     }
@@ -353,6 +354,8 @@ export function TransferBoard() {
               <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px]">
                 {stageCards.map(card => {
                   const assignee = profiles.find(p => p.id === card.assignedTo);
+                  const creator = profiles.find(p => p.id === card.createdByUid);
+                  
                   return (
                     <div
                       key={card.id}
@@ -406,11 +409,21 @@ export function TransferBoard() {
                         <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400">
                           <User className="w-3 h-3" />
                           {assignee ? (
-                            <span className="text-gray-700 font-bold bg-gray-100 px-1.5 py-0.5 rounded-md">{assignee.name}</span>
+                            <span className="text-gray-700 font-bold bg-gray-100 px-1.5 py-0.5 rounded-md">{assignee.name || assignee.full_name || assignee.email}</span>
                           ) : (
                             <span>Não atribuído</span>
                           )}
                         </div>
+                        {creator && (
+                          <div className="flex items-center gap-1.5" title={`Criado por ${creator.full_name || creator.name || creator.email}`}>
+                            <img src={creator.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${creator.email}`} alt="Criador" className="w-5 h-5 rounded-full bg-gray-100 border border-gray-200" referrerPolicy="no-referrer" />
+                          </div>
+                        )}
+                        {!creator && card.createdBy && (
+                          <div className="flex items-center gap-1.5" title={`Criado por ${card.createdBy}`}>
+                            <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${card.createdBy}`} alt="Criador" className="w-5 h-5 rounded-full bg-gray-100 border border-gray-200" referrerPolicy="no-referrer" />
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -516,7 +529,7 @@ export function TransferBoard() {
                   >
                     <option value="">-- Sem responsável --</option>
                     {profiles.map(p => (
-                      <option key={p.id} value={p.id}>{p.name || p.email}</option>
+                      <option key={p.id} value={p.id}>{p.name || p.full_name || p.email}</option>
                     ))}
                   </select>
                </div>
@@ -632,7 +645,7 @@ export function TransferBoard() {
                             ) : '-'}
                           </td>
                           <td className="px-6 py-4 font-medium">
-                             {assignee ? assignee.name : <span className="text-gray-400 italic">Não atribuído</span>}
+                             {assignee ? (assignee.name || assignee.full_name || assignee.email) : <span className="text-gray-400 italic">Não atribuído</span>}
                           </td>
                           <td className="px-6 py-4 text-right">
                              <button 
