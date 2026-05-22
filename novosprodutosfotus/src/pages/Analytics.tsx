@@ -238,14 +238,15 @@ export function Analytics() {
                 if (dbObj && dbObj[product]) {
                   sold += (dbObj[product].quantidadeVendida || 0);
                   goal += (dbObj[product].metaMensal || 0);
-                  propostaAceita += (dbObj[product].propostaAceita || dbObj[product].emAberto || 0);
+                  const pA = dbObj[product].propostaAceita !== undefined ? dbObj[product].propostaAceita : dbObj[product].emAberto;
+                  propostaAceita += (pA || 0);
                 }
               });
             } else {
               const cmDb = salesMetricsMap[selectedDate];
               sold = cmDb?.[product]?.quantidadeVendida || 0;
               goal = cmDb?.[product]?.metaMensal || 0;
-              propostaAceita = (cmDb?.[product]?.propostaAceita || cmDb?.[product]?.emAberto || 0);
+              propostaAceita = cmDb?.[product]?.propostaAceita !== undefined ? cmDb?.[product]?.propostaAceita : (cmDb?.[product]?.emAberto || 0);
             }
 
             const percentage = goal > 0 ? Math.min(100, Math.round((sold / goal) * 100)) : 0;

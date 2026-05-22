@@ -13,6 +13,7 @@ export function TransferBoard() {
   const [loading, setLoading] = useState(true);
 
   const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
+  const [editingStageId, setEditingStageId] = useState<string | null>(null);
   const [newStageName, setNewStageName] = useState("");
   const [newStageIsCompleted, setNewStageIsCompleted] = useState(false);
 
@@ -54,14 +55,36 @@ export function TransferBoard() {
     };
   }, []);
 
-  const handleAddStage = async () => {
+  const openAddStageModal = () => {
+    setEditingStageId(null);
+    setNewStageName("");
+    setNewStageIsCompleted(false);
+    setIsAddStageModalOpen(true);
+  };
+
+  const openEditStageModal = (stage: any) => {
+    setEditingStageId(stage.id);
+    setNewStageName(stage.name || "");
+    setNewStageIsCompleted(!!stage.isCompletedStage);
+    setIsAddStageModalOpen(true);
+  };
+
+  const handleSaveStage = async () => {
     if (!newStageName.trim()) return;
-    await addDoc(collection(db, 'transfer_stages'), {
-      name: newStageName,
-      isCompletedStage: newStageIsCompleted,
-      order: stages.length,
-      createdAt: serverTimestamp()
-    });
+    
+    if (editingStageId) {
+      await updateDoc(doc(db, 'transfer_stages', editingStageId), {
+        name: newStageName,
+        isCompletedStage: newStageIsCompleted
+      });
+    } else {
+      await addDoc(collection(db, 'transfer_stages'), {
+        name: newStageName,
+        isCompletedStage: newStageIsCompleted,
+        order: stages.length,
+        createdAt: serverTimestamp()
+      });
+    }
     setNewStageName("");
     setNewStageIsCompleted(false);
     setIsAddStageModalOpen(false);
@@ -216,7 +239,7 @@ export function TransferBoard() {
             Ver Tudo
           </button>
           <button 
-            onClick={() => setIsAddStageModalOpen(true)}
+            onClick={openAddStageModal}
             className="bg-gray-900 text-white px-4 py-2 flex items-center gap-2 rounded-xl text-sm font-bold shadow-md hover:bg-gray-800 transition-all shrink-0"
           >
             <Plus className="w-4 h-4" />
@@ -266,23 +289,27 @@ export function TransferBoard() {
             <div 
               key={stage.id} 
               className={cn(
-                "bg-gray-100 rounded-2xl w-80 shrink-0 flex flex-col max-h-[60vh] border-2 transition-colors",
-                stage.isCompletedStage ? "border-emerald-100 bg-emerald-50/30" : "border-transparent"
+                "rounded-2xl w-80 shrink-0 flex flex-col max-h-[70vh] border-2 transition-all shadow-sm",
+                stage.isCompletedStage ? "border-emerald-200 bg-emerald-50/50" : "border-transparent bg-gray-100"
               )}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
             >
               <div className="p-4 flex items-center justify-between border-b border-gray-200/50 shrink-0 group">
-                <div>
-                  <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                <div 
+                  onClick={() => openEditStageModal(stage)}
+                  className="cursor-pointer hover:opacity-80 transition-opacity flex-1"
+                  title="Editar Etapa"
+                >
+                  <h3 className={cn("font-bold flex items-center gap-2", stage.isCompletedStage ? "text-emerald-900" : "text-gray-800")}>
                     {stage.name} 
-                    <span className={cn("text-xs px-2 py-0.5 rounded-full font-bold", stage.isCompletedStage ? "bg-emerald-100 text-emerald-700" : "bg-gray-200 text-gray-500")}>
+                    <span className={cn("text-xs px-2 py-0.5 rounded-full font-bold", stage.isCompletedStage ? "bg-emerald-200 text-emerald-800" : "bg-gray-200 text-gray-600")}>
                       {stageCards.length}
                     </span>
                   </h3>
-                  {stage.isCompletedStage && <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-1">Etapa de Conclusão</p>}
+                  {stage.isCompletedStage && <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-1">Transferências Finalizadas</p>}
                 </div>
-                <button onClick={() => handleDeleteStage(stage.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => handleDeleteStage(stage.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -297,8 +324,11 @@ export function TransferBoard() {
                       onDragStart={(e) => handleDragStart(e, card.id)}
                       onClick={() => openEditCardModal(card)}
                       className={cn(
-                        "bg-white p-4 rounded-xl shadow-sm border border-gray-200 cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors group relative",
-                        draggedCardId === card.id ? "opacity-50 border-dashed" : ""
+                        "p-4 rounded-xl shadow-sm border cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:shadow-lg transition-all group relative duration-300 ease-out",
+                        stage.isCompletedStage 
+                          ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-200 hover:border-emerald-400" 
+                          : "bg-white border-gray-200 hover:border-primary/40",
+                        draggedCardId === card.id ? "opacity-30 border-dashed scale-90" : ""
                       )}
                     >
                       <button 
@@ -351,13 +381,13 @@ export function TransferBoard() {
                 })}
               </div>
 
-              <div className="p-3 shrink-0">
+              <div className="p-3 shrink-0 opacity-80 hover:opacity-100 transition-opacity">
                 <button 
                   onClick={() => openAddCardModal(stage.id)}
-                  className="w-full py-2.5 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm bg-gray-50 hover:bg-gray-200 rounded-xl transition-colors"
+                  className="w-full py-2.5 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm bg-black/5 hover:bg-black/10 rounded-xl transition-colors border border-transparent hover:border-black/5"
                 >
                   <Plus className="w-4 h-4" />
-                  Adicionar Card
+                  Adicionar Pedido
                 </button>
               </div>
             </div>
@@ -367,7 +397,7 @@ export function TransferBoard() {
         {stages.length === 0 && !loading && (
           <div className="w-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-3xl text-gray-400 gap-4">
              <p className="font-bold">Nenhuma etapa configurada.</p>
-             <button onClick={() => setIsAddStageModalOpen(true)} className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">Criar Primeira Etapa</button>
+             <button onClick={openAddStageModal} className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">Criar Primeira Etapa</button>
           </div>
         )}
       </div>
@@ -402,7 +432,7 @@ export function TransferBoard() {
             <button onClick={() => setIsAddStageModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full">
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-xl font-black text-gray-900 mb-6">Nova Etapa</h2>
+            <h2 className="text-xl font-black text-gray-900 mb-6">{editingStageId ? 'Editar Etapa' : 'Nova Etapa'}</h2>
             <div className="space-y-4">
                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Etapa</label>
@@ -415,7 +445,7 @@ export function TransferBoard() {
                    <span className="text-xs text-gray-500 font-medium">Marque se cards nesta etapa já foram transferidos/finalizados.</span>
                  </div>
                </label>
-               <button onClick={handleAddStage} className="w-full bg-primary text-white font-bold py-3 rounded-xl mt-4 shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">Criar Etapa</button>
+               <button onClick={handleSaveStage} className="w-full bg-primary text-white font-bold py-3 rounded-xl mt-4 shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">{editingStageId ? 'Salvar Alterações' : 'Criar Etapa'}</button>
             </div>
           </div>
         </div>
@@ -427,7 +457,7 @@ export function TransferBoard() {
             <button onClick={() => setIsCardModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full">
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-xl font-black text-gray-900 mb-6">{editingCardId ? 'Editar Card' : 'Novo Card'}</h2>
+            <h2 className="text-xl font-black text-gray-900 mb-6">{editingCardId ? 'Editar Pedido' : 'Novo Pedido'}</h2>
             
             <div className="space-y-4">
                <div className="grid grid-cols-2 gap-4">
@@ -490,7 +520,7 @@ export function TransferBoard() {
                    onClick={handleSaveCard} 
                    className="flex-1 bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition-colors"
                  >
-                   {editingCardId ? 'Salvar Alterações' : 'Adicionar Card'}
+                   {editingCardId ? 'Salvar Alterações' : 'Adicionar Pedido'}
                  </button>
                </div>
             </div>
