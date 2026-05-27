@@ -7,10 +7,10 @@ import { cn } from '../lib/utils';
 import { useAuth } from '../contexts/AuthContext';
 
 const COMPETITORS = [
+  { id: "fotus", name: "Fotus", color: "text-red-500", bg: "bg-red-50", logo: "https://res.cloudinary.com/dsctpzqvy/image/upload/v1776688963/LOGO_Fotus_1A_jzdytt.png" },
   { id: "belenergy", name: "Belenergy", color: "text-blue-500", bg: "bg-blue-50", logo: "https://res.cloudinary.com/ddtpuucfi/image/upload/v1779822067/logo-bel-retina-1_ak5eqn.png" },
   { id: "soollar", name: "Soollar", color: "text-orange-500", bg: "bg-orange-50", logo: "https://res.cloudinary.com/ddtpuucfi/image/upload/v1779822342/soollar_e2rspy.png" },
-  { id: "solfacil", name: "Solfácil", color: "text-emerald-500", bg: "bg-emerald-50", logo: "https://res.cloudinary.com/ddtpuucfi/image/upload/v1779822108/solfacil-logo-green-1_zwqsyj.png" },
-  { id: "souenergy", name: "SouEnergy", color: "text-purple-500", bg: "bg-purple-50", logo: "https://res.cloudinary.com/ddtpuucfi/image/upload/v1779822422/Dimens_o-da-logo-da-Sou--180x60-px_amzxj2.png" }
+  { id: "solfacil", name: "Solfácil", color: "text-emerald-500", bg: "bg-emerald-50", logo: "https://res.cloudinary.com/ddtpuucfi/image/upload/v1779822108/solfacil-logo-green-1_zwqsyj.png" }
 ];
 
 const STANDARD_KITS = [
@@ -20,7 +20,7 @@ const STANDARD_KITS = [
   "Kit 50 kWp (Fibrocimento)"
 ];
 
-const REGIONS = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+const REGIONS = ['Sudeste'];
 
 export function MarketIntelligence() {
   const { user } = useAuth();
@@ -28,7 +28,7 @@ export function MarketIntelligence() {
   const [loading, setLoading] = useState(true);
   
   const [selectedRegion, setSelectedRegion] = useState<string>(() => {
-    return localStorage.getItem('market_selected_region') || "Sul";
+    return localStorage.getItem('market_selected_region') || "Sudeste";
   });
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export function MarketIntelligence() {
               <div className="flex items-start justify-between mb-6">
                 <div className={cn("rounded-xl flex items-center shrink-0 h-14 w-[140px]", !comp.logo && cn("p-2.5 justify-center", comp.bg, comp.color))}>
                   {comp.logo ? (
-                    <img src={comp.logo} alt={comp.name} className={cn("h-full w-full object-contain object-left", comp.id === 'soollar' && "scale-[3] origin-left", comp.id === 'souenergy' && "scale-[1.2] origin-left")} referrerPolicy="no-referrer" />
+                    <img src={comp.logo} alt={comp.name} className={cn("h-full w-full object-contain object-left", comp.id === 'soollar' && "scale-[3] origin-left", comp.id === 'fotus' && "scale-[1.1] origin-left")} referrerPolicy="no-referrer" />
                   ) : (
                     <ShieldCheck className="w-6 h-6" />
                   )}
@@ -230,11 +230,14 @@ export function MarketIntelligence() {
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input 
-                      type="number" 
-                      value={kitForm.price || ''} 
-                      onChange={e => setKitForm({...kitForm, price: Number(e.target.value)})} 
+                      type="text" 
+                      value={kitForm.price ? kitForm.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''} 
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setKitForm({...kitForm, price: Number(val) / 100});
+                      }} 
                       className="w-full pl-9 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-black text-lg text-gray-900 bg-white transition-colors" 
-                      placeholder="0.00" 
+                      placeholder="0,00" 
                     />
                   </div>
                </div>
@@ -312,7 +315,7 @@ export function MarketIntelligence() {
                          value={kitForm.batteryPower || ''} 
                          onChange={e => setKitForm({...kitForm, batteryPower: e.target.value})} 
                          className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 bg-white transition-colors" 
-                         placeholder="Ex: 100Ah" 
+                         placeholder="Ex: 5kW" 
                        />
                      </div>
                    </div>
@@ -402,6 +405,18 @@ export function MarketIntelligence() {
                               <p className={cn("text-2xl font-black truncate tracking-tight", idx === 0 ? "text-emerald-700" : "text-gray-900")}>
                                 {formatCurrency(c.price)}
                               </p>
+                              
+                              {c.id !== 'fotus' && compPrices.find(comp => comp.id === 'fotus')?.price ? (
+                                (() => {
+                                  let fPrice = compPrices.find(comp => comp.id === 'fotus')?.price || 0;
+                                  let diffPercentage = ((c.price - fPrice) / fPrice) * 100;
+                                  return (
+                                    <p className={cn("text-[11px] font-bold mt-0.5", diffPercentage > 0 ? "text-emerald-600" : "text-red-500")}>
+                                      {diffPercentage > 0 ? '+' : ''}{diffPercentage.toFixed(2).replace('.', ',')}% vs Fotus
+                                    </p>
+                                  );
+                                })()
+                              ) : null}
 
                               {c.kitData && typeof c.kitData === 'object' && (c.kitData.inverterPower || c.kitData.modulePower > 0 || c.kitData.inverterBrand) && (
                                   <div className="mt-4 pt-4 border-t border-gray-200/60 border-dashed text-[11px] text-gray-500 font-medium">
