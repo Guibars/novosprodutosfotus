@@ -316,7 +316,7 @@ export function TransferBoard() {
       </div>
 
       {/* Board */}
-      <div className="flex-1 flex gap-6 overflow-x-auto pb-4 items-start pt-2 px-1">
+      <div className="flex-1 flex gap-6 overflow-x-auto pb-4 items-start pt-2 px-1 custom-scrollbar snap-x snap-mandatory">
         {stages.map(stage => {
           const stageCards = getFilteredCards(stage.id);
           return (
@@ -325,7 +325,7 @@ export function TransferBoard() {
               draggable
               onDragStart={(e) => handleStageDragStart(e, stage.id)}
               className={cn(
-                "rounded-2xl w-80 shrink-0 flex flex-col max-h-[70vh] border-2 transition-all shadow-sm cursor-grab active:cursor-grabbing",
+                "rounded-3xl w-[85vw] sm:w-80 md:flex-1 md:min-w-[250px] shrink-0 flex flex-col max-h-[75vh] border-2 transition-all shadow-sm cursor-grab active:cursor-grabbing snap-center",
                 draggedStageId === stage.id ? "opacity-30 border-dashed scale-95" : "",
                 stage.isCompletedStage ? "border-emerald-200 bg-emerald-50/50" : "border-transparent bg-gray-100"
               )}

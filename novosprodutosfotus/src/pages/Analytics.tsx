@@ -231,6 +231,7 @@ export function Analytics() {
             let sold = 0;
             let goal = 0;
             let propostaAceita = 0;
+            let leadsQuentes = 0;
             
             if (isQuarterView) {
               quarterKeys.forEach(k => {
@@ -240,6 +241,7 @@ export function Analytics() {
                   goal += (dbObj[product].metaMensal || 0);
                   const pA = dbObj[product].propostaAceita !== undefined ? dbObj[product].propostaAceita : dbObj[product].emAberto;
                   propostaAceita += (pA || 0);
+                  leadsQuentes += (dbObj[product].leadsQuentes || 0);
                 }
               });
             } else {
@@ -247,6 +249,7 @@ export function Analytics() {
               sold = cmDb?.[product]?.quantidadeVendida || 0;
               goal = cmDb?.[product]?.metaMensal || 0;
               propostaAceita = cmDb?.[product]?.propostaAceita !== undefined ? cmDb?.[product]?.propostaAceita : (cmDb?.[product]?.emAberto || 0);
+              leadsQuentes = cmDb?.[product]?.leadsQuentes || 0;
             }
 
             const percentage = goal > 0 ? Math.min(100, Math.round((sold / goal) * 100)) : 0;
@@ -282,11 +285,17 @@ export function Analytics() {
                   </div>
                 </div>
 
-                <div className="bg-orange-50/50 rounded-xl p-3 border border-orange-100/50 mb-auto relative z-10">
+                <div className="bg-orange-50/50 rounded-xl p-3 border border-orange-100/50 mb-auto relative z-10 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-orange-600/80 uppercase tracking-wider">Unidades em aberto</span>
                     <span className="text-lg font-black text-orange-600 leading-none">{propostaAceita}</span>
                   </div>
+                  {product === 'Carregador' && (
+                    <div className="flex items-center justify-between border-t border-orange-200/50 pt-2 mt-1">
+                      <span className="text-[11px] font-bold text-red-500/80 uppercase tracking-wider">Leads Quentes</span>
+                      <span className="text-lg font-black text-red-500 leading-none">{leadsQuentes}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-100 relative z-10">

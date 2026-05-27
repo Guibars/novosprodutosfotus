@@ -67,5 +67,9 @@ service cloud.firestore {
     match /transfer_cards/{id} {
       allow read, write: if isAuthenticated();
     }
+
+    match /market_prices/{id} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }

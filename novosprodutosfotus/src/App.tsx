@@ -9,6 +9,7 @@ import { Layout } from "./components/layout/Layout";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { TransferBoard } from "./pages/TransferBoard";
+import { MarketIntelligence } from "./pages/MarketIntelligence";
 import { Projects } from "./pages/Projects";
 import { ProjectDetails } from "./pages/ProjectDetails";
 import { Team } from "./pages/Team";
@@ -55,6 +56,7 @@ export default function App() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/metrics" element={<Metrics />} />
               <Route path="/transfer-board" element={<TransferBoard />} />
+              <Route path="/market-intelligence" element={<MarketIntelligence />} />
               <Route path="/vacations" element={<Vacations />} />
               <Route path="/help" element={<Help />} />
             </Route>

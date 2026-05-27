@@ -160,6 +160,18 @@ export function Metrics() {
                     placeholder="0"
                   />
                 </div>
+                {product === 'Carregador' && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1">Leads Quentes</label>
+                    <input 
+                      type="number" 
+                      value={data.leadsQuentes || ""}
+                      onChange={(e) => handleInputChange(product, "leadsQuentes", e.target.value)}
+                      className="w-full bg-red-50 border border-red-200 text-red-600 rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-red-400 outline-none"
+                      placeholder="0"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="mt-2 pt-4 border-t border-gray-200 space-y-2">
