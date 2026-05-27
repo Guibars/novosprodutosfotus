@@ -27,7 +27,13 @@ export function MarketIntelligence() {
   const [prices, setPrices] = useState<any>({});
   const [loading, setLoading] = useState(true);
   
-  const [selectedRegion, setSelectedRegion] = useState<string>("Sul");
+  const [selectedRegion, setSelectedRegion] = useState<string>(() => {
+    return localStorage.getItem('market_selected_region') || "Sul";
+  });
+
+  useEffect(() => {
+    localStorage.setItem('market_selected_region', selectedRegion);
+  }, [selectedRegion]);
   
   const [editingKit, setEditingKit] = useState<{ competitorId: string; kitName: string } | null>(null);
   const [kitForm, setKitForm] = useState<{ price: number; inverterPower: string; modulePower: number; moduleQty: number; inverterBrand: string; batteryBrand: string; batteryPower: string }>({ price: 0, inverterPower: '', modulePower: 0, moduleQty: 0, inverterBrand: '', batteryBrand: '', batteryPower: '' });
@@ -79,9 +85,10 @@ export function MarketIntelligence() {
       }, { merge: true });
       
       setEditingKit(null);
-    } catch(err) {
-      console.error(err);
-      setEditingKit(null);
+    } catch(err: any) {
+      console.error("Error saving kit:", err);
+      alert(`Erro ao salvar kit: ${err.message || 'Erro desconhecido'}`);
+      // setEditingKit(null); // Keep modal open so they can see error
     }
   };
 
@@ -138,7 +145,7 @@ export function MarketIntelligence() {
               <div className="flex items-start justify-between mb-6">
                 <div className={cn("rounded-xl flex items-center shrink-0 h-14 w-[140px]", !comp.logo && cn("p-2.5 justify-center", comp.bg, comp.color))}>
                   {comp.logo ? (
-                    <img src={comp.logo} alt={comp.name} className={cn("h-full w-full object-contain object-left", comp.id === 'soollar' && "scale-[4.5] ml-10 origin-left", comp.id === 'souenergy' && "scale-[1.2] origin-left")} referrerPolicy="no-referrer" />
+                    <img src={comp.logo} alt={comp.name} className={cn("h-full w-full object-contain object-left", comp.id === 'soollar' && "scale-[3] origin-left", comp.id === 'souenergy' && "scale-[1.2] origin-left")} referrerPolicy="no-referrer" />
                   ) : (
                     <ShieldCheck className="w-6 h-6" />
                   )}
