@@ -71,5 +71,9 @@ service cloud.firestore {
     match /market_prices/{id} {
       allow read, write: if isAuthenticated();
     }
+    
+    match /meeting_followups/{id} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }

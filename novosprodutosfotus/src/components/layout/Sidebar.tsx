@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, CheckSquare, Calendar, BarChart2, Target, Palmtree, Users, Settings, HelpCircle, LogOut, Package, TrendingUp } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Calendar, BarChart2, Target, Palmtree, Settings, HelpCircle, LogOut, Package, TrendingUp, MessagesSquare } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -9,10 +9,10 @@ const menuItems = [
   { icon: CheckSquare, label: "Projetos", path: "/projects" },
   { icon: LayoutDashboard, label: "Visão Projetos", path: "/dashboard" },
   { icon: Package, label: "Quadro de Transferência", path: "/transfer-board" },
+  { icon: MessagesSquare, label: "Follow-Up de Reuniões", path: "/follow-up" },
   { icon: TrendingUp, label: "Inteligência de Mercado", path: "/market-intelligence" },
   { icon: Calendar, label: "Calendário", path: "/calendar" },
   { icon: Palmtree, label: "Férias", path: "/vacations" },
-  { icon: Users, label: "Time", path: "/team" },
 ];
 
 const generalItems = [
