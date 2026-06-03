@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, addDoc, updateDoc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Plus, X, Trash2, Package, Tag, MessageSquare, User, TrendingUp, Inbox, Search, CheckCircle2, ListFilter } from 'lucide-react';
+import { Plus, X, Trash2, Package, Tag, MessageSquare, User, TrendingUp, Inbox, Search, CheckCircle2, ListFilter, Copy } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,6 +30,8 @@ export function TransferBoard() {
   });
 
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'card' | 'stage' } | null>(null);
+
+  const [generatedEmailPreview, setGeneratedEmailPreview] = useState<string | null>(null);
 
   const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -104,6 +106,7 @@ export function TransferBoard() {
       observations: "",
       assignedTo: ""
     });
+    setGeneratedEmailPreview(null);
     setIsCardModalOpen(true);
   };
 
@@ -118,6 +121,7 @@ export function TransferBoard() {
       observations: card.observations || "",
       assignedTo: card.assignedTo || ""
     });
+    setGeneratedEmailPreview(null);
     setIsCardModalOpen(true);
   };
 
@@ -238,9 +242,15 @@ O pedido já teve o seu pagamento vinculado.
 
 Atenciosamente.`;
 
-    navigator.clipboard.writeText(emailText)
-      .then(() => alert('Texto de e-mail copiado para a área de transferência!'))
-      .catch(err => alert('Erro ao copiar texto: ' + err));
+    setGeneratedEmailPreview(emailText);
+  };
+
+  const handleCopyEmail = () => {
+    if (generatedEmailPreview) {
+      navigator.clipboard.writeText(generatedEmailPreview)
+        .then(() => alert('Texto de e-mail copiado para a área de transferência!'))
+        .catch(err => alert('Erro ao copiar texto: ' + err));
+    }
   };
 
   const confirmDelete = async () => {
@@ -592,6 +602,20 @@ Atenciosamente.`;
                     placeholder="Ex: HÍBRIDO SP GOODWE GW7.5K-ES-LD-G10..."
                   />
                </div>
+
+               {generatedEmailPreview && (
+                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-4 relative">
+                   <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Pré-visualização do E-mail</h4>
+                   <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium font-sans mb-12">{generatedEmailPreview}</pre>
+                   <button 
+                     onClick={handleCopyEmail}
+                     className="absolute bottom-4 right-4 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors shadow-sm flex items-center gap-2"
+                   >
+                     <Copy className="w-4 h-4" />
+                     Copiar E-mail
+                   </button>
+                 </div>
+               )}
 
                <div className="pt-2 flex gap-3 flex-wrap">
                  {editingCardId && (
