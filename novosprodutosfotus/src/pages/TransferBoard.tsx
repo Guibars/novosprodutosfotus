@@ -23,6 +23,8 @@ export function TransferBoard() {
   const [cardData, setCardData] = useState({
     title: "",
     productCode: "",
+    quantity: "",
+    destinationCd: "",
     observations: "",
     assignedTo: ""
   });
@@ -97,6 +99,8 @@ export function TransferBoard() {
     setCardData({
       title: "",
       productCode: "",
+      quantity: "",
+      destinationCd: "",
       observations: "",
       assignedTo: ""
     });
@@ -109,6 +113,8 @@ export function TransferBoard() {
     setCardData({
       title: card.title || "",
       productCode: card.productCode || "",
+      quantity: card.quantity || "",
+      destinationCd: card.destinationCd || "",
       observations: card.observations || "",
       assignedTo: card.assignedTo || ""
     });
@@ -212,6 +218,29 @@ export function TransferBoard() {
     if (editingCardId === cardId) {
       setIsCardModalOpen(false);
     }
+  };
+
+  const handleGenerateEmail = () => {
+    const hour = new Date().getHours();
+    let greeting = 'Bom dia!';
+    if (hour >= 12 && hour < 18) {
+      greeting = 'Boa tarde!';
+    } else if (hour >= 18) {
+      greeting = 'Boa noite!';
+    }
+
+    const emailText = `${greeting}
+
+Solicito a transferencia de : ${cardData.quantity || '___'}
+${cardData.observations || '___'} — Cód ${cardData.productCode || '___'} para o CD de ${cardData.destinationCd || '___'}
+
+O pedido já teve o seu pagamento vinculado.
+
+Atenciosamente.`;
+
+    navigator.clipboard.writeText(emailText)
+      .then(() => alert('Texto de e-mail copiado para a área de transferência!'))
+      .catch(err => alert('Erro ao copiar texto: ' + err));
   };
 
   const confirmDelete = async () => {
@@ -509,39 +538,58 @@ export function TransferBoard() {
             <h2 className="text-xl font-black text-gray-900 mb-6">{editingCardId ? 'Editar Pedido' : 'Novo Pedido'}</h2>
             
             <div className="space-y-4">
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-3 gap-4">
                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Número do Pedido (Título) *</label>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nº do Pedido *</label>
                     <input type="text" value={cardData.title} onChange={e => setCardData({...cardData, title: e.target.value})} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 12345" />
                  </div>
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cód Produto</label>
                     <input type="text" value={cardData.productCode} onChange={e => setCardData({...cardData, productCode: e.target.value})} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 98765" />
                  </div>
+                 <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
+                    <input type="text" value={cardData.quantity} onChange={e => setCardData({...cardData, quantity: e.target.value})} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 10" />
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Atribuir à / Responsável</label>
+                    <select 
+                      value={cardData.assignedTo} 
+                      onChange={e => setCardData({...cardData, assignedTo: e.target.value})} 
+                      className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
+                    >
+                      <option value="">-- Sem responsável --</option>
+                      {profiles.map(p => (
+                        <option key={p.id} value={p.id}>{p.name || p.full_name || p.email}</option>
+                      ))}
+                    </select>
+                 </div>
+                 <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">CD Destino</label>
+                    <select 
+                      value={cardData.destinationCd} 
+                      onChange={e => setCardData({...cardData, destinationCd: e.target.value})} 
+                      className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
+                    >
+                      <option value="">-- Selecione o CD --</option>
+                      {['PE', 'ES', 'SP', 'SC', 'BA', 'PA', 'MT', 'GO'].map(cd => (
+                        <option key={cd} value={cd}>{cd}</option>
+                      ))}
+                    </select>
+                 </div>
                </div>
 
                <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Atribuir à / Responsável</label>
-                  <select 
-                    value={cardData.assignedTo} 
-                    onChange={e => setCardData({...cardData, assignedTo: e.target.value})} 
-                    className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
-                  >
-                    <option value="">-- Sem responsável --</option>
-                    {profiles.map(p => (
-                      <option key={p.id} value={p.id}>{p.name || p.full_name || p.email}</option>
-                    ))}
-                  </select>
-               </div>
-
-               <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Observações / Detalhes</label>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Equipamentos</label>
                   <textarea 
                     value={cardData.observations} 
                     onChange={e => setCardData({...cardData, observations: e.target.value})} 
                     className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none font-medium text-gray-900" 
                     rows={4} 
-                    placeholder="Adicione observações importantes sobre essa transferência..."
+                    placeholder="Ex: HÍBRIDO SP GOODWE GW7.5K-ES-LD-G10..."
                   />
                </div>
 
@@ -565,6 +613,13 @@ export function TransferBoard() {
                      Finalizar
                    </button>
                  )}
+                 <button 
+                   onClick={handleGenerateEmail} 
+                   className="px-4 py-3 bg-blue-50 text-blue-600 font-bold rounded-xl hover:bg-blue-100 transition-colors flex items-center justify-center shadow-sm shrink-0 whitespace-nowrap"
+                   title="Gerar E-mail"
+                 >
+                   Gerar E-mail
+                 </button>
                  <button 
                    onClick={handleSaveCard} 
                    className="flex-1 bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition-colors"
