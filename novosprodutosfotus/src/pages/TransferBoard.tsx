@@ -20,10 +20,19 @@ export function TransferBoard() {
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [addingToStageId, setAddingToStageId] = useState("");
-  const [cardData, setCardData] = useState({
+  const [cardData, setCardData] = useState<{
+    title: string;
+    productCode: string;
+    quantity: string;
+    extraProducts: { code: string; quantity: string; description: string; }[];
+    destinationCd: string;
+    observations: string;
+    assignedTo: string;
+  }>({
     title: "",
     productCode: "",
     quantity: "",
+    extraProducts: [],
     destinationCd: "",
     observations: "",
     assignedTo: ""
@@ -102,6 +111,7 @@ export function TransferBoard() {
       title: "",
       productCode: "",
       quantity: "",
+      extraProducts: [],
       destinationCd: "",
       observations: "",
       assignedTo: ""
@@ -117,6 +127,7 @@ export function TransferBoard() {
       title: card.title || "",
       productCode: card.productCode || "",
       quantity: card.quantity || "",
+      extraProducts: card.extraProducts || [],
       destinationCd: card.destinationCd || "",
       observations: card.observations || "",
       assignedTo: card.assignedTo || ""
@@ -233,10 +244,20 @@ export function TransferBoard() {
       greeting = 'Boa noite!';
     }
 
+    let productsList = `${cardData.quantity || '___'}\n${cardData.observations || '___'} — Cód ${cardData.productCode || '___'}`;
+    
+    if (cardData.extraProducts && cardData.extraProducts.length > 0) {
+      cardData.extraProducts.forEach(ep => {
+        productsList += `\n\n${ep.quantity || '___'}\n${ep.description || '___'} — Cód ${ep.code || '___'}`;
+      });
+    }
+
     const emailText = `${greeting}
 
-Solicito a transferencia de : ${cardData.quantity || '___'}
-${cardData.observations || '___'} — Cód ${cardData.productCode || '___'} para o CD de ${cardData.destinationCd || '___'}
+Solicito a transferencia de : 
+${productsList}
+
+para o CD de ${cardData.destinationCd || '___'}
 
 O pedido já teve o seu pagamento vinculado.
 
@@ -282,7 +303,8 @@ Atenciosamente.`;
       c.stageId === stageId && 
       (!searchTerm || 
        (c.title || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-       (c.productCode || "").toLowerCase().includes(searchTerm.toLowerCase()))
+       (c.productCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (c.extraProducts || []).some((ep: any) => (ep.code || "").toLowerCase().includes(searchTerm.toLowerCase())))
     );
   };
 
@@ -433,6 +455,13 @@ Atenciosamente.`;
                             <Package className="w-3 h-3" /> Cód: {card.productCode}
                           </div>
                         )}
+                        {card.extraProducts?.map((ep: any, idx: number) => (
+                           ep.code && (
+                             <div key={idx} className="text-[10px] font-bold text-orange-600 uppercase tracking-wider bg-orange-100 inline-block px-2 py-0.5 rounded-md flex items-center gap-1">
+                               <Package className="w-3 h-3" /> Cód: {ep.code}
+                             </div>
+                           )
+                        ))}
                       </div>
                       
                       <h4 className="font-bold text-gray-900 text-sm leading-tight pr-6">{card.title}</h4>
@@ -593,15 +622,73 @@ Atenciosamente.`;
                </div>
 
                <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Equipamentos</label>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Equipamento (Principal)</label>
                   <textarea 
                     value={cardData.observations} 
                     onChange={e => setCardData({...cardData, observations: e.target.value})} 
                     className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none font-medium text-gray-900" 
-                    rows={4} 
+                    rows={2} 
                     placeholder="Ex: HÍBRIDO SP GOODWE GW7.5K-ES-LD-G10..."
                   />
                </div>
+
+               <div className="flex items-center justify-between mt-6">
+                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Produtos Adicionais</label>
+                 <button 
+                   type="button"
+                   onClick={() => {
+                     setCardData(prev => ({
+                       ...prev,
+                       extraProducts: [...(prev.extraProducts || []), { code: '', quantity: '', description: '' }]
+                     }))
+                   }}
+                   className="text-[10px] font-black text-primary flex items-center gap-1 hover:text-primary-dark transition-colors uppercase tracking-wider"
+                 >
+                   <Plus className="w-3 h-3" /> Adicionar Outro Produto
+                 </button>
+               </div>
+               
+               {(cardData.extraProducts || []).map((ep, idx) => (
+                 <div key={idx} className="p-4 border border-gray-100 rounded-xl bg-gray-50 relative space-y-3 shadow-inner">
+                   <button 
+                     type="button"
+                     onClick={() => {
+                       const newExtras = [...(cardData.extraProducts || [])];
+                       newExtras.splice(idx, 1);
+                       setCardData(prev => ({ ...prev, extraProducts: newExtras }));
+                     }}
+                     className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-white rounded-full transition-all shadow-sm bg-white/50"
+                   >
+                     <X className="w-3.5 h-3.5" />
+                   </button>
+                   <div className="grid grid-cols-2 gap-4 mr-8">
+                     <div>
+                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cód Produto</label>
+                       <input type="text" value={ep.code} onChange={e => {
+                         const newExtras = [...(cardData.extraProducts || [])];
+                         newExtras[idx].code = e.target.value;
+                         setCardData(prev => ({ ...prev, extraProducts: newExtras }));
+                       }} className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 98765" />
+                     </div>
+                     <div>
+                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
+                       <input type="text" value={ep.quantity} onChange={e => {
+                         const newExtras = [...(cardData.extraProducts || [])];
+                         newExtras[idx].quantity = e.target.value;
+                         setCardData(prev => ({ ...prev, extraProducts: newExtras }));
+                       }} className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 10" />
+                     </div>
+                   </div>
+                   <div>
+                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Equipamento</label>
+                     <input type="text" value={ep.description} onChange={e => {
+                       const newExtras = [...(cardData.extraProducts || [])];
+                       newExtras[idx].description = e.target.value;
+                       setCardData(prev => ({ ...prev, extraProducts: newExtras }));
+                     }} className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Nome do produto ou descrição..." />
+                   </div>
+                 </div>
+               ))}
 
                {generatedEmailPreview && (
                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-4 relative">
@@ -701,7 +788,8 @@ Atenciosamente.`;
                     {cards.filter(c => 
                         !searchTerm || 
                         (c.title || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        (c.productCode || "").toLowerCase().includes(searchTerm.toLowerCase())
+                        (c.productCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (c.extraProducts || []).some((ep: any) => (ep.code || "").toLowerCase().includes(searchTerm.toLowerCase()))
                     ).map(card => {
                       const assignee = profiles.find(p => p.id === card.assignedTo);
                       const currentStage = stages.find(s => s.id === card.stageId);
@@ -709,9 +797,16 @@ Atenciosamente.`;
                         <tr key={card.id} className="hover:bg-gray-50/50 transition-colors">
                           <td className="px-6 py-4 font-bold text-gray-900">{card.title}</td>
                           <td className="px-6 py-4">
-                            {card.productCode ? (
-                              <span className="bg-orange-100 text-orange-700 font-bold px-2.5 py-1 rounded-md text-xs">{card.productCode}</span>
-                            ) : '-'}
+                            <div className="flex flex-wrap gap-1">
+                              {card.productCode ? (
+                                <span className="bg-orange-100 text-orange-700 font-bold px-2.5 py-1 rounded-md text-[10px] inline-block">{card.productCode}</span>
+                              ) : '-'}
+                              {card.extraProducts?.map((ep: any, idx: number) => (
+                                ep.code && (
+                                  <span key={idx} className="bg-orange-100 text-orange-700 font-bold px-2.5 py-1 rounded-md text-[10px] inline-block">{ep.code}</span>
+                                )
+                              ))}
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             {currentStage ? (
