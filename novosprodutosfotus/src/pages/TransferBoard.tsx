@@ -466,6 +466,12 @@ Atenciosamente.`;
                       
                       <h4 className="font-bold text-gray-900 text-sm leading-tight pr-6">{card.title}</h4>
                       
+                      {card.createdAt?.toDate && (
+                        <div className="text-[10px] text-gray-400 font-medium mt-1 mb-1">
+                          {new Date(card.createdAt.toDate()).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </div>
+                      )}
+                      
                       {card.observations && (
                         <p className="text-xs text-gray-500 mt-2 line-clamp-2 italic flex items-start gap-1">
                           <MessageSquare className="w-3 h-3 mt-0.5 shrink-0" />
@@ -570,13 +576,15 @@ Atenciosamente.`;
 
       {isCardModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setIsCardModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full">
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-xl font-black text-gray-900 mb-6">{editingCardId ? 'Editar Pedido' : 'Novo Pedido'}</h2>
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
+            <div className="p-6 pb-2 shrink-0 relative">
+              <button onClick={() => setIsCardModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 transition-colors rounded-full z-10">
+                <X className="w-5 h-5" />
+              </button>
+              <h2 className="text-xl font-black text-gray-900 pr-8">{editingCardId ? 'Editar Pedido' : 'Novo Pedido'}</h2>
+            </div>
             
-            <div className="space-y-4">
+            <div className="p-6 pt-2 space-y-4 overflow-y-auto custom-scrollbar flex-1">
                <div className="grid grid-cols-3 gap-4">
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nº do Pedido *</label>
@@ -779,6 +787,7 @@ Atenciosamente.`;
                     <tr>
                       <th className="px-6 py-4">N° Pedido (Título)</th>
                       <th className="px-6 py-4">Código Produto</th>
+                      <th className="px-6 py-4">Data de Criação</th>
                       <th className="px-6 py-4">Etapa Atual</th>
                       <th className="px-6 py-4">Responsável</th>
                       <th className="px-6 py-4 text-right">Ações</th>
@@ -807,6 +816,9 @@ Atenciosamente.`;
                                 )
                               ))}
                             </div>
+                          </td>
+                          <td className="px-6 py-4 text-xs text-gray-500 font-medium">
+                            {card.createdAt?.toDate ? new Date(card.createdAt.toDate()).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'}
                           </td>
                           <td className="px-6 py-4">
                             {currentStage ? (
