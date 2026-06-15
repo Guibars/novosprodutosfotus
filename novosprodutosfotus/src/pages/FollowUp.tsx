@@ -161,14 +161,14 @@ export function FollowUp() {
       acc[st] = (acc[st] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    const sortedStates = Object.entries(stateCounts).sort((a, b) => b[1] - a[1]);
+    const sortedStates = Object.entries(stateCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
 
     const powerCounts = meetings.reduce((acc, m) => {
       const p = m.chargerPower || '60';
       acc[p] = (acc[p] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    const sortedPowers = Object.entries(powerCounts).sort((a, b) => b[1] - a[1]);
+    const sortedPowers = Object.entries(powerCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
 
     const installedCounts = meetings.reduce((acc, m) => {
       if (m.hasInstalledChargers) acc.yes++;

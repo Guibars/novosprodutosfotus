@@ -16,6 +16,7 @@ export function TransferBoard() {
   const [editingStageId, setEditingStageId] = useState<string | null>(null);
   const [newStageName, setNewStageName] = useState("");
   const [newStageIsCompleted, setNewStageIsCompleted] = useState(false);
+  const [newStageIsCancelled, setNewStageIsCancelled] = useState(false);
 
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export function TransferBoard() {
     destinationCd: string;
     observations: string;
     assignedTo: string;
+    consultantName: string;
   }>({
     title: "",
     productCode: "",
@@ -35,7 +37,8 @@ export function TransferBoard() {
     extraProducts: [],
     destinationCd: "",
     observations: "",
-    assignedTo: ""
+    assignedTo: "",
+    consultantName: ""
   });
 
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'card' | 'stage' } | null>(null);
@@ -73,6 +76,7 @@ export function TransferBoard() {
     setEditingStageId(null);
     setNewStageName("");
     setNewStageIsCompleted(false);
+    setNewStageIsCancelled(false);
     setIsAddStageModalOpen(true);
   };
 
@@ -80,6 +84,7 @@ export function TransferBoard() {
     setEditingStageId(stage.id);
     setNewStageName(stage.name || "");
     setNewStageIsCompleted(!!stage.isCompletedStage);
+    setNewStageIsCancelled(!!stage.isCancelledStage);
     setIsAddStageModalOpen(true);
   };
 
@@ -89,18 +94,21 @@ export function TransferBoard() {
     if (editingStageId) {
       await updateDoc(doc(db, 'transfer_stages', editingStageId), {
         name: newStageName,
-        isCompletedStage: newStageIsCompleted
+        isCompletedStage: newStageIsCompleted,
+        isCancelledStage: newStageIsCancelled
       });
     } else {
       await addDoc(collection(db, 'transfer_stages'), {
         name: newStageName,
         isCompletedStage: newStageIsCompleted,
+        isCancelledStage: newStageIsCancelled,
         order: stages.length,
         createdAt: serverTimestamp()
       });
     }
     setNewStageName("");
     setNewStageIsCompleted(false);
+    setNewStageIsCancelled(false);
     setIsAddStageModalOpen(false);
   };
 
@@ -114,7 +122,8 @@ export function TransferBoard() {
       extraProducts: [],
       destinationCd: "",
       observations: "",
-      assignedTo: ""
+      assignedTo: "",
+      consultantName: ""
     });
     setGeneratedEmailPreview(null);
     setIsCardModalOpen(true);
@@ -130,7 +139,8 @@ export function TransferBoard() {
       extraProducts: card.extraProducts || [],
       destinationCd: card.destinationCd || "",
       observations: card.observations || "",
-      assignedTo: card.assignedTo || ""
+      assignedTo: card.assignedTo || "",
+      consultantName: card.consultantName || ""
     });
     setGeneratedEmailPreview(null);
     setIsCardModalOpen(true);
@@ -388,7 +398,11 @@ Atenciosamente.`;
               className={cn(
                 "rounded-3xl w-[85vw] sm:w-80 md:flex-1 md:min-w-[250px] shrink-0 flex flex-col max-h-[75vh] border-2 transition-all shadow-sm cursor-grab active:cursor-grabbing snap-center",
                 draggedStageId === stage.id ? "opacity-30 border-dashed scale-95" : "",
-                stage.isCompletedStage ? "border-emerald-200 bg-emerald-50/50" : "border-transparent bg-gray-100"
+                stage.isCompletedStage 
+                  ? "border-emerald-200 bg-emerald-50/50" 
+                  : stage.isCancelledStage 
+                    ? "border-red-200 bg-red-50/50" 
+                    : "border-transparent bg-gray-100"
               )}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
@@ -399,13 +413,14 @@ Atenciosamente.`;
                   className="cursor-pointer hover:opacity-80 transition-opacity flex-1"
                   title="Editar Etapa"
                 >
-                  <h3 className={cn("font-bold flex items-center gap-2", stage.isCompletedStage ? "text-emerald-900" : "text-gray-800")}>
+                  <h3 className={cn("font-bold flex items-center gap-2", stage.isCompletedStage ? "text-emerald-900" : stage.isCancelledStage ? "text-red-900" : "text-gray-800")}>
                     {stage.name} 
-                    <span className={cn("text-xs px-2 py-0.5 rounded-full font-bold", stage.isCompletedStage ? "bg-emerald-200 text-emerald-800" : "bg-gray-200 text-gray-600")}>
+                    <span className={cn("text-xs px-2 py-0.5 rounded-full font-bold", stage.isCompletedStage ? "bg-emerald-200 text-emerald-800" : stage.isCancelledStage ? "bg-red-200 text-red-800" : "bg-gray-200 text-gray-600")}>
                       {stageCards.length}
                     </span>
                   </h3>
                   {stage.isCompletedStage && <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-1">Transferências Finalizadas</p>}
+                  {stage.isCancelledStage && <p className="text-[9px] font-bold text-red-600 uppercase tracking-wider mt-1">Pedidos Cancelados</p>}
                 </div>
                 <button onClick={() => handleDeleteStage(stage.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2">
                   <Trash2 className="w-4 h-4" />
@@ -427,7 +442,9 @@ Atenciosamente.`;
                         "p-4 rounded-xl shadow-sm border cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:shadow-lg transition-all group relative duration-300 ease-out",
                         stage.isCompletedStage 
                           ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-200 hover:border-emerald-400" 
-                          : "bg-white border-gray-200 hover:border-primary/40",
+                          : stage.isCancelledStage 
+                            ? "bg-gradient-to-br from-red-50 to-white border-red-200 hover:border-red-400"
+                            : "bg-white border-gray-200 hover:border-primary/40",
                         draggedCardId === card.id ? "opacity-30 border-dashed scale-90" : ""
                       )}
                     >
@@ -439,7 +456,7 @@ Atenciosamente.`;
                          <Trash2 className="w-3.5 h-3.5" />
                       </button>
                       
-                      {!stage.isCompletedStage && (
+                      {!stage.isCompletedStage && !stage.isCancelledStage && (
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleCompleteTransfer(card.id); }} 
                           className="absolute top-3 right-11 text-gray-300 hover:text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white border border-gray-50 rounded-md shadow-sm"
@@ -469,6 +486,13 @@ Atenciosamente.`;
                       {card.createdAt?.toDate && (
                         <div className="text-[10px] text-gray-400 font-medium mt-1 mb-1">
                           {new Date(card.createdAt.toDate()).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </div>
+                      )}
+
+                      {card.consultantName && (
+                        <div className="text-[10px] text-gray-600 font-bold bg-gray-100 px-2 py-1 rounded-md inline-flex items-center gap-1 mt-2 mb-1">
+                          <User className="w-3 h-3" />
+                          Consultor: {card.consultantName}
                         </div>
                       )}
                       
@@ -568,6 +592,13 @@ Atenciosamente.`;
                    <span className="text-xs text-gray-500 font-medium">Marque se cards nesta etapa já foram transferidos/finalizados.</span>
                  </div>
                </label>
+               <label className="flex items-center gap-3 cursor-pointer mt-4 bg-red-50 p-3 rounded-xl border border-red-100 hover:bg-red-100 transition-colors">
+                 <input type="checkbox" checked={newStageIsCancelled} onChange={e => setNewStageIsCancelled(e.target.checked)} className="w-5 h-5 rounded text-red-500 focus:ring-red-500 border-gray-300" />
+                 <div>
+                   <span className="text-sm font-bold text-red-900 block">Etapa de Cancelados?</span>
+                   <span className="text-xs text-red-700/80 font-medium">Marque se cards nesta etapa foram cancelados ou reprovados.</span>
+                 </div>
+               </label>
                <button onClick={handleSaveStage} className="w-full bg-primary text-white font-bold py-3 rounded-xl mt-4 shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">{editingStageId ? 'Salvar Alterações' : 'Criar Etapa'}</button>
             </div>
           </div>
@@ -576,37 +607,37 @@ Atenciosamente.`;
 
       {isCardModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden">
-            <div className="p-6 pb-2 shrink-0 relative">
-              <button onClick={() => setIsCardModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 transition-colors rounded-full z-10">
+          <div className="w-full max-w-xl relative flex flex-col max-h-[95vh]">
+            <div className="bg-white rounded-t-[2rem] p-6 shrink-0 relative z-10 border-b border-gray-100 shadow-sm">
+              <button onClick={() => setIsCardModalOpen(false)} className="absolute top-6 right-6 p-2 text-gray-400 hover:bg-gray-100 transition-colors rounded-full z-10">
                 <X className="w-5 h-5" />
               </button>
               <h2 className="text-xl font-black text-gray-900 pr-8">{editingCardId ? 'Editar Pedido' : 'Novo Pedido'}</h2>
             </div>
             
-            <div className="p-6 pt-2 space-y-4 overflow-y-auto custom-scrollbar flex-1">
-               <div className="grid grid-cols-3 gap-4">
+            <div className="bg-white p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1 relative">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nº do Pedido *</label>
-                    <input type="text" value={cardData.title} onChange={e => setCardData({...cardData, title: e.target.value})} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 12345" />
+                    <input type="text" value={cardData.title} onChange={e => setCardData({...cardData, title: e.target.value})} className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 12345" />
                  </div>
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cód Produto</label>
-                    <input type="text" value={cardData.productCode} onChange={e => setCardData({...cardData, productCode: e.target.value})} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 98765" />
+                    <input type="text" value={cardData.productCode} onChange={e => setCardData({...cardData, productCode: e.target.value})} className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 98765" />
                  </div>
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
-                    <input type="text" value={cardData.quantity} onChange={e => setCardData({...cardData, quantity: e.target.value})} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 10" />
+                    <input type="text" value={cardData.quantity} onChange={e => setCardData({...cardData, quantity: e.target.value})} className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 10" />
                  </div>
                </div>
 
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Atribuir à / Responsável</label>
                     <select 
                       value={cardData.assignedTo} 
                       onChange={e => setCardData({...cardData, assignedTo: e.target.value})} 
-                      className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
+                      className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
                     >
                       <option value="">-- Sem responsável --</option>
                       {profiles.map(p => (
@@ -615,18 +646,29 @@ Atenciosamente.`;
                     </select>
                  </div>
                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">CD Destino</label>
-                    <select 
-                      value={cardData.destinationCd} 
-                      onChange={e => setCardData({...cardData, destinationCd: e.target.value})} 
-                      className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
-                    >
-                      <option value="">-- Selecione o CD --</option>
-                      {['PE', 'ES', 'SP', 'SC', 'BA', 'PA', 'MT', 'GO'].map(cd => (
-                        <option key={cd} value={cd}>{cd}</option>
-                      ))}
-                    </select>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nome do Consultor</label>
+                    <input 
+                      type="text" 
+                      value={cardData.consultantName || ''} 
+                      onChange={e => setCardData({...cardData, consultantName: e.target.value})} 
+                      className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 bg-white" 
+                      placeholder="Ex: João Silva" 
+                    />
                  </div>
+               </div>
+               
+               <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">CD Destino</label>
+                  <select 
+                    value={cardData.destinationCd} 
+                    onChange={e => setCardData({...cardData, destinationCd: e.target.value})} 
+                    className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
+                  >
+                    <option value="">-- Selecione o CD --</option>
+                    {['PE', 'ES', 'SP', 'SC', 'BA', 'PA', 'MT', 'GO'].map(cd => (
+                      <option key={cd} value={cd}>{cd}</option>
+                    ))}
+                  </select>
                </div>
 
                <div>
@@ -634,7 +676,7 @@ Atenciosamente.`;
                   <textarea 
                     value={cardData.observations} 
                     onChange={e => setCardData({...cardData, observations: e.target.value})} 
-                    className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none font-medium text-gray-900" 
+                    className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none font-medium text-gray-900" 
                     rows={2} 
                     placeholder="Ex: HÍBRIDO SP GOODWE GW7.5K-ES-LD-G10..."
                   />
@@ -657,7 +699,7 @@ Atenciosamente.`;
                </div>
                
                {(cardData.extraProducts || []).map((ep, idx) => (
-                 <div key={idx} className="p-4 border border-gray-100 rounded-xl bg-gray-50 relative space-y-3 shadow-inner">
+                 <div key={idx} className="p-5 border border-gray-100 rounded-xl bg-gray-50 relative space-y-4 shadow-inner">
                    <button 
                      type="button"
                      onClick={() => {
@@ -665,7 +707,7 @@ Atenciosamente.`;
                        newExtras.splice(idx, 1);
                        setCardData(prev => ({ ...prev, extraProducts: newExtras }));
                      }}
-                     className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-white rounded-full transition-all shadow-sm bg-white/50"
+                     className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-red-500 hover:bg-white rounded-full transition-all shadow-sm bg-white/50"
                    >
                      <X className="w-3.5 h-3.5" />
                    </button>
@@ -676,7 +718,7 @@ Atenciosamente.`;
                          const newExtras = [...(cardData.extraProducts || [])];
                          newExtras[idx].code = e.target.value;
                          setCardData(prev => ({ ...prev, extraProducts: newExtras }));
-                       }} className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 98765" />
+                       }} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 98765" />
                      </div>
                      <div>
                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
@@ -684,7 +726,7 @@ Atenciosamente.`;
                          const newExtras = [...(cardData.extraProducts || [])];
                          newExtras[idx].quantity = e.target.value;
                          setCardData(prev => ({ ...prev, extraProducts: newExtras }));
-                       }} className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 10" />
+                       }} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 10" />
                      </div>
                    </div>
                    <div>
@@ -693,26 +735,27 @@ Atenciosamente.`;
                        const newExtras = [...(cardData.extraProducts || [])];
                        newExtras[idx].description = e.target.value;
                        setCardData(prev => ({ ...prev, extraProducts: newExtras }));
-                     }} className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Nome do produto ou descrição..." />
+                     }} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Nome do produto ou descrição..." />
                    </div>
                  </div>
                ))}
 
                {generatedEmailPreview && (
-                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-4 relative">
-                   <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Pré-visualização do E-mail</h4>
+                 <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 mt-6 relative">
+                   <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Pré-visualização do E-mail</h4>
                    <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium font-sans mb-12">{generatedEmailPreview}</pre>
                    <button 
                      onClick={handleCopyEmail}
-                     className="absolute bottom-4 right-4 bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors shadow-sm flex items-center gap-2"
+                     className="absolute bottom-4 right-4 bg-white border border-gray-200 px-4 py-2 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors shadow-sm flex items-center gap-2"
                    >
                      <Copy className="w-4 h-4" />
                      Copiar E-mail
                    </button>
                  </div>
                )}
-
-               <div className="pt-2 flex gap-3 flex-wrap">
+            </div>
+            
+            <div className="bg-white rounded-b-[2rem] p-6 pt-4 shrink-0 border-t border-gray-100 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.1)] z-10 flex gap-3 flex-wrap">
                  {editingCardId && (
                    <button 
                      onClick={() => handleDeleteCard(editingCardId)} 
@@ -741,11 +784,10 @@ Atenciosamente.`;
                  </button>
                  <button 
                    onClick={handleSaveCard} 
-                   className="flex-1 bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition-colors"
+                   className="flex-1 bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition-colors min-w-[200px]"
                  >
                    {editingCardId ? 'Salvar Alterações' : 'Adicionar Pedido'}
                  </button>
-               </div>
             </div>
           </div>
         </div>

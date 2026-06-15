@@ -1,15 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { useProjects } from "../../contexts/ProjectContext";
 import { cn } from "../../lib/utils";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 export function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { isProjectModalOpen, setIsProjectModalOpen, addProject } = useProjects();
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDate, setNewProjectDate] = useState("");
+  
+  const [updatePopupData, setUpdatePopupData] = useState<{ version: string; notes: string } | null>(null);
+
+  useEffect(() => {
+    // Listen for updates
+    const unsubscribe = onSnapshot(doc(db, 'system', 'latest_update'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data && data.version) {
+          const lastSeenVersion = localStorage.getItem('seen_update_version');
+          if (lastSeenVersion !== data.version) {
+            setUpdatePopupData({ version: data.version, notes: data.notes || "" });
+          }
+        }
+      }
+    }, (error) => {
+      console.warn("Could not load system updates:", error);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const dismissUpdatePopup = () => {
+    if (updatePopupData) {
+      localStorage.setItem('seen_update_version', updatePopupData.version);
+      setUpdatePopupData(null);
+    }
+  };
 
   const handleAddProject = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +121,28 @@ export function Layout() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* System Update Notification Modal */}
+      {updatePopupData && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl animate-fade-in relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary"></div>
+            <h2 className="text-3xl font-black text-gray-900 mb-2">Novidades da Versão {updatePopupData.version} ✨</h2>
+            <p className="text-gray-500 mb-6 font-medium">Acabamos de lançar uma atualização no sistema.</p>
+            
+            <div className="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100 max-h-[40vh] overflow-y-auto">
+              <pre className="whitespace-pre-wrap font-sans text-gray-700 text-sm">{updatePopupData.notes}</pre>
+            </div>
+            
+            <button 
+              onClick={dismissUpdatePopup}
+              className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-gray-900/20 active:scale-[0.98]"
+            >
+              Entendi
+            </button>
           </div>
         </div>
       )}

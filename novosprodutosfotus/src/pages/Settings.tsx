@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { Shield, User, Save, Check, Edit2, Trash2 } from "lucide-react";
+import { Shield, User, Save, Check, Edit2, Trash2, Send } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const availableRoles = [
   "Membro",
@@ -16,6 +17,9 @@ const availableRoles = [
 ];
 
 export function Settings() {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'users' | 'updates'>('users');
+  
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -24,6 +28,10 @@ export function Settings() {
   const [editName, setEditName] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  const [updateVersion, setUpdateVersion] = useState("1.0.1");
+  const [updateNotes, setUpdateNotes] = useState("");
+  const [savingUpdate, setSavingUpdate] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
@@ -84,90 +92,184 @@ export function Settings() {
     }
   };
 
+  const handleLaunchUpdate = async () => {
+    if (!updateVersion || !updateNotes) {
+      alert("Preencha a versão e as notas da atualização.");
+      return;
+    }
+    setSavingUpdate(true);
+    try {
+      await setDoc(doc(db, 'system', 'latest_update'), {
+        version: updateVersion,
+        notes: updateNotes,
+        timestamp: serverTimestamp()
+      });
+      alert(`Atualização ${updateVersion} lançada com sucesso!`);
+      setUpdateNotes("");
+    } catch (error) {
+      console.error("Erro ao lançar atualização:", error);
+      alert("Erro ao lançar atualização.");
+    } finally {
+      setSavingUpdate(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-4xl relative">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
-        <p className="text-gray-500 mt-1">Gerencie as permissões e cargos dos usuários da plataforma.</p>
+        <p className="text-gray-500 mt-1">Gerencie as permissões e configurações da plataforma.</p>
       </div>
 
-      <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-xl shadow-black/5 overflow-hidden">
-        <div className="p-6 border-b border-white/50">
-          <h2 className="text-xl font-semibold text-gray-900">Gerenciamento de Usuários</h2>
-          <p className="text-sm text-gray-500 mt-1">Defina o cargo de cada membro. Isso refletirá no perfil deles.</p>
+      {user?.email === 'guilhermebarbosars@gmail.com' && (
+        <div className="flex space-x-2 border-b border-gray-200 mb-6">
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+              activeTab === 'users' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Usuários
+          </button>
+          <button
+            onClick={() => setActiveTab('updates')}
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+              activeTab === 'updates' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Lançar Atualização
+          </button>
         </div>
+      )}
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      {activeTab === 'users' && (
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-xl shadow-black/5 overflow-hidden">
+          <div className="p-6 border-b border-white/50">
+            <h2 className="text-xl font-semibold text-gray-900">Gerenciamento de Usuários</h2>
+            <p className="text-sm text-gray-500 mt-1">Defina o cargo de cada membro. Isso refletirá no perfil deles.</p>
           </div>
-        ) : (
-          <div className="divide-y divide-white/30">
-            {teamMembers.map((member) => (
-              <div key={member.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/30 transition-colors">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src={member.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.email}`} 
-                    alt={member.full_name} 
-                    className="w-12 h-12 rounded-xl object-cover border border-white shadow-sm"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{member.full_name}</h3>
-                    <p className="text-sm text-gray-500">{member.email}</p>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/30">
+              {teamMembers.map((member) => (
+                <div key={member.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/30 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src={member.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.email}`} 
+                      alt={member.full_name} 
+                      className="w-12 h-12 rounded-xl object-cover border border-white shadow-sm"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{member.full_name}</h3>
+                      <p className="text-sm text-gray-500">{member.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={member.role || "Membro"}
+                      onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                      disabled={savingId === member.id}
+                      className="px-4 py-2 glass-input rounded-xl text-sm font-medium min-w-[160px]"
+                    >
+                      {availableRoles.map(role => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                    
+                    <div className="w-8 flex justify-center">
+                      {savingId === member.id && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      )}
+                      {savedId === member.id && (
+                        <Check className="w-5 h-5 text-success" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => {
+                          setEditingUser(member);
+                          setEditName(member.full_name || "");
+                          setEditAvatar(member.avatar_url || "");
+                        }}
+                        className="p-2 text-gray-400 hover:text-primary transition-colors bg-white/50 rounded-lg"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteUser(member.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-white/50 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ))}
 
-                <div className="flex items-center gap-3">
-                  <select
-                    value={member.role || "Membro"}
-                    onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                    disabled={savingId === member.id}
-                    className="px-4 py-2 glass-input rounded-xl text-sm font-medium min-w-[160px]"
-                  >
-                    {availableRoles.map(role => (
-                      <option key={role} value={role}>{role}</option>
-                    ))}
-                  </select>
-                  
-                  <div className="w-8 flex justify-center">
-                    {savingId === member.id && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    )}
-                    {savedId === member.id && (
-                      <Check className="w-5 h-5 text-success" />
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button 
-                      onClick={() => {
-                        setEditingUser(member);
-                        setEditName(member.full_name || "");
-                        setEditAvatar(member.avatar_url || "");
-                      }}
-                      className="p-2 text-gray-400 hover:text-primary transition-colors bg-white/50 rounded-lg"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteUser(member.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-white/50 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+              {teamMembers.length === 0 && (
+                <div className="p-8 text-center text-gray-500">
+                  Nenhum membro encontrado.
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
-            {teamMembers.length === 0 && (
-              <div className="p-8 text-center text-gray-500">
-                Nenhum membro encontrado.
-              </div>
-            )}
+      {activeTab === 'updates' && user?.email === 'guilhermebarbosars@gmail.com' && (
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-xl shadow-black/5 overflow-hidden">
+          <div className="p-6 border-b border-white/50">
+            <h2 className="text-xl font-semibold text-gray-900">Lançar Atualização</h2>
+            <p className="text-sm text-gray-500 mt-1">Envie um comunicado que aparecerá para todos os usuários na próxima vez que abrirem o sistema.</p>
           </div>
-        )}
-      </div>
+          <div className="p-6 space-y-5">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Versão do App</label>
+              <input 
+                type="text" 
+                value={updateVersion}
+                onChange={(e) => setUpdateVersion(e.target.value)}
+                className="w-full max-w-xs px-4 py-3 glass-input rounded-xl font-mono"
+                placeholder="Ex: 1.2.0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">O que há de novo? (Release Notes)</label>
+              <textarea 
+                rows={6}
+                value={updateNotes}
+                onChange={(e) => setUpdateNotes(e.target.value)}
+                className="w-full px-4 py-3 glass-input rounded-xl"
+                placeholder="- Nova funcionalidade de X...&#10;- Correção de bugs em Y..."
+              ></textarea>
+            </div>
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={handleLaunchUpdate}
+                disabled={savingUpdate || !updateNotes}
+                className="px-6 py-3 bg-secondary hover:bg-secondary-hover disabled:opacity-50 text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30 flex items-center gap-2"
+              >
+                {savingUpdate ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+                Lançar Atualização
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit User Modal */}
       {editingUser && (

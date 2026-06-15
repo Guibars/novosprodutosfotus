@@ -75,5 +75,10 @@ service cloud.firestore {
     match /meeting_followups/{id} {
       allow read, write: if isAuthenticated();
     }
+
+    match /system/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
   }
 }
