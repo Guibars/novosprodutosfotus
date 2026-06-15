@@ -14,8 +14,10 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() &&
-        (get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'Admin' ||
-          (request.auth.token.email == "guilhermebarbosars@gmail.com" && request.auth.token.email_verified == true)); // Default admin
+        (
+          get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'Admin' ||
+          request.auth.token.email == "guilhermebarbosars@gmail.com"
+        );
     }
 
     match /profiles/{userId} {
