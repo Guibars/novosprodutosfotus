@@ -20,7 +20,7 @@ const STANDARD_KITS = [
   "Kit 50 kWp (Fibrocimento)"
 ];
 
-const REGIONS = ['Sudeste'];
+const REGIONS = ['Sudeste', 'Nordeste'];
 
 export function MarketIntelligence() {
   const { user } = useAuth();
