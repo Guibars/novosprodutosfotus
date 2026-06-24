@@ -22,12 +22,22 @@ export function Login() {
     }
   }, [user, navigate]);
 
+  const isAllowedEmail = (emailToCheck: string | null) => {
+    if (!emailToCheck) return false;
+    const normalizedEmail = emailToCheck.toLowerCase();
+    return normalizedEmail.endsWith('@fotus.com.br') || normalizedEmail === 'guilhermebarbosars@gmail.com';
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     
     try {
+      if (!isAllowedEmail(email)) {
+        throw new Error("Acesso negado: Somente endereços com @fotus.com.br são aceitos neste sistema.");
+      }
+
       if (isRegistering) {
         await createUserWithEmailAndPassword(auth, email, password);
         alert("Cadastro realizado com sucesso! Faça login para continuar.");
@@ -45,8 +55,15 @@ export function Login() {
 
   const handleGoogleLogin = async () => {
     try {
+      setError("");
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      if (!isAllowedEmail(result.user.email)) {
+        await auth.signOut();
+        throw new Error("Acesso negado: Somente endereços com @fotus.com.br são aceitos neste sistema.");
+      }
+      
       navigate("/analytics");
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login com Google");
@@ -107,10 +124,16 @@ export function Login() {
 
             <form onSubmit={handleLogin} className="space-y-6">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
+                <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200 font-medium">
                   {error}
                 </div>
               )}
+              
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center">
+                <p className="text-sm text-blue-800 font-medium">
+                  Acesso restrito. Somente e-mails corporativos <strong className="font-bold">@fotus.com.br</strong> são permitidos neste sistema.
+                </p>
+              </div>
               
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">E-mail</label>

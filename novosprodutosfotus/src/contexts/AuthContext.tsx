@@ -19,6 +19,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (currentUser: User) => {
     try {
+      const emailToCheck = currentUser.email || "";
+      const normalizedEmail = emailToCheck.toLowerCase();
+      if (!normalizedEmail.endsWith('@fotus.com.br') && normalizedEmail !== 'guilhermebarbosars@gmail.com') {
+        return;
+      }
+      
       const docRef = doc(db, 'profiles', currentUser.uid);
       const docSnap = await getDoc(docRef);
 
@@ -57,6 +63,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Listen to profile changes
   useEffect(() => {
     if (!user) return;
+    
+    const emailToCheck = user.email || "";
+    const normalizedEmail = emailToCheck.toLowerCase();
+    if (!normalizedEmail.endsWith('@fotus.com.br') && normalizedEmail !== 'guilhermebarbosars@gmail.com') {
+      return;
+    }
+
     const unsubscribeProfile = onSnapshot(doc(db, 'profiles', user.uid), (doc) => {
       if (doc.exists()) {
         setProfile(doc.data());
