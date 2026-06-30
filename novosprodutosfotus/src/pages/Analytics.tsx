@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import { useProjects } from "../contexts/ProjectContext";
 import { collection, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase";
@@ -9,9 +10,18 @@ import {
 import { 
   FolderGit2, CheckCircle2, Clock, PauseCircle,
   AlertCircle, LayoutList, Target, TrendingUp, Users, Calendar, ShoppingCart, Info, Filter,
-  ArrowUpRight, ArrowDownRight
+  ArrowUpRight, ArrowDownRight, Map, X, Maximize2, Minimize2
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import BrazilMapData from "@svg-maps/brazil";
+
+const stateToRegion: Record<string, string> = {
+  ac: "Norte", ap: "Norte", am: "Norte", pa: "Norte", ro: "Norte", rr: "Norte", to: "Norte",
+  al: "Nordeste", ba: "Nordeste", ce: "Nordeste", ma: "Nordeste", pb: "Nordeste", pe: "Nordeste", pi: "Nordeste", rn: "Nordeste", se: "Nordeste",
+  df: "Centro-Oeste", go: "Centro-Oeste", mt: "Centro-Oeste", ms: "Centro-Oeste",
+  es: "Sudeste", mg: "Sudeste", rj: "Sudeste", sp: "Sudeste",
+  pr: "Sul", rs: "Sul", sc: "Sul"
+};
 
 const PRODUCTS = ["Inversores Híbridos", "Bateria", "Drive", "RSD", "Carregador"];
 
@@ -34,6 +44,7 @@ const CircularProgress = ({ percentage, colorClass, size = 64, strokeWidth = 6 }
 };
 
 export function Analytics() {
+  const context = useOutletContext<{ isSidebarOpen?: boolean; setIsSidebarOpen?: (v: boolean) => void }>();
   const { projects } = useProjects();
   const [teamMembersCount, setTeamMembersCount] = useState(0);
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -43,6 +54,44 @@ export function Analytics() {
   const [salesMetricsMap, setSalesMetricsMap] = useState<Record<string, any>>({});
   const [isQuarterView, setIsQuarterView] = useState(false);
   const [selectedProductTrend, setSelectedProductTrend] = useState(PRODUCTS[0]);
+  
+  // Interactive Map States
+  const [selectedProductMap, setSelectedProductMap] = useState<string | null>(null);
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
+
+  // Auto-select region with highest sales volume on modal open
+  useEffect(() => {
+    if (selectedProductMap) {
+      if (context?.setIsSidebarOpen) {
+        context.setIsSidebarOpen(false); // Fechar sidebar automaticamente ao abrir o mapa
+      }
+      const currentMonthMetrics = salesMetricsMap[selectedDate] || {};
+      const productMetrics = currentMonthMetrics[selectedProductMap] || {};
+      const getRegionVendas = (r: string) => {
+        if (productMetrics.regioes && productMetrics.regioes[r]) {
+          return Number(productMetrics.regioes[r].vendas) || 0;
+        }
+        return 0;
+      };
+      const regionsList = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
+      let topRegion = "Sudeste";
+      let maxV = -1;
+      regionsList.forEach(r => {
+        const v = getRegionVendas(r);
+        if (v > maxV) {
+          maxV = v;
+          topRegion = r;
+        }
+      });
+      setSelectedRegion(topRegion);
+    } else {
+      setSelectedRegion(null);
+      setHoveredRegion(null);
+      setIsMapExpanded(false);
+    }
+  }, [selectedProductMap, selectedDate, salesMetricsMap]);
   
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'profiles'), (snapshot) => {
@@ -261,20 +310,26 @@ export function Analytics() {
             }
 
             return (
-              <div key={product} className="bg-white rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all flex flex-col relative overflow-visible group">
-                <div className={cn("absolute -top-4 -right-4 w-28 h-28 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-700 group-hover:scale-150 group-hover:opacity-30", percentage >= 100 ? "bg-success" : "bg-primary")}></div>
+              <div 
+                key={product} 
+                onClick={() => setSelectedProductMap(product)}
+                className="bg-white rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-primary/50 hover:shadow-[0_12px_40px_rgba(249,115,22,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group cursor-pointer"
+              >
+                <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-700 group-hover:scale-150 group-hover:opacity-30", percentage >= 100 ? "bg-success" : "bg-primary")}></div>
                 
-                <div className="flex items-center gap-3 mb-5 relative z-10">
-                  <CircularProgress percentage={percentage} colorClass={percentage >= 100 ? "text-success" : "text-primary"} size={54} strokeWidth={5} />
+                <div className="flex items-center gap-4 mb-6 relative z-10">
+                  <div className="shrink-0">
+                    <CircularProgress percentage={percentage} colorClass={percentage >= 100 ? "text-success" : "text-primary"} size={52} strokeWidth={5} />
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-gray-900 text-[13px] leading-tight mb-0.5 line-clamp-2" title={product}>{product} {isQuarterView ? `(Tri)` : ``}</h4>
+                    <h4 className="font-bold text-gray-900 text-sm leading-tight mb-1 line-clamp-2" title={product}>{product} {isQuarterView ? `(Tri)` : ``}</h4>
                     <p className={cn("text-[10px] uppercase font-bold tracking-wider", percentage >= 100 ? "text-success" : "text-gray-400")}>
                       {percentage >= 100 ? 'Meta Atingida!' : 'Em Progresso'}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-4 relative z-10">
+                <div className="grid grid-cols-2 gap-3 mb-4 relative z-10">
                   <div className="bg-gray-50 rounded-xl p-3 border border-gray-100/50">
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Real</p>
                     <p className="text-xl font-black text-gray-900 tracking-tighter">{sold}</p>
@@ -330,6 +385,14 @@ export function Analytics() {
                     <span className={cn("font-black text-[14px]", (sold + propostaAceita) >= goal ? "text-success" : "text-gray-900")}>
                       {sold + propostaAceita}
                     </span>
+                  </div>
+                  
+                  {/* Interactive Map Indicator - Bottom Row */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 relative z-10">
+                    <div className="flex items-center gap-1.5 text-gray-400 group-hover:text-primary transition-colors bg-gray-50 group-hover:bg-primary/5 px-3 py-1.5 rounded-lg border border-transparent group-hover:border-primary/20">
+                      <Map className="w-4 h-4" />
+                      <span className="text-[10px] uppercase tracking-widest font-black">Mapa</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -411,6 +474,254 @@ export function Analytics() {
           </div>
         </div>
       </div>
+
+      {/* Interactive Regional Map Modal */}
+      {selectedProductMap && (() => {
+        const currentMonthMetrics = salesMetricsMap[selectedDate] || {};
+        const productMetrics = currentMonthMetrics[selectedProductMap] || {};
+        
+        const getRegionData = (regionName: string) => {
+          if (productMetrics.regioes && productMetrics.regioes[regionName]) {
+            return {
+              vendas: Number(productMetrics.regioes[regionName].vendas) || 0,
+              potencia: productMetrics.regioes[regionName].potencia || "Não cadastrada"
+            };
+          }
+          return { vendas: 0, potencia: "Não cadastrada" };
+        };
+
+        const regionsList = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
+        const maxSales = Math.max(...regionsList.map(r => getRegionData(r).vendas), 1);
+        const totalSales = regionsList.reduce((acc, r) => acc + getRegionData(r).vendas, 0);
+
+        // Sort regions by sales
+        const sortedRegions = [...regionsList].sort((a, b) => getRegionData(b).vendas - getRegionData(a).vendas);
+        const topRegion = sortedRegions[0];
+
+        const activeRegion = hoveredRegion || selectedRegion || topRegion;
+        const activeRegionData = getRegionData(activeRegion);
+
+        return (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4 lg:p-6 animate-in fade-in duration-200" id="map-modal">
+            <div className={cn("bg-white rounded-[2rem] shadow-2xl p-5 lg:p-6 relative border border-gray-100 flex flex-col transition-all duration-300 overflow-y-auto lg:overflow-hidden", isMapExpanded ? "w-[95vw] h-[95vh] max-w-none" : "w-full max-w-5xl max-h-[90vh] lg:h-[85vh]")} id="map-modal-content">
+              
+              {/* Header Compact */}
+              <div className="flex items-start justify-between mb-4 border-b border-gray-100 pb-4 shrink-0">
+                <div>
+                   <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-xl font-black text-gray-900">{selectedProductMap}</h3>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-0.5 rounded-full hidden sm:inline-block">
+                        Mapa Interativo
+                      </span>
+                   </div>
+                   <p className="text-xs text-gray-500">
+                      Referente a <strong className="font-semibold text-gray-700">{monthsLabels[selMonth]} de {selYear}</strong>. Passe o mouse ou clique nas regiões para ver o detalhamento comercial.
+                   </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setIsMapExpanded(!isMapExpanded)}
+                    className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors border border-gray-100 cursor-pointer hidden lg:flex"
+                    title={isMapExpanded ? "Reduzir" : "Expandir"}
+                  >
+                    {isMapExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  </button>
+                  <button 
+                    onClick={() => setSelectedProductMap(null)}
+                    className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors border border-gray-100 cursor-pointer"
+                    id="close-modal-btn"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Main Grid Content */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch flex-1 lg:h-full lg:min-h-0 lg:overflow-hidden">
+                
+                {/* Map Container */}
+                <div className={cn("bg-gray-50/50 rounded-2xl border border-gray-150 p-4 flex flex-col items-center justify-center relative lg:min-h-0", isMapExpanded ? "lg:col-span-6 min-h-[400px] lg:h-full" : "lg:col-span-5 min-h-[300px] lg:h-full")}>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 self-start absolute top-4 left-4 z-10 hidden sm:block">
+                    Visão Regional
+                  </h4>
+                  
+                  <div className="flex-1 w-full flex items-center justify-center relative min-h-0 mt-2 lg:mt-0 lg:h-full">
+                    <svg viewBox={BrazilMapData.viewBox} className="w-full h-full max-h-[100%] max-w-[320px] lg:max-w-none drop-shadow-xl filter pb-2 object-contain mx-auto">
+                    <g>
+                    {BrazilMapData.locations.map(location => {
+                      const region = stateToRegion[location.id];
+                      const rData = getRegionData(region);
+                      const isHovered = hoveredRegion === region;
+                      const isActive = activeRegion === region;
+                      const fillIntensity = rData.vendas === 0 ? 0 : 0.15 + (rData.vendas / maxSales) * 0.7;
+                      return (
+                        <path
+                          key={location.id}
+                          id={location.id}
+                          name={location.name}
+                          d={location.path}
+                          className={cn(
+                            "transition-all duration-300 stroke-white stroke-[1.5px] cursor-pointer outline-none"
+                          )}
+                          fill={
+                            isActive
+                              ? "rgba(249, 115, 22, 1)"
+                              : isHovered
+                                ? "rgba(249, 115, 22, 0.85)"
+                                : rData.vendas === 0
+                                  ? "#E5E7EB"
+                                  : `rgba(249, 115, 22, ${fillIntensity})`
+                          }
+                          style={{
+                            filter: isActive ? "drop-shadow(0px 4px 12px rgba(249, 115, 22, 0.5))" : "none"
+                          }}
+                          onMouseEnter={() => setHoveredRegion(region)}
+                          onMouseLeave={() => setHoveredRegion(null)}
+                          onClick={() => setSelectedRegion(region)}
+                        >
+                          <title>{location.name} ({region})</title>
+                        </path>
+                      );
+                    })}
+                    </g>
+                    {/* Labels de Regiões Manuais baseadas no viewBox (0 0 613 639) */}
+                    <g className="pointer-events-none select-none">
+                      <text x="180" y="200" className={cn("font-bold text-sm transition-colors duration-200", activeRegion === "Norte" || getRegionData("Norte").vendas > 0 ? "fill-white drop-shadow-md" : "fill-gray-500")} textAnchor="middle">NORTE</text>
+                      <text x="470" y="220" className={cn("font-bold text-sm transition-colors duration-200", activeRegion === "Nordeste" || getRegionData("Nordeste").vendas > 0 ? "fill-white drop-shadow-md" : "fill-gray-500")} textAnchor="middle">NORDESTE</text>
+                      <text x="320" y="360" className={cn("font-bold text-sm transition-colors duration-200", activeRegion === "Centro-Oeste" || getRegionData("Centro-Oeste").vendas > 0 ? "fill-white drop-shadow-md" : "fill-gray-500")} textAnchor="middle">C. OESTE</text>
+                      <text x="440" y="430" className={cn("font-bold text-sm transition-colors duration-200", activeRegion === "Sudeste" || getRegionData("Sudeste").vendas > 0 ? "fill-white drop-shadow-md" : "fill-gray-500")} textAnchor="middle">SUDESTE</text>
+                      <text x="310" y="520" className={cn("font-bold text-sm transition-colors duration-200", activeRegion === "Sul" || getRegionData("Sul").vendas > 0 ? "fill-white drop-shadow-md" : "fill-gray-500")} textAnchor="middle">SUL</text>
+                    </g>
+                  </svg>
+                  </div>
+                  
+                  <div className="mt-2 flex flex-wrap gap-3 text-[9px] font-bold text-gray-400 uppercase tracking-wider justify-center">
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-gray-200 border border-gray-300"></span>
+                      Sem vendas
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-orange-200"></span>
+                      Baixo vol.
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                      Alto vol.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Region Details */}
+                <div className={cn("flex flex-col gap-3 lg:overflow-y-auto pr-2 scrollbar-hide lg:h-full lg:min-h-0 pb-4", isMapExpanded ? "lg:col-span-6" : "lg:col-span-7")}>
+                  <div className="flex items-center justify-between mb-1 shrink-0">
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                      Ranking & Desempenho Regional
+                    </h4>
+                    <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                      {totalSales} unid. totais
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    {sortedRegions.map((regionName, idx) => {
+                      const rData = getRegionData(regionName);
+                      const isCurrentActive = regionName === activeRegion;
+                      const percentage = totalSales > 0 ? Math.round((rData.vendas / totalSales) * 100) : 0;
+                      
+                      return (
+                        <div 
+                          key={regionName}
+                          onClick={() => setSelectedRegion(regionName)}
+                          className={cn(
+                            "rounded-2xl transition-all duration-300 cursor-pointer border overflow-hidden flex flex-col relative shrink-0",
+                            isCurrentActive 
+                              ? "bg-white border-primary/40 shadow-[0_8px_30px_rgb(0,0,0,0.08)]" 
+                              : "bg-gray-50/50 border-gray-100 hover:bg-white hover:border-gray-200"
+                          )}
+                        >
+                          {/* Background Progress Bar for inactive state or subtle for active */}
+                          {!isCurrentActive && (
+                            <div 
+                              className="absolute bottom-0 left-0 h-1 bg-orange-500/20 transition-all duration-500"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          )}
+
+                          <div className={cn("p-4 flex items-center justify-between", isCurrentActive ? "pb-3 border-b border-gray-50" : "")}>
+                            <div className="flex items-center gap-3">
+                              <span className={cn(
+                                "w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0",
+                                idx === 0 && !isCurrentActive ? "bg-amber-100 text-amber-700" :
+                                idx === 1 && !isCurrentActive ? "bg-gray-200 text-gray-700" : 
+                                idx === 2 && !isCurrentActive ? "bg-orange-100 text-orange-700" :
+                                isCurrentActive ? "bg-primary text-white shadow-md shadow-primary/30" : "bg-white text-gray-400 border border-gray-200"
+                              )}>
+                                {idx + 1}
+                              </span>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className={cn("font-black text-sm", isCurrentActive ? "text-gray-900" : "text-gray-700")}>{regionName}</span>
+                                  {isCurrentActive && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+                                  )}
+                                </div>
+                                {!isCurrentActive && percentage > 0 && (
+                                  <span className="text-[10px] font-bold text-gray-400 block mt-0.5">{percentage}% do nacional</span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="text-right">
+                              <span className={cn("font-black", isCurrentActive ? "text-xl text-primary" : "text-sm text-gray-900")}>
+                                {rData.vendas} <span className={cn("text-[10px] uppercase font-bold", isCurrentActive ? "text-primary/70" : "text-gray-400")}>un</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Expanded Details */}
+                          <div className={cn(
+                            "grid grid-cols-2 gap-3 transition-all duration-300 ease-in-out px-4",
+                            isCurrentActive ? "py-4 opacity-100 max-h-[200px]" : "max-h-0 opacity-0 overflow-hidden py-0"
+                          )}>
+                            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                                Participação
+                              </p>
+                              <div className="flex items-end gap-2">
+                                <p className="text-lg font-black text-gray-900 leading-none">
+                                  {percentage}%
+                                </p>
+                                <p className="text-[9px] font-bold text-gray-500 pb-0.5">do volume total</p>
+                              </div>
+                              <div className="w-full bg-gray-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                                <div className="bg-primary h-full rounded-full" style={{ width: `${percentage}%` }}></div>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                                Potência Destaque
+                              </p>
+                              <p className="text-sm font-black text-gray-900 leading-tight truncate" title={rData.potencia}>
+                                {rData.potencia}
+                              </p>
+                              <p className="text-[9px] font-bold text-gray-500 mt-1 uppercase tracking-wider">
+                                Mais vendido
+                              </p>
+                            </div>
+                          </div>
+
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

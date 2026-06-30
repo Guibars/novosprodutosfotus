@@ -68,12 +68,12 @@ export function Layout() {
       <Sidebar isOpen={isSidebarOpen} />
       <div className={cn(
         "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300",
-        isSidebarOpen ? "pl-72" : "pl-0"
+        isSidebarOpen ? "pl-72" : "pl-[5.5rem]"
       )}>
         <Topbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         <main className="flex-1 overflow-y-auto p-8">
           <div className="w-full">
-            <Outlet />
+            <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
           </div>
         </main>
       </div>

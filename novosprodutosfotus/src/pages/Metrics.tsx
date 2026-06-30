@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Target, TrendingUp, Calendar as CalendarIcon, Save } from "lucide-react";
+import { Target, TrendingUp, Calendar as CalendarIcon, Save, Map } from "lucide-react";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { cn } from "../lib/utils";
@@ -13,6 +13,7 @@ export function Metrics() {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [activeProductTab, setActiveProductTab] = useState(PRODUCTS[0]);
 
   const [selYearStr, selMonthStr] = selectedDate.split('-');
   const year = parseInt(selYearStr, 10);
@@ -45,11 +46,38 @@ export function Metrics() {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, 'sales_metrics', selectedDate), (docSnap) => {
+      const regionsList = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"];
+      
       if (docSnap.exists()) {
-        setMetricsData(docSnap.data());
+        const data = docSnap.data();
+        const normalized = { ...data };
+        PRODUCTS.forEach(p => {
+          if (!normalized[p]) {
+            normalized[p] = { metaMensal: 0, metaTrimestral: 0, quantidadeVendida: 0, propostaAceita: 0 };
+          }
+          if (!normalized[p].regioes) {
+            normalized[p].regioes = {};
+          }
+          regionsList.forEach(r => {
+            if (!normalized[p].regioes[r]) {
+              normalized[p].regioes[r] = { vendas: 0, potencia: "" };
+            }
+          });
+        });
+        setMetricsData(normalized);
       } else {
         const initialData = PRODUCTS.reduce((acc, p) => {
-          acc[p] = { metaMensal: 0, metaTrimestral: 0, quantidadeVendida: 0, propostaAceita: 0 };
+          const regioesObj: Record<string, any> = {};
+          regionsList.forEach(r => {
+            regioesObj[r] = { vendas: 0, potencia: "" };
+          });
+          acc[p] = { 
+            metaMensal: 0, 
+            metaTrimestral: 0, 
+            quantidadeVendida: 0, 
+            propostaAceita: 0,
+            regioes: regioesObj
+          };
           return acc;
         }, {} as any);
         setMetricsData(initialData);
@@ -68,6 +96,28 @@ export function Metrics() {
         [field]: numValue
       }
     }));
+  };
+
+  const handleRegionalInputChange = (product: string, region: string, field: "vendas" | "potencia", value: string) => {
+    setMetricsData((prev: any) => {
+      const prodData = prev[product] || {};
+      const regioes = prodData.regioes || {};
+      const regData = regioes[region] || { vendas: 0, potencia: "" };
+      
+      return {
+        ...prev,
+        [product]: {
+          ...prodData,
+          regioes: {
+            ...regioes,
+            [region]: {
+              ...regData,
+              [field]: field === "vendas" ? (Number(value) || 0) : value
+            }
+          }
+        }
+      };
+    });
   };
 
   const handleSave = async () => {
@@ -201,34 +251,68 @@ export function Metrics() {
         })}
       </div>
 
-      {/* Calendário de Dias Úteis */}
+      {/* Métricas Regionais (Mapa Interativo) */}
       <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 mt-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <CalendarIcon className="w-6 h-6 text-primary" />
-          Calendário de Dias Úteis do Mês
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-3">
-          {businessDays.map((date, idx) => {
-            const isToday = date.getDate() === todayActual.getDate() && date.getMonth() === todayActual.getMonth() && date.getFullYear() === todayActual.getFullYear();
-            const isPast = date < todayActual && !isToday;
-            return (
-              <div 
-                key={idx} 
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Map className="w-6 h-6 text-primary" />
+              Métricas Regionais para o Mapa Interativo
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Defina o volume de vendas e a potência de equipamento mais vendida em cada região geográfica do Brasil para o mapa interativo.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1 bg-gray-100/80 p-1 rounded-xl shrink-0 self-start lg:self-center">
+            {PRODUCTS.map(p => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setActiveProductTab(p)}
                 className={cn(
-                  "p-3 rounded-2xl flex flex-col items-center justify-center border transition-all",
-                  isToday ? "bg-primary text-white border-primary shadow-lg shadow-primary/30" : 
-                  isPast ? "bg-white/60 border-white/20 text-gray-900" : "bg-white/30 border-dashed border-gray-300 text-gray-400"
+                  "px-3 py-1.5 text-xs font-bold rounded-lg transition-colors",
+                  activeProductTab === p ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-white"
                 )}
               >
-                <span className={cn("text-xs font-semibold uppercase opacity-80 mb-1")}>
-                  {date.toLocaleDateString("pt-BR", { weekday: "short" })}
-                </span>
-                <span className="text-2xl font-bold">
-                  {date.getDate()}
-                </span>
-                <span className={cn("text-[10px] mt-1 opacity-70", isToday ? "font-bold" : "font-medium")}>
-                  Dia {idx + 1}
-                </span>
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"].map(region => {
+            const productData = metricsData[activeProductTab] || {};
+            const regionData = (productData.regioes && productData.regioes[region]) || { vendas: 0, potencia: "" };
+            
+            return (
+              <div key={region} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-3">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                  <span className="font-bold text-sm text-gray-800">{region}</span>
+                  <span className="text-[9px] uppercase font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Região</span>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Qtd de Vendas (Unidades)</label>
+                    <input
+                      type="number"
+                      value={regionData.vendas || ""}
+                      onChange={(e) => handleRegionalInputChange(activeProductTab, region, "vendas", e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Potência Mais Vendida</label>
+                    <input
+                      type="text"
+                      value={regionData.potencia || ""}
+                      onChange={(e) => handleRegionalInputChange(activeProductTab, region, "potencia", e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-primary/20 outline-none"
+                      placeholder="Ex: 50 kWp, 10kW"
+                    />
+                  </div>
+                </div>
               </div>
             );
           })}
