@@ -12,7 +12,7 @@ const menuItems = [
   { icon: MessagesSquare, label: "Follow-Up de Reuniões", path: "/follow-up" },
   { icon: TrendingUp, label: "Inteligência de Mercado", path: "/market-intelligence" },
   { icon: Calendar, label: "Calendário", path: "/calendar" },
-  { icon: Palmtree, label: "Férias", path: "/vacations" },
+  { icon: Palmtree, label: "Férias e Voos", path: "/vacations" },
 ];
 
 const generalItems = [

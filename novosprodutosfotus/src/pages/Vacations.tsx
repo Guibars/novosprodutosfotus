@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Palmtree, Plus, Save, Trash2, Calendar as CalendarIcon } from "lucide-react";
+import { Palmtree, Plus, Save, Trash2, Calendar as CalendarIcon, Plane } from "lucide-react";
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,7 +10,7 @@ export function Vacations() {
   const [vacations, setVacations] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false);
-  const [newVacation, setNewVacation] = useState({ userId: "", startDate: "", endDate: "" });
+  const [newVacation, setNewVacation] = useState({ userId: "", startDate: "", endDate: "", type: "ferias" });
 
   useEffect(() => {
     // Busca todo o time
@@ -38,10 +38,11 @@ export function Vacations() {
         userId: newVacation.userId,
         startDate: newVacation.startDate,
         endDate: newVacation.endDate,
+        type: newVacation.type || 'ferias',
         created_by: user?.uid
       });
       setIsAdding(false);
-      setNewVacation({ userId: "", startDate: "", endDate: "" });
+      setNewVacation({ userId: "", startDate: "", endDate: "", type: "ferias" });
     } catch (error) {
       console.error("Erro ao registrar férias", error);
     }
@@ -72,21 +73,36 @@ export function Vacations() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Palmtree className="w-8 h-8 text-orange-500" />
-            Férias do Time
+            Férias, Voos e Viagens
           </h1>
-          <p className="text-gray-500 mt-1">Visualize e cadastre os períodos de férias da equipe de forma transparente.</p>
+          <p className="text-gray-500 mt-1">Visualize e cadastre os períodos de férias, voos e viagens internas da equipe.</p>
         </div>
-        <button 
-          onClick={() => setIsAdding(true)}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20"
-        >
-          <Plus className="w-5 h-5" />
-          Registrar Férias
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={() => {
+              setNewVacation(prev => ({...prev, type: 'ferias'}));
+              setIsAdding(true);
+            }}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Registrar Férias e Voos
+          </button>
+          <button 
+            onClick={() => {
+              setNewVacation(prev => ({...prev, type: 'viagem'}));
+              setIsAdding(true);
+            }}
+            className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg shadow-gray-900/20 text-sm"
+          >
+            <Plane className="w-4 h-4" />
+            Registrar Viagem Interna
+          </button>
+        </div>
       </div>
 
       {isAdding && (
@@ -141,72 +157,156 @@ export function Vacations() {
          </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {vacations.map(vacation => {
-          const member = teamMembers.find((m: any) => m.uid === vacation.userId);
-          const isCurrent = isTodayBetween(vacation.startDate, vacation.endDate);
-          const isComing = isFuture(vacation.startDate);
-          
-          if (!member) return null;
+      <div className="space-y-8">
+        {/* Seção de Férias e Voos */}
+        {vacations.filter(v => v.type === 'ferias' || !v.type).length > 0 && (
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Palmtree className="w-6 h-6 text-orange-500" />
+              Férias e Voos
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {vacations.filter(v => v.type === 'ferias' || !v.type).map(vacation => {
+                const member = teamMembers.find((m: any) => m.uid === vacation.userId);
+                const isCurrent = isTodayBetween(vacation.startDate, vacation.endDate);
+                const isComing = isFuture(vacation.startDate);
+                
+                if (!member) return null;
 
-          return (
-            <div key={vacation.id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 flex flex-col relative overflow-hidden group transition-all hover:shadow-2xl">
-              <div className={cn(
-                "absolute top-0 right-0 left-0 h-2",
-                isCurrent ? "bg-orange-500" : isComing ? "bg-blue-400" : "bg-gray-300"
-              )}></div>
-              
-              <button 
-                onClick={() => handleDeleteVacation(vacation.id)}
-                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 rounded-md"
-                title="Remover Registro"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                return (
+                  <div key={vacation.id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 flex flex-col relative overflow-hidden group transition-all hover:shadow-2xl">
+                    <div className={cn(
+                      "absolute top-0 right-0 left-0 h-2",
+                      isCurrent ? "bg-orange-500" : isComing ? "bg-blue-400" : "bg-gray-300"
+                    )}></div>
+                    
+                    <button 
+                      onClick={() => handleDeleteVacation(vacation.id)}
+                      className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 rounded-md"
+                      title="Remover Registro"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
 
-              <div className="flex items-center gap-4 mb-5 pt-2">
-                <img 
-                  src={member.avatar_url} 
-                  alt={member.full_name} 
-                  className="w-12 h-12 rounded-full border-2 border-white object-cover shadow-md"
-                  referrerPolicy="no-referrer"
-                />
-                <div>
-                  <h3 className="font-bold text-gray-900 leading-tight">{member.full_name}</h3>
-                  <span className={cn(
-                    "text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full mt-1 inline-block",
-                    isCurrent ? "bg-orange-100 text-orange-600" : isComing ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-600"
-                  )}>
-                    {isCurrent ? "De férias agora" : isComing ? "Férias Agendadas" : "Férias Concluídas"}
-                  </span>
-                </div>
-              </div>
+                    <div className="flex items-center gap-4 mb-5 pt-2">
+                      <img 
+                        src={member.avatar_url} 
+                        alt={member.full_name} 
+                        className="w-12 h-12 rounded-full border-2 border-white object-cover shadow-md"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div>
+                        <h3 className="font-bold text-gray-900 leading-tight">{member.full_name}</h3>
+                        <span className={cn(
+                          "text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full mt-1 inline-block",
+                          isCurrent ? "bg-orange-100 text-orange-600" : isComing ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-600"
+                        )}>
+                          {isCurrent ? "De férias/voo" : isComing ? "Agendado" : "Concluído"}
+                        </span>
+                      </div>
+                    </div>
 
-              <div className="bg-white/50 border border-gray-100 rounded-xl p-4 flex flex-col gap-2 relative">
-                <Palmtree className="absolute right-2 bottom-2 w-12 h-12 text-black opacity-5" />
-                <div className="flex items-center gap-2 relative z-10">
-                  <CalendarIcon className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Início:</span>
-                  <span className="text-sm text-gray-600">
-                    {new Date(vacation.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 relative z-10">
-                  <CalendarIcon className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Retorno:</span>
-                  <span className="text-sm text-gray-600">
-                    {new Date(vacation.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-              </div>
+                    <div className="bg-white/50 border border-gray-100 rounded-xl p-4 flex flex-col gap-2 relative">
+                      <Palmtree className="absolute right-2 bottom-2 w-12 h-12 text-black opacity-5" />
+                      <div className="flex items-center gap-2 relative z-10">
+                        <CalendarIcon className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">Início:</span>
+                        <span className="text-sm text-gray-600">
+                          {new Date(vacation.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 relative z-10">
+                        <CalendarIcon className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">Retorno:</span>
+                        <span className="text-sm text-gray-600">
+                          {new Date(vacation.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        )}
+
+        {/* Seção de Viagens Internas */}
+        {vacations.filter(v => v.type === 'viagem').length > 0 && (
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Plane className="w-6 h-6 text-gray-900" />
+              Viagens Internas
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {vacations.filter(v => v.type === 'viagem').map(vacation => {
+                const member = teamMembers.find((m: any) => m.uid === vacation.userId);
+                const isCurrent = isTodayBetween(vacation.startDate, vacation.endDate);
+                const isComing = isFuture(vacation.startDate);
+                
+                if (!member) return null;
+
+                return (
+                  <div key={vacation.id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 flex flex-col relative overflow-hidden group transition-all hover:shadow-2xl">
+                    <div className={cn(
+                      "absolute top-0 right-0 left-0 h-2",
+                      isCurrent ? "bg-gray-900" : isComing ? "bg-gray-500" : "bg-gray-300"
+                    )}></div>
+                    
+                    <button 
+                      onClick={() => handleDeleteVacation(vacation.id)}
+                      className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 rounded-md"
+                      title="Remover Registro"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex items-center gap-4 mb-5 pt-2">
+                      <img 
+                        src={member.avatar_url} 
+                        alt={member.full_name} 
+                        className="w-12 h-12 rounded-full border-2 border-white object-cover shadow-md"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div>
+                        <h3 className="font-bold text-gray-900 leading-tight">{member.full_name}</h3>
+                        <span className={cn(
+                          "text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full mt-1 inline-block",
+                          isCurrent ? "bg-gray-900 text-white" : isComing ? "bg-gray-200 text-gray-800" : "bg-gray-100 text-gray-600"
+                        )}>
+                          {isCurrent ? "Em viagem agora" : isComing ? "Viagem Agendada" : "Viagem Concluída"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/50 border border-gray-100 rounded-xl p-4 flex flex-col gap-2 relative">
+                      <Plane className="absolute right-2 bottom-2 w-12 h-12 text-black opacity-5" />
+                      <div className="flex items-center gap-2 relative z-10">
+                        <CalendarIcon className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">Início:</span>
+                        <span className="text-sm text-gray-600">
+                          {new Date(vacation.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 relative z-10">
+                        <CalendarIcon className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">Retorno:</span>
+                        <span className="text-sm text-gray-600">
+                          {new Date(vacation.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {vacations.length === 0 && !isAdding && (
-          <div className="col-span-full py-12 text-center text-gray-500">
+          <div className="py-12 text-center text-gray-500">
             <Palmtree className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <p className="text-lg font-medium">Nenhum período de férias agendado.</p>
-            <p className="text-sm mt-1">Utilize o botão acima para registrar as férias da equipe.</p>
+            <p className="text-lg font-medium">Nenhum registro agendado.</p>
+            <p className="text-sm mt-1">Utilize os botões acima para registrar ausências.</p>
           </div>
         )}
       </div>

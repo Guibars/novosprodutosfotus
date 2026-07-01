@@ -309,13 +309,18 @@ export function Analytics() {
               projecao = isCurrentMonth ? Math.round((sold / passedBusinessDays) * totalBusinessDays) : sold;
             }
 
+            const isMapEnabled = product === 'Carregador' || product === 'RSD';
+
             return (
               <div 
                 key={product} 
-                onClick={() => setSelectedProductMap(product)}
-                className="bg-white rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-primary/50 hover:shadow-[0_12px_40px_rgba(249,115,22,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group cursor-pointer"
+                onClick={() => isMapEnabled && setSelectedProductMap(product)}
+                className={cn(
+                  "bg-white rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 transition-all duration-300 flex flex-col relative overflow-hidden group",
+                  isMapEnabled ? "hover:border-primary/50 hover:shadow-[0_12px_40px_rgba(249,115,22,0.08)] hover:-translate-y-1 cursor-pointer" : ""
+                )}
               >
-                <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-700 group-hover:scale-150 group-hover:opacity-30", percentage >= 100 ? "bg-success" : "bg-primary")}></div>
+                <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-700", isMapEnabled ? "group-hover:scale-150 group-hover:opacity-30" : "", percentage >= 100 ? "bg-success" : "bg-primary")}></div>
                 
                 <div className="flex items-center gap-4 mb-6 relative z-10">
                   <div className="shrink-0">
@@ -388,12 +393,14 @@ export function Analytics() {
                   </div>
                   
                   {/* Interactive Map Indicator - Bottom Row */}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 relative z-10">
-                    <div className="flex items-center gap-1.5 text-gray-400 group-hover:text-primary transition-colors bg-gray-50 group-hover:bg-primary/5 px-3 py-1.5 rounded-lg border border-transparent group-hover:border-primary/20">
-                      <Map className="w-4 h-4" />
-                      <span className="text-[10px] uppercase tracking-widest font-black">Mapa</span>
+                  {isMapEnabled && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 relative z-10">
+                      <div className="flex items-center gap-1.5 text-gray-400 group-hover:text-primary transition-colors bg-gray-50 group-hover:bg-primary/5 px-3 py-1.5 rounded-lg border border-transparent group-hover:border-primary/20">
+                        <Map className="w-4 h-4" />
+                        <span className="text-[10px] uppercase tracking-widest font-black">Mapa</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );

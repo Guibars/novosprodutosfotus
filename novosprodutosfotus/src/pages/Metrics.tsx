@@ -13,7 +13,7 @@ export function Metrics() {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   });
-  const [activeProductTab, setActiveProductTab] = useState(PRODUCTS[0]);
+  const [activeProductTab, setActiveProductTab] = useState("Carregador");
 
   const [selYearStr, selMonthStr] = selectedDate.split('-');
   const year = parseInt(selYearStr, 10);
@@ -264,7 +264,7 @@ export function Metrics() {
             </p>
           </div>
           <div className="flex flex-wrap gap-1 bg-gray-100/80 p-1 rounded-xl shrink-0 self-start lg:self-center">
-            {PRODUCTS.map(p => (
+            {['Carregador', 'RSD'].map(p => (
               <button
                 key={p}
                 type="button"
