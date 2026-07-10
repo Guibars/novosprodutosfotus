@@ -52,8 +52,8 @@ export function Sidebar({ isOpen }: { isOpen: boolean }) {
                     "flex items-center gap-3 rounded-2xl text-sm font-medium transition-all duration-200",
                     isOpen ? "px-4 py-3" : "p-3 justify-center",
                     isActive 
-                      ? "bg-secondary text-white shadow-lg shadow-secondary/30 scale-[1.02]" 
-                      : "text-gray-600 hover:bg-white/50 hover:text-gray-900"
+                      ? "nav-pill-active scale-[1.02]"
+                      : "text-gray-600 hover:bg-white/60 hover:text-gray-900 hover:translate-x-1 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
                   )}
                 >
                   {({ isActive }) => (
@@ -81,8 +81,8 @@ export function Sidebar({ isOpen }: { isOpen: boolean }) {
                     "flex items-center gap-3 rounded-2xl text-sm font-medium transition-all duration-200",
                     isOpen ? "px-4 py-3" : "p-3 justify-center",
                     isActive 
-                      ? "bg-secondary text-white shadow-lg shadow-secondary/30 scale-[1.02]" 
-                      : "text-gray-600 hover:bg-white/50 hover:text-gray-900"
+                      ? "nav-pill-active scale-[1.02]"
+                      : "text-gray-600 hover:bg-white/60 hover:text-gray-900 hover:translate-x-1 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
                   )}
                 >
                   {({ isActive }) => (
@@ -97,7 +97,7 @@ export function Sidebar({ isOpen }: { isOpen: boolean }) {
                 onClick={signOut}
                 title={!isOpen ? "Sair" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl text-sm font-medium text-red-500 hover:bg-red-50/50 transition-all mt-2",
+                  "flex items-center gap-3 rounded-2xl text-sm font-medium text-red-500 hover:bg-red-50/60 hover:translate-x-1 transition-all mt-2",
                   isOpen ? "px-4 py-3" : "p-3 justify-center"
                 )}
               >

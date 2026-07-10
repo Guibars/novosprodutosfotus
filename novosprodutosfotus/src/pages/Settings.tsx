@@ -115,31 +115,23 @@ export function Settings() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl relative">
+    <div className="space-y-6 max-w-4xl relative animate-fade-up">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
         <p className="text-gray-500 mt-1">Gerencie as permissões e configurações da plataforma.</p>
       </div>
 
       {user?.email === 'guilhermebarbosars@gmail.com' && (
-        <div className="flex space-x-2 border-b border-gray-200 mb-6">
+        <div className="glass-segment inline-flex mb-6">
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
-              activeTab === 'users' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`seg-btn px-4 py-2 text-sm ${activeTab === 'users' ? 'seg-btn-active' : ''}`}
           >
             Usuários
           </button>
           <button
             onClick={() => setActiveTab('updates')}
-            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
-              activeTab === 'updates' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`seg-btn px-4 py-2 text-sm ${activeTab === 'updates' ? 'seg-btn-active' : ''}`}
           >
             Lançar Atualização
           </button>
@@ -147,7 +139,7 @@ export function Settings() {
       )}
 
       {activeTab === 'users' && (
-        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-xl shadow-black/5 overflow-hidden">
+        <div className="glass-panel rounded-[2rem] overflow-hidden">
           <div className="p-6 border-b border-white/50">
             <h2 className="text-xl font-semibold text-gray-900">Gerenciamento de Usuários</h2>
             <p className="text-sm text-gray-500 mt-1">Defina o cargo de cada membro. Isso refletirá no perfil deles.</p>
@@ -227,7 +219,7 @@ export function Settings() {
       )}
 
       {activeTab === 'updates' && user?.email === 'guilhermebarbosars@gmail.com' && (
-        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-xl shadow-black/5 overflow-hidden">
+        <div className="glass-panel rounded-[2rem] overflow-hidden">
           <div className="p-6 border-b border-white/50">
             <h2 className="text-xl font-semibold text-gray-900">Lançar Atualização</h2>
             <p className="text-sm text-gray-500 mt-1">Envie um comunicado que aparecerá para todos os usuários na próxima vez que abrirem o sistema.</p>
@@ -257,7 +249,7 @@ export function Settings() {
               <button
                 onClick={handleLaunchUpdate}
                 disabled={savingUpdate || !updateNotes}
-                className="px-6 py-3 bg-secondary hover:bg-secondary-hover disabled:opacity-50 text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30 flex items-center gap-2"
+                className="btn-liquid btn-secondary-liquid px-6 py-3 rounded-xl"
               >
                 {savingUpdate ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -273,8 +265,8 @@ export function Settings() {
 
       {/* Edit User Modal */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
+          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-md animate-pop-in">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Editar Usuário</h2>
             <form onSubmit={handleSaveEdit} className="space-y-5">
               <div>
@@ -302,13 +294,13 @@ export function Settings() {
                 <button 
                   type="button" 
                   onClick={() => setEditingUser(null)}
-                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
+                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
+                  className="btn-liquid btn-secondary-liquid px-5 py-2.5 rounded-xl"
                 >
                   Salvar
                 </button>
@@ -320,8 +312,8 @@ export function Settings() {
 
       {/* Delete User Modal */}
       {userToDelete && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
+          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-sm animate-pop-in">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Excluir Usuário</h2>
             <p className="text-sm text-gray-600 mb-6">
               Tem certeza que deseja excluir este usuário? (Esta ação apenas remove o perfil da plataforma. O usuário ainda poderá ter acesso se não for removido no painel de autenticação do Firebase.)
@@ -336,7 +328,7 @@ export function Settings() {
               </button>
               <button 
                 onClick={confirmDeleteUser}
-                className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-red-500/30"
+                className="btn-liquid btn-danger-liquid px-5 py-2.5 rounded-xl"
               >
                 Excluir Definitivamente
               </button>

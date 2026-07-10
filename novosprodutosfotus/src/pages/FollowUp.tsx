@@ -184,7 +184,7 @@ export function FollowUp() {
   }
 
   return (
-    <div className="h-full flex flex-col space-y-6 max-w-[1600px] mx-auto pb-10">
+    <div className="h-full flex flex-col space-y-6 max-w-[1600px] mx-auto pb-10 animate-fade-up">
       <div className="flex justify-between items-end shrink-0 gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
@@ -202,13 +202,13 @@ export function FollowUp() {
               placeholder="Buscar cliente ou empresa..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-secondary outline-none w-[260px] hover:border-gray-300 transition-colors"
+              className="pl-9 pr-4 py-2.5 glass-input rounded-xl text-sm font-medium text-gray-800 w-[260px]"
             />
           </div>
 
           <button 
             onClick={() => setIsInsightsOpen(true)}
-            className="bg-white border border-gray-200 text-gray-700 px-5 py-2.5 flex items-center gap-2 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 transition-all shrink-0 hover:border-gray-300"
+            className="btn-liquid btn-white-liquid px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
           >
             <BarChart3 className="w-4 h-4" />
             Insights Gerais
@@ -216,7 +216,7 @@ export function FollowUp() {
 
           <button 
             onClick={openNewModal}
-            className="bg-secondary text-white px-5 py-2.5 flex items-center gap-2 rounded-xl text-sm font-bold shadow-md hover:bg-secondary/90 transition-all shrink-0 hover:scale-105"
+            className="btn-liquid btn-secondary-liquid px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
           >
             <Plus className="w-4 h-4" />
             Nova Reunião
@@ -228,7 +228,7 @@ export function FollowUp() {
         {filteredMeetings.length > 0 ? filteredMeetings.map(meeting => (
           <div 
             key={meeting.id} 
-            className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group overflow-hidden"
+            className="glass-card hover-lift rounded-3xl flex flex-col group overflow-hidden"
           >
             <div className="p-6 pb-5 flex-1 flex flex-col relative">
               <div className="absolute top-3 right-3 flex opacity-0 group-hover:opacity-100 transition-opacity gap-1 z-20 bg-white/90 backdrop-blur-sm p-1.5 rounded-xl shadow-sm border border-gray-100">
@@ -302,20 +302,20 @@ export function FollowUp() {
             </div>
             
             {meeting.observations && (
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 text-sm text-gray-600 line-clamp-3 relative">
+              <div className="px-6 py-4 bg-white/40 border-t border-white/60 text-sm text-gray-600 line-clamp-3 relative">
                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1">Observações</span>
                 <p className="font-medium leading-relaxed pb-1">{meeting.observations}</p>
-                <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-gray-50 to-transparent"></div>
+                <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/70 to-transparent"></div>
               </div>
             )}
             {!meeting.observations && (
-               <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-xs font-medium text-gray-400 italic">
+               <div className="px-6 py-3 bg-white/40 border-t border-white/60 text-xs font-medium text-gray-400 italic">
                  Nenhuma observação registrada.
                </div>
             )}
           </div>
         )) : (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center bg-gray-50 rounded-3xl border border-dashed border-gray-300">
+          <div className="col-span-full py-20 flex flex-col items-center justify-center bg-white/30 backdrop-blur-md rounded-3xl border border-dashed border-white/70">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
               <MessagesSquare className="w-6 h-6 text-gray-400" />
             </div>
@@ -326,13 +326,13 @@ export function FollowUp() {
       </div>
 
       {isModalOpen && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999] p-4 md:p-8">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors z-[100] bg-white border border-gray-100 shadow-sm">
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[9999] p-4 md:p-8">
+          <div className="glass-modal rounded-[2rem] w-full max-w-2xl relative max-h-[90vh] flex flex-col overflow-hidden animate-pop-in">
+            <button onClick={() => setIsModalOpen(false)} className="icon-btn absolute top-6 right-6 p-2 rounded-full z-[100] bg-white/70">
               <X className="w-5 h-5" />
             </button>
             
-            <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-gray-50">
+            <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
               <div className="flex items-center gap-4 mb-8">
                <div className="p-3.5 rounded-2xl bg-secondary/10 text-secondary shadow-inner border border-secondary/20">
                   <MessagesSquare className="w-8 h-8" />
@@ -345,7 +345,7 @@ export function FollowUp() {
                </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-6">
+              <div className="glass-tile p-6 rounded-3xl space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -355,7 +355,7 @@ export function FollowUp() {
                       type="text" 
                       value={form.clientName} 
                       onChange={e => setForm({...form, clientName: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                       placeholder="Ex: João Silva" 
                     />
                   </div>
@@ -367,7 +367,7 @@ export function FollowUp() {
                       type="text" 
                       value={form.companyName} 
                       onChange={e => setForm({...form, companyName: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                       placeholder="Ex: Eletro Engenharia" 
                     />
                   </div>
@@ -382,7 +382,7 @@ export function FollowUp() {
                       type="text" 
                       value={form.phone} 
                       onChange={e => setForm({...form, phone: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                       placeholder="(11) 99999-9999" 
                     />
                   </div>
@@ -393,7 +393,7 @@ export function FollowUp() {
                     <select 
                       value={form.state} 
                       onChange={e => setForm({...form, state: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors bg-white hover:border-gray-300" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                     >
                       {BRAZIL_STATES.map(s => (
                         <option key={s} value={s}>{s}</option>
@@ -407,7 +407,7 @@ export function FollowUp() {
                     <select 
                       value={form.chargerPower} 
                       onChange={e => setForm({...form, chargerPower: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors bg-white appearance-none cursor-pointer" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900 appearance-none cursor-pointer"
                     >
                       <option value="40">40 kW</option>
                       <option value="60">60 kW</option>
@@ -425,7 +425,7 @@ export function FollowUp() {
                     <select 
                       value={form.responsible} 
                       onChange={e => setForm({...form, responsible: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors bg-white hover:border-gray-300" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                     >
                       <option value="">Selecione o responsável</option>
                       {teamMembers.map(member => (
@@ -443,7 +443,7 @@ export function FollowUp() {
                       type="text" 
                       value={form.orderNumber} 
                       onChange={e => setForm({...form, orderNumber: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                       placeholder="Ex: 1234567-98" 
                     />
                   </div>
@@ -458,7 +458,7 @@ export function FollowUp() {
                       type="date" 
                       value={form.date} 
                       onChange={e => setForm({...form, date: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors text-sm" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900 text-sm"
                     />
                   </div>
                   <div>
@@ -469,7 +469,7 @@ export function FollowUp() {
                       type="text" 
                       value={form.time} 
                       onChange={e => setForm({...form, time: e.target.value})} 
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-bold text-gray-900 transition-colors text-sm" 
+                      className="w-full glass-input p-3 rounded-xl font-bold text-gray-900 text-sm"
                       placeholder="Ex: 09:00 as 10:00" 
                     />
                   </div>
@@ -480,13 +480,13 @@ export function FollowUp() {
                       <HelpCircle className="w-3.5 h-3.5 text-gray-400" /> Cliente já possui carregadores instalados?
                     </label>
                     <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer p-3 border border-gray-200 rounded-xl flex-1 hover:border-emerald-300 hover:bg-emerald-50 transition-colors" onClick={() => setForm({...form, hasInstalledChargers: true})}>
+                      <label className="flex items-center gap-2 cursor-pointer p-3 glass-tile rounded-xl flex-1 hover:border-emerald-300 hover:bg-emerald-50/70 transition-colors" onClick={() => setForm({...form, hasInstalledChargers: true})}>
                         <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", form.hasInstalledChargers ? "border-emerald-500" : "border-gray-300")}>
                           {form.hasInstalledChargers && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
                         </div>
                         <span className={cn("font-bold text-sm", form.hasInstalledChargers ? "text-emerald-700" : "text-gray-600")}>Sim</span>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer p-3 border border-gray-200 rounded-xl flex-1 hover:border-gray-300 hover:bg-gray-50 transition-colors" onClick={() => setForm({...form, hasInstalledChargers: false})}>
+                      <label className="flex items-center gap-2 cursor-pointer p-3 glass-tile rounded-xl flex-1 hover:border-white hover:bg-white/80 transition-colors" onClick={() => setForm({...form, hasInstalledChargers: false})}>
                         <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", !form.hasInstalledChargers ? "border-gray-500" : "border-gray-300")}>
                           {!form.hasInstalledChargers && <div className="w-2.5 h-2.5 bg-gray-500 rounded-full" />}
                         </div>
@@ -502,17 +502,17 @@ export function FollowUp() {
                     <textarea 
                       value={form.observations}
                       onChange={e => setForm({...form, observations: e.target.value})}
-                      className="w-full border border-gray-200 p-4 rounded-xl focus:ring-2 focus:ring-secondary outline-none font-medium text-gray-900 transition-colors resize-none h-32"
+                      className="w-full glass-input p-4 rounded-xl font-medium text-gray-900 resize-none h-32"
                       placeholder="Anote aqui os detalhes da reunião, próximos passos e acordos..."
                     />
                 </div>
               </div>
             </div>
             
-            <div className="p-6 bg-white border-t border-gray-100 flex justify-end shrink-0">
-               <button 
-                 onClick={handleSave} 
-                 className="bg-secondary text-white font-bold py-3.5 px-8 rounded-xl shadow-md hover:bg-secondary/90 transition-colors flex items-center gap-2 w-full sm:w-auto"
+            <div className="p-6 border-t border-white/60 flex justify-end shrink-0">
+               <button
+                 onClick={handleSave}
+                 className="btn-liquid btn-secondary-liquid py-3.5 px-8 rounded-xl font-bold w-full sm:w-auto"
                >
                  <Plus className="w-5 h-5" />
                  Salvar Reunião
@@ -524,13 +524,13 @@ export function FollowUp() {
       )}
 
       {isInsightsOpen && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999] p-4 md:p-8">
-          <div className="bg-white rounded-[2rem] w-full max-w-4xl shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden">
-            <button onClick={() => setIsInsightsOpen(false)} className="absolute top-6 right-6 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors z-[100] bg-white border border-gray-100 shadow-sm">
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[9999] p-4 md:p-8">
+          <div className="glass-modal rounded-[2rem] w-full max-w-4xl relative max-h-[90vh] flex flex-col overflow-hidden animate-pop-in">
+            <button onClick={() => setIsInsightsOpen(false)} className="icon-btn absolute top-6 right-6 p-2 rounded-full z-[100] bg-white/70">
               <X className="w-5 h-5" />
             </button>
 
-            <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-gray-50">
+            <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
               <div className="flex items-center gap-4 mb-8">
                <div className="p-3.5 rounded-2xl bg-secondary/10 text-secondary shadow-inner border border-secondary/20">
                   <BarChart3 className="w-8 h-8" />
@@ -544,7 +544,7 @@ export function FollowUp() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
+                <div className="glass-tile p-6 rounded-3xl flex flex-col items-center justify-center text-center">
                   <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Total de Reuniões</span>
                   <div className="text-5xl font-black text-gray-900">{insights.totalMeetings}</div>
                 </div>
@@ -561,7 +561,7 @@ export function FollowUp() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+                <div className="glass-tile p-6 rounded-3xl">
                   <h3 className="text-sm font-black text-gray-900 flex items-center gap-2 mb-6">
                     <MapPin className="w-4 h-4 text-secondary" />
                     Estados com mais reuniões
@@ -584,7 +584,7 @@ export function FollowUp() {
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+                <div className="glass-tile p-6 rounded-3xl">
                   <h3 className="text-sm font-black text-gray-900 flex items-center gap-2 mb-6">
                     <Zap className="w-4 h-4 text-secondary" />
                     Potência mais oferecida
@@ -614,8 +614,8 @@ export function FollowUp() {
       )}
 
       {meetingToDelete && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999] p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6 text-center">
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[9999] p-4">
+          <div className="glass-modal rounded-3xl w-full max-w-sm p-6 text-center animate-pop-in">
             <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 className="w-8 h-8" />
             </div>
@@ -624,13 +624,13 @@ export function FollowUp() {
             <div className="flex gap-3">
               <button 
                 onClick={() => setMeetingToDelete(null)}
-                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                className="btn-liquid btn-white-liquid flex-1 px-4 py-3 rounded-xl font-bold"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={confirmDelete}
-                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors"
+                className="btn-liquid btn-danger-liquid flex-1 px-4 py-3 rounded-xl font-bold"
               >
                 Excluir
               </button>

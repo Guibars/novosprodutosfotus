@@ -235,14 +235,14 @@ export function Analytics() {
   const trendData6Months = getLast6MonthsData();
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fade-up">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Cockpit Novos Produtos</h1>
         <p className="text-gray-500 mt-1">Visão detalhada do desempenho da equipe, acompanhamento de produtos.</p>
       </div>
 
       {/* 🚀 Métricas de Vendas (Integração) */}
-      <div className="bg-gradient-to-br from-white/60 to-white/30 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
+      <div className="glass-panel rounded-[2rem] p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex flex-col">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -256,18 +256,18 @@ export function Analytics() {
               type="month" 
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-white/50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700 w-full sm:w-auto"
+              className="glass-input rounded-xl px-4 py-2 text-sm font-medium text-gray-700 w-full sm:w-auto"
             />
-            <div className="bg-white/50 border border-gray-200 rounded-xl p-1 flex items-center shrink-0 w-full sm:w-auto overflow-hidden">
-              <button 
+            <div className="glass-segment rounded-xl shrink-0 w-full sm:w-auto overflow-hidden">
+              <button
                 onClick={() => setIsQuarterView(false)}
-                className={cn("flex-1 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors", !isQuarterView ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-white")}
+                className={cn("seg-btn flex-1 px-4 py-1.5 text-sm", !isQuarterView && "seg-btn-active")}
               >
                 Mês
               </button>
-              <button 
+              <button
                 onClick={() => setIsQuarterView(true)}
-                className={cn("flex-1 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors", isQuarterView ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-white")}
+                className={cn("seg-btn flex-1 px-4 py-1.5 text-sm", isQuarterView && "seg-btn-active")}
               >
                 Trimestre
               </button>
@@ -316,8 +316,8 @@ export function Analytics() {
                 key={product} 
                 onClick={() => isMapEnabled && setSelectedProductMap(product)}
                 className={cn(
-                  "bg-white rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 transition-all duration-300 flex flex-col relative overflow-hidden group",
-                  isMapEnabled ? "hover:border-primary/50 hover:shadow-[0_12px_40px_rgba(249,115,22,0.08)] hover:-translate-y-1 cursor-pointer" : ""
+                  "glass-card rounded-[1.75rem] p-5 flex flex-col relative overflow-hidden group",
+                  isMapEnabled ? "hover-lift hover:border-primary/40 cursor-pointer" : ""
                 )}
               >
                 <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-700", isMapEnabled ? "group-hover:scale-150 group-hover:opacity-30" : "", percentage >= 100 ? "bg-success" : "bg-primary")}></div>
@@ -335,11 +335,11 @@ export function Analytics() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-4 relative z-10">
-                  <div className="bg-gray-50 rounded-xl p-3 border border-gray-100/50">
+                  <div className="glass-tile rounded-xl p-3">
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Real</p>
                     <p className="text-xl font-black text-gray-900 tracking-tighter">{sold}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-3 border border-gray-100/50">
+                  <div className="glass-tile rounded-xl p-3">
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Meta</p>
                     <p className="text-xl font-black text-gray-400 tracking-tighter">{goal}</p>
                   </div>
@@ -410,7 +410,7 @@ export function Analytics() {
 
       {/* 📊 Tendência do Produto */}
       <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
+        <div className="glass-panel rounded-[2rem] p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-secondary" />
@@ -419,7 +419,7 @@ export function Analytics() {
             <select
               value={selectedProductTrend}
               onChange={(e) => setSelectedProductTrend(e.target.value)}
-              className="bg-white/50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700"
+              className="glass-input rounded-xl px-4 py-2 text-sm font-medium text-gray-700"
             >
               {PRODUCTS.map(p => (
                 <option key={p} value={p}>{p}</option>
@@ -436,7 +436,7 @@ export function Analytics() {
               const growth = prevItem && prevItem.Realizado > 0 ? Math.round(((item.Realizado - prevItem.Realizado) / prevItem.Realizado) * 100) : null;
               
               return (
-                <div key={item.id} className={cn("bg-white rounded-[1.5rem] p-5 shadow-sm border transition-shadow flex flex-col", isLast ? "border-primary/40 shadow-primary/5" : "border-gray-100/80 hover:shadow-md")}>
+                <div key={item.id} className={cn("glass-card hover-lift rounded-[1.75rem] p-5 flex flex-col", isLast && "border-primary/40 ring-1 ring-primary/20")}>
                   <div className="flex justify-between items-start mb-6">
                     <span className={cn("text-xs font-bold uppercase tracking-wider", isLast ? "text-primary" : "text-gray-500")}>
                       {item.monthName} '{item.yearLabel}
@@ -509,8 +509,8 @@ export function Analytics() {
         const activeRegionData = getRegionData(activeRegion);
 
         return (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4 lg:p-6 animate-in fade-in duration-200" id="map-modal">
-            <div className={cn("bg-white rounded-[2rem] shadow-2xl p-5 lg:p-6 relative border border-gray-100 flex flex-col transition-all duration-300 overflow-y-auto lg:overflow-hidden", isMapExpanded ? "w-[95vw] h-[95vh] max-w-none" : "w-full max-w-5xl max-h-[90vh] lg:h-[85vh]")} id="map-modal-content">
+          <div className="fixed inset-0 glass-overlay z-50 flex items-center justify-center p-4 lg:p-6" id="map-modal">
+            <div className={cn("glass-modal rounded-[2rem] p-5 lg:p-6 relative flex flex-col transition-all duration-300 overflow-y-auto lg:overflow-hidden animate-pop-in", isMapExpanded ? "w-[95vw] h-[95vh] max-w-none" : "w-full max-w-5xl max-h-[90vh] lg:h-[85vh]")} id="map-modal-content">
               
               {/* Header Compact */}
               <div className="flex items-start justify-between mb-4 border-b border-gray-100 pb-4 shrink-0">
@@ -528,14 +528,14 @@ export function Analytics() {
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => setIsMapExpanded(!isMapExpanded)}
-                    className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors border border-gray-100 cursor-pointer hidden lg:flex"
+                    className="icon-btn p-2 rounded-xl bg-white/60 hidden lg:flex"
                     title={isMapExpanded ? "Reduzir" : "Expandir"}
                   >
                     {isMapExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                   </button>
                   <button 
                     onClick={() => setSelectedProductMap(null)}
-                    className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors border border-gray-100 cursor-pointer"
+                    className="icon-btn p-2 rounded-xl bg-white/60"
                     id="close-modal-btn"
                   >
                     <X className="w-4 h-4" />
@@ -547,7 +547,7 @@ export function Analytics() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch flex-1 lg:h-full lg:min-h-0 lg:overflow-hidden">
                 
                 {/* Map Container */}
-                <div className={cn("bg-gray-50/50 rounded-2xl border border-gray-150 p-4 flex flex-col items-center justify-center relative lg:min-h-0", isMapExpanded ? "lg:col-span-6 min-h-[400px] lg:h-full" : "lg:col-span-5 min-h-[300px] lg:h-full")}>
+                <div className={cn("glass-tile rounded-2xl p-4 flex flex-col items-center justify-center relative lg:min-h-0", isMapExpanded ? "lg:col-span-6 min-h-[400px] lg:h-full" : "lg:col-span-5 min-h-[300px] lg:h-full")}>
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 self-start absolute top-4 left-4 z-10 hidden sm:block">
                     Visão Regional
                   </h4>
@@ -641,9 +641,9 @@ export function Analytics() {
                           onClick={() => setSelectedRegion(regionName)}
                           className={cn(
                             "rounded-2xl transition-all duration-300 cursor-pointer border overflow-hidden flex flex-col relative shrink-0",
-                            isCurrentActive 
-                              ? "bg-white border-primary/40 shadow-[0_8px_30px_rgb(0,0,0,0.08)]" 
-                              : "bg-gray-50/50 border-gray-100 hover:bg-white hover:border-gray-200"
+                            isCurrentActive
+                              ? "glass-card border-primary/40"
+                              : "glass-tile border-white/50 hover:bg-white/85 hover:border-white"
                           )}
                         >
                           {/* Background Progress Bar for inactive state or subtle for active */}
@@ -690,7 +690,7 @@ export function Analytics() {
                             "grid grid-cols-2 gap-3 transition-all duration-300 ease-in-out px-4",
                             isCurrentActive ? "py-4 opacity-100 max-h-[200px]" : "max-h-0 opacity-0 overflow-hidden py-0"
                           )}>
-                            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                            <div className="glass-tile rounded-xl p-3">
                               <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                                 Participação
                               </p>
@@ -705,7 +705,7 @@ export function Analytics() {
                               </div>
                             </div>
                             
-                            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                            <div className="glass-tile rounded-xl p-3">
                               <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                                 Potência Destaque
                               </p>

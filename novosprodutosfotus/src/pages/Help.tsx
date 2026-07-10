@@ -3,13 +3,13 @@ import { Info, ShieldAlert, Wrench, Bug } from "lucide-react";
 
 export function Help() {
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-fade-up">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Sobre o Sistema</h1>
         <p className="text-gray-500 mt-1">Informações importantes sobre a versão atual da plataforma.</p>
       </div>
 
-      <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-8 shadow-xl shadow-black/5 relative overflow-hidden">
+      <div className="glass-panel rounded-[2rem] p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
 
@@ -23,7 +23,7 @@ export function Help() {
             <p className="text-gray-500 mt-2 font-medium">Fase de Testes e Ajustes</p>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-white/80 shadow-sm text-left space-y-4 w-full mt-4">
+          <div className="glass-tile rounded-2xl p-6 text-left space-y-4 w-full mt-4">
             <div className="flex gap-4 items-start">
               <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
                 <Wrench className="w-5 h-5" />

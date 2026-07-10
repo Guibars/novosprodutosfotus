@@ -319,7 +319,7 @@ Atenciosamente.`;
   };
 
   return (
-    <div className="h-full flex flex-col space-y-6 max-w-[1600px] mx-auto pb-10 overflow-hidden">
+    <div className="h-full flex flex-col space-y-6 max-w-[1600px] mx-auto pb-10 overflow-hidden animate-fade-up">
       <div className="flex justify-between items-end shrink-0 gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Quadro de Transferência</h1>
@@ -333,19 +333,19 @@ Atenciosamente.`;
               placeholder="Buscar por n° pedido..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
+              className="w-full pl-9 pr-4 py-2 glass-input rounded-xl text-sm"
             />
           </div>
           <button 
             onClick={() => setIsViewAllModalOpen(true)}
-            className="bg-white border border-gray-200 text-gray-700 font-bold px-4 py-2 flex items-center gap-2 rounded-xl text-sm shadow-sm hover:bg-gray-50 transition-all shrink-0"
+            className="btn-liquid btn-white-liquid px-4 py-2 rounded-xl text-sm font-bold shrink-0"
           >
             <ListFilter className="w-4 h-4" />
             Ver Tudo
           </button>
           <button 
             onClick={openAddStageModal}
-            className="bg-gray-900 text-white px-4 py-2 flex items-center gap-2 rounded-xl text-sm font-bold shadow-md hover:bg-gray-800 transition-all shrink-0"
+            className="btn-liquid btn-dark-liquid px-4 py-2 rounded-xl text-sm font-bold shrink-0"
           >
             <Plus className="w-4 h-4" />
             Nova Etapa
@@ -355,7 +355,7 @@ Atenciosamente.`;
 
       {/* Analytics Transferências */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+        <div className="glass-card hover-lift rounded-2xl p-6 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
             <Package className="w-6 h-6" />
           </div>
@@ -365,7 +365,7 @@ Atenciosamente.`;
           </div>
         </div>
         
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+        <div className="glass-card hover-lift rounded-2xl p-6 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
             <Inbox className="w-6 h-6" />
           </div>
@@ -375,7 +375,7 @@ Atenciosamente.`;
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+        <div className="glass-card hover-lift rounded-2xl p-6 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
             <TrendingUp className="w-6 h-6" />
           </div>
@@ -398,11 +398,11 @@ Atenciosamente.`;
               className={cn(
                 "rounded-3xl w-[85vw] sm:w-80 md:flex-1 md:min-w-[250px] shrink-0 flex flex-col max-h-[75vh] border-2 transition-all shadow-sm cursor-grab active:cursor-grabbing snap-center",
                 draggedStageId === stage.id ? "opacity-30 border-dashed scale-95" : "",
-                stage.isCompletedStage 
-                  ? "border-emerald-200 bg-emerald-50/50" 
-                  : stage.isCancelledStage 
-                    ? "border-red-200 bg-red-50/50" 
-                    : "border-transparent bg-gray-100"
+                stage.isCompletedStage
+                  ? "border-emerald-200/80 bg-emerald-50/50 backdrop-blur-xl"
+                  : stage.isCancelledStage
+                    ? "border-red-200/80 bg-red-50/50 backdrop-blur-xl"
+                    : "glass-column border-white/50"
               )}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
@@ -444,7 +444,7 @@ Atenciosamente.`;
                           ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-200 hover:border-emerald-400" 
                           : stage.isCancelledStage 
                             ? "bg-gradient-to-br from-red-50 to-white border-red-200 hover:border-red-400"
-                            : "bg-white border-gray-200 hover:border-primary/40",
+                            : "bg-white/90 border-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,1)] hover:border-primary/40",
                         draggedCardId === card.id ? "opacity-30 border-dashed scale-90" : ""
                       )}
                     >
@@ -531,7 +531,7 @@ Atenciosamente.`;
               <div className="p-3 shrink-0 opacity-80 hover:opacity-100 transition-opacity">
                 <button 
                   onClick={() => openAddCardModal(stage.id)}
-                  className="w-full py-2.5 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm bg-black/5 hover:bg-black/10 rounded-xl transition-colors border border-transparent hover:border-black/5"
+                  className="w-full py-2.5 flex items-center justify-center gap-2 text-gray-600 font-bold text-sm bg-white/40 hover:bg-white/75 rounded-xl transition-all border border-white/50 hover:shadow-md active:scale-[0.98]"
                 >
                   <Plus className="w-4 h-4" />
                   Adicionar Pedido
@@ -551,20 +551,20 @@ Atenciosamente.`;
 
       {/* Modals */}
       {itemToDelete && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[110] p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[110] p-4">
+          <div className="glass-modal rounded-3xl p-6 w-full max-w-sm relative animate-pop-in">
             <h2 className="text-xl font-black text-gray-900 mb-2">Confirmar Exclusão</h2>
             <p className="text-sm text-gray-500 mb-6">Esta ação não pode ser desfeita. Deseja continuar?</p>
             <div className="flex gap-3">
               <button 
                 onClick={() => setItemToDelete(null)} 
-                className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition-colors"
+                className="btn-liquid btn-ghost-liquid flex-1 py-3 rounded-xl font-bold"
               >
                 Cancelar
               </button>
-              <button 
-                onClick={confirmDelete} 
-                className="flex-1 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors"
+              <button
+                onClick={confirmDelete}
+                className="btn-liquid btn-danger-liquid flex-1 py-3 rounded-xl font-bold"
               >
                 Excluir
               </button>
@@ -574,18 +574,18 @@ Atenciosamente.`;
       )}
 
       {isAddStageModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
-            <button onClick={() => setIsAddStageModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full">
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[100] p-4">
+          <div className="glass-modal rounded-3xl p-6 w-full max-w-md relative animate-pop-in">
+            <button onClick={() => setIsAddStageModalOpen(false)} className="icon-btn absolute top-4 right-4 p-2 rounded-full">
               <X className="w-5 h-5" />
             </button>
             <h2 className="text-xl font-black text-gray-900 mb-6">{editingStageId ? 'Editar Etapa' : 'Nova Etapa'}</h2>
             <div className="space-y-4">
                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Etapa</label>
-                  <input type="text" value={newStageName} onChange={e => setNewStageName(e.target.value)} className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium" placeholder="Ex: A Faturar" />
+                  <input type="text" value={newStageName} onChange={e => setNewStageName(e.target.value)} className="w-full glass-input p-3 rounded-xl font-medium" placeholder="Ex: A Faturar" />
                </div>
-               <label className="flex items-center gap-3 cursor-pointer mt-4 bg-gray-50 p-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+               <label className="flex items-center gap-3 cursor-pointer mt-4 glass-tile p-3 rounded-xl hover:bg-white/80 transition-colors">
                  <input type="checkbox" checked={newStageIsCompleted} onChange={e => setNewStageIsCompleted(e.target.checked)} className="w-5 h-5 rounded text-primary focus:ring-primary border-gray-300" />
                  <div>
                    <span className="text-sm font-bold text-gray-900 block">Etapa de Conclusão / Transferido?</span>
@@ -599,35 +599,35 @@ Atenciosamente.`;
                    <span className="text-xs text-red-700/80 font-medium">Marque se cards nesta etapa foram cancelados ou reprovados.</span>
                  </div>
                </label>
-               <button onClick={handleSaveStage} className="w-full bg-primary text-white font-bold py-3 rounded-xl mt-4 shadow-md shadow-primary/20 hover:bg-primary/90 transition-colors">{editingStageId ? 'Salvar Alterações' : 'Criar Etapa'}</button>
+               <button onClick={handleSaveStage} className="btn-liquid btn-primary-liquid w-full py-3 rounded-xl mt-4 font-bold">{editingStageId ? 'Salvar Alterações' : 'Criar Etapa'}</button>
             </div>
           </div>
         </div>
       )}
 
       {isCardModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
-          <div className="w-full max-w-xl relative flex flex-col max-h-[95vh]">
-            <div className="bg-white rounded-t-[2rem] p-6 shrink-0 relative z-10 border-b border-gray-100 shadow-sm">
-              <button onClick={() => setIsCardModalOpen(false)} className="absolute top-6 right-6 p-2 text-gray-400 hover:bg-gray-100 transition-colors rounded-full z-10">
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[100] p-4">
+          <div className="w-full max-w-xl relative flex flex-col max-h-[95vh] animate-pop-in">
+            <div className="glass-modal rounded-t-[2rem] p-6 shrink-0 relative z-10 border-b border-white/60">
+              <button onClick={() => setIsCardModalOpen(false)} className="icon-btn absolute top-6 right-6 p-2 rounded-full z-10">
                 <X className="w-5 h-5" />
               </button>
               <h2 className="text-xl font-black text-gray-900 pr-8">{editingCardId ? 'Editar Pedido' : 'Novo Pedido'}</h2>
             </div>
             
-            <div className="bg-white p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1 relative">
+            <div className="bg-white/85 backdrop-blur-2xl p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1 relative">
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nº do Pedido *</label>
-                    <input type="text" value={cardData.title} onChange={e => setCardData({...cardData, title: e.target.value})} className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 12345" />
+                    <input type="text" value={cardData.title} onChange={e => setCardData({...cardData, title: e.target.value})} className="w-full glass-input p-3.5 rounded-xl font-medium text-gray-900" placeholder="Ex: 12345" />
                  </div>
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cód Produto</label>
-                    <input type="text" value={cardData.productCode} onChange={e => setCardData({...cardData, productCode: e.target.value})} className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 98765" />
+                    <input type="text" value={cardData.productCode} onChange={e => setCardData({...cardData, productCode: e.target.value})} className="w-full glass-input p-3.5 rounded-xl font-medium text-gray-900" placeholder="Ex: 98765" />
                  </div>
                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
-                    <input type="text" value={cardData.quantity} onChange={e => setCardData({...cardData, quantity: e.target.value})} className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900" placeholder="Ex: 10" />
+                    <input type="text" value={cardData.quantity} onChange={e => setCardData({...cardData, quantity: e.target.value})} className="w-full glass-input p-3.5 rounded-xl font-medium text-gray-900" placeholder="Ex: 10" />
                  </div>
                </div>
 
@@ -637,7 +637,7 @@ Atenciosamente.`;
                     <select 
                       value={cardData.assignedTo} 
                       onChange={e => setCardData({...cardData, assignedTo: e.target.value})} 
-                      className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
+                      className="w-full glass-input p-3.5 rounded-xl font-medium text-gray-900"
                     >
                       <option value="">-- Sem responsável --</option>
                       {profiles.map(p => (
@@ -651,7 +651,7 @@ Atenciosamente.`;
                       type="text" 
                       value={cardData.consultantName || ''} 
                       onChange={e => setCardData({...cardData, consultantName: e.target.value})} 
-                      className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 bg-white" 
+                      className="w-full glass-input p-3.5 rounded-xl font-medium text-gray-900"
                       placeholder="Ex: João Silva" 
                     />
                  </div>
@@ -662,7 +662,7 @@ Atenciosamente.`;
                   <select 
                     value={cardData.destinationCd} 
                     onChange={e => setCardData({...cardData, destinationCd: e.target.value})} 
-                    className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none font-medium bg-white text-gray-900"
+                    className="w-full glass-input p-3.5 rounded-xl font-medium text-gray-900"
                   >
                     <option value="">-- Selecione o CD --</option>
                     {['PE', 'ES', 'SP', 'SC', 'BA', 'PA', 'MT', 'GO'].map(cd => (
@@ -676,7 +676,7 @@ Atenciosamente.`;
                   <textarea 
                     value={cardData.observations} 
                     onChange={e => setCardData({...cardData, observations: e.target.value})} 
-                    className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none font-medium text-gray-900" 
+                    className="w-full glass-input p-3.5 rounded-xl resize-none font-medium text-gray-900"
                     rows={2} 
                     placeholder="Ex: HÍBRIDO SP GOODWE GW7.5K-ES-LD-G10..."
                   />
@@ -699,7 +699,7 @@ Atenciosamente.`;
                </div>
                
                {(cardData.extraProducts || []).map((ep, idx) => (
-                 <div key={idx} className="p-5 border border-gray-100 rounded-xl bg-gray-50 relative space-y-4 shadow-inner">
+                 <div key={idx} className="p-5 glass-tile rounded-xl relative space-y-4">
                    <button 
                      type="button"
                      onClick={() => {
@@ -718,7 +718,7 @@ Atenciosamente.`;
                          const newExtras = [...(cardData.extraProducts || [])];
                          newExtras[idx].code = e.target.value;
                          setCardData(prev => ({ ...prev, extraProducts: newExtras }));
-                       }} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 98765" />
+                       }} className="w-full glass-input p-3 rounded-lg font-medium text-gray-900 text-sm" placeholder="Ex: 98765" />
                      </div>
                      <div>
                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Quantidade</label>
@@ -726,7 +726,7 @@ Atenciosamente.`;
                          const newExtras = [...(cardData.extraProducts || [])];
                          newExtras[idx].quantity = e.target.value;
                          setCardData(prev => ({ ...prev, extraProducts: newExtras }));
-                       }} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Ex: 10" />
+                       }} className="w-full glass-input p-3 rounded-lg font-medium text-gray-900 text-sm" placeholder="Ex: 10" />
                      </div>
                    </div>
                    <div>
@@ -735,13 +735,13 @@ Atenciosamente.`;
                        const newExtras = [...(cardData.extraProducts || [])];
                        newExtras[idx].description = e.target.value;
                        setCardData(prev => ({ ...prev, extraProducts: newExtras }));
-                     }} className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none font-medium text-gray-900 text-sm bg-white" placeholder="Nome do produto ou descrição..." />
+                     }} className="w-full glass-input p-3 rounded-lg font-medium text-gray-900 text-sm" placeholder="Nome do produto ou descrição..." />
                    </div>
                  </div>
                ))}
 
                {generatedEmailPreview && (
-                 <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 mt-6 relative">
+                 <div className="glass-tile p-5 rounded-xl mt-6 relative">
                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">Pré-visualização do E-mail</h4>
                    <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium font-sans mb-12">{generatedEmailPreview}</pre>
                    <button 
@@ -755,7 +755,7 @@ Atenciosamente.`;
                )}
             </div>
             
-            <div className="bg-white rounded-b-[2rem] p-6 pt-4 shrink-0 border-t border-gray-100 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.1)] z-10 flex gap-3 flex-wrap">
+            <div className="bg-white/90 backdrop-blur-2xl rounded-b-[2rem] p-6 pt-4 shrink-0 border-t border-white/60 z-10 flex gap-3 flex-wrap">
                  {editingCardId && (
                    <button 
                      onClick={() => handleDeleteCard(editingCardId)} 
@@ -784,7 +784,7 @@ Atenciosamente.`;
                  </button>
                  <button 
                    onClick={handleSaveCard} 
-                   className="flex-1 bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition-colors min-w-[200px]"
+                   className="btn-liquid btn-dark-liquid flex-1 py-3 rounded-xl font-bold min-w-[200px]"
                  >
                    {editingCardId ? 'Salvar Alterações' : 'Adicionar Pedido'}
                  </button>
@@ -795,9 +795,9 @@ Atenciosamente.`;
 
       {/* Ver Tudo Modal / Tabela de Transferências */}
       {isViewAllModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex flex-col p-4 md:p-8 items-center cursor-pointer" onClick={() => setIsViewAllModalOpen(false)}>
-          <div className="bg-white rounded-3xl w-full max-w-5xl h-full shadow-2xl relative flex flex-col cursor-default overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+        <div className="fixed inset-0 glass-overlay z-[100] flex flex-col p-4 md:p-8 items-center cursor-pointer" onClick={() => setIsViewAllModalOpen(false)}>
+          <div className="glass-modal rounded-3xl w-full max-w-5xl h-full relative flex flex-col cursor-default overflow-hidden animate-pop-in" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-white/60 flex items-center justify-between shrink-0">
               <div>
                 <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
                   <ListFilter className="w-6 h-6 text-primary" />
@@ -813,19 +813,19 @@ Atenciosamente.`;
                     placeholder="Buscar (N° ou Cód)..." 
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="w-64 pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary outline-none transition-all"
+                    className="w-64 pl-9 pr-4 py-2 glass-input rounded-xl text-sm"
                   />
                 </div>
-                <button onClick={() => setIsViewAllModalOpen(false)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+                <button onClick={() => setIsViewAllModalOpen(false)} className="icon-btn p-2 rounded-full">
                   <X className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
             <div className="p-6 flex-1 overflow-auto">
-              <div className="border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="border border-white/70 rounded-2xl overflow-hidden bg-white/50">
                 <table className="w-full text-left text-sm text-gray-700">
-                  <thead className="bg-gray-50 text-xs uppercase font-bold text-gray-500">
+                  <thead className="bg-white/70 text-xs uppercase font-bold text-gray-500">
                     <tr>
                       <th className="px-6 py-4">N° Pedido (Título)</th>
                       <th className="px-6 py-4">Código Produto</th>
@@ -845,7 +845,7 @@ Atenciosamente.`;
                       const assignee = profiles.find(p => p.id === card.assignedTo);
                       const currentStage = stages.find(s => s.id === card.stageId);
                       return (
-                        <tr key={card.id} className="hover:bg-gray-50/50 transition-colors">
+                        <tr key={card.id} className="hover:bg-white/80 transition-colors">
                           <td className="px-6 py-4 font-bold text-gray-900">{card.title}</td>
                           <td className="px-6 py-4">
                             <div className="flex flex-wrap gap-1">

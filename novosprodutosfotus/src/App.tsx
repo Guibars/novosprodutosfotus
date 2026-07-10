@@ -28,7 +28,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <div className="min-h-[125vh] flex items-center justify-center bg-gray-50">Carregando...</div>;
+    return (
+      <div className="min-h-[125vh] flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+        <p className="text-gray-500 font-medium animate-pulse">Carregando...</p>
+      </div>
+    );
   }
   
   // If not logged in, redirect to login

@@ -101,7 +101,7 @@ export function MarketIntelligence() {
   }
 
   return (
-    <div className="h-full flex flex-col space-y-6 max-w-[1600px] mx-auto pb-10">
+    <div className="h-full flex flex-col space-y-6 max-w-[1600px] mx-auto pb-10 animate-fade-up">
       <div className="flex justify-between items-end shrink-0 gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
@@ -117,7 +117,7 @@ export function MarketIntelligence() {
             <select 
               value={selectedRegion}
               onChange={e => setSelectedRegion(e.target.value)}
-              className="pl-9 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-800 shadow-sm focus:ring-2 focus:ring-primary outline-none cursor-pointer appearance-none hover:border-gray-300 transition-colors"
+              className="pl-9 pr-10 py-2.5 glass-input rounded-xl text-sm font-bold text-gray-800 cursor-pointer appearance-none"
             >
               {REGIONS.map(r => <option key={r} value={r}>Região {r}</option>)}
             </select>
@@ -126,7 +126,7 @@ export function MarketIntelligence() {
 
           <button 
             onClick={() => setIsGeneralViewOpen(true)}
-            className="bg-gray-900 text-white px-5 py-2.5 flex items-center gap-2 rounded-xl text-sm font-bold shadow-md hover:bg-gray-800 transition-all shrink-0"
+            className="btn-liquid btn-dark-liquid px-5 py-2.5 rounded-xl text-sm font-bold shrink-0"
           >
             <Award className="w-4 h-4" />
             Visualização Geral (Ranking)
@@ -140,7 +140,7 @@ export function MarketIntelligence() {
           const isRecentlyUpdated = compData.updatedAt && (new Date().getTime() - new Date(compData.updatedAt).getTime()) < 1000 * 60 * 60 * 24 * 7;
           
           return (
-            <div key={comp.id} className={cn("bg-white rounded-3xl border shadow-sm p-6 hover:shadow-xl transition-all duration-300 relative group flex flex-col hover:-translate-y-1", isRecentlyUpdated ? "border-emerald-100" : "border-gray-100")}>
+            <div key={comp.id} className={cn("glass-card hover-lift rounded-3xl p-6 relative group flex flex-col", isRecentlyUpdated && "border-emerald-300/70 ring-1 ring-emerald-200/60")}>
               
               <div className="flex items-start justify-between mb-6">
                 <div className={cn("rounded-xl flex items-center shrink-0 h-14 w-[140px]", !comp.logo && cn("p-2.5 justify-center", comp.bg, comp.color))}>
@@ -173,7 +173,7 @@ export function MarketIntelligence() {
                   const price = typeof kitData === 'number' ? kitData : (kitData?.price || 0);
 
                   return (
-                    <div key={idx} onClick={() => openEditKit(comp.id, kit)} className="flex flex-col p-3 bg-gray-50/60 rounded-2xl border border-gray-100 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all relative group/kit">
+                    <div key={idx} onClick={() => openEditKit(comp.id, kit)} className="flex flex-col p-3 glass-tile rounded-2xl hover:border-primary/50 hover:bg-primary/5 cursor-pointer transition-all relative group/kit">
                       <Edit2 className="w-4 h-4 text-primary absolute top-3 right-3 opacity-0 group-hover/kit:opacity-100 transition-opacity" />
                       <span className="text-[11px] font-bold text-gray-600 leading-tight mb-1 pr-6">{kit}</span>
                       <span className="text-base font-black text-gray-900">{price ? formatCurrency(Number(price)) : <span className="text-gray-300 text-sm font-medium italic">Não informado</span>}</span>
@@ -202,9 +202,9 @@ export function MarketIntelligence() {
 
       {/* Edit Kit Modal */}
       {editingKit && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999] p-4 md:p-8">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden">
-            <button onClick={() => setEditingKit(null)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors z-[100] bg-white border border-gray-100 shadow-sm">
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[9999] p-4 md:p-8">
+          <div className="glass-modal rounded-3xl w-full max-w-lg relative max-h-[90vh] flex flex-col overflow-hidden animate-pop-in">
+            <button onClick={() => setEditingKit(null)} className="icon-btn absolute top-4 right-4 p-2 rounded-full z-[100] bg-white/70">
               <X className="w-5 h-5" />
             </button>
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
@@ -220,7 +220,7 @@ export function MarketIntelligence() {
                </div>
             </div>
             
-            <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <div className="mb-6 p-4 glass-tile rounded-2xl">
                <h3 className="text-sm font-bold text-gray-800">{editingKit.kitName}</h3>
             </div>
 
@@ -236,7 +236,7 @@ export function MarketIntelligence() {
                         const val = e.target.value.replace(/\D/g, '');
                         setKitForm({...kitForm, price: Number(val) / 100});
                       }} 
-                      className="w-full pl-9 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-black text-lg text-gray-900 bg-white transition-colors" 
+                      className="w-full pl-9 glass-input p-3 rounded-xl font-black text-lg text-gray-900"
                       placeholder="0,00" 
                     />
                   </div>
@@ -255,7 +255,7 @@ export function MarketIntelligence() {
                          type="text" 
                          value={kitForm.inverterBrand || ''} 
                          onChange={e => setKitForm({...kitForm, inverterBrand: e.target.value})} 
-                         className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 bg-white transition-colors" 
+                         className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                          placeholder="Ex: Deye" 
                        />
                      </div>
@@ -267,7 +267,7 @@ export function MarketIntelligence() {
                            type="text" 
                            value={kitForm.inverterPower || ''} 
                            onChange={e => setKitForm({...kitForm, inverterPower: e.target.value})} 
-                           className="w-full pl-9 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 bg-white transition-colors" 
+                           className="w-full pl-9 glass-input p-3 rounded-xl font-bold text-gray-900"
                            placeholder="Ex: 5kW" 
                          />
                        </div>
@@ -281,7 +281,7 @@ export function MarketIntelligence() {
                          type="number" 
                          value={kitForm.moduleQty || ''} 
                          onChange={e => setKitForm({...kitForm, moduleQty: Number(e.target.value)})} 
-                         className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 bg-white transition-colors" 
+                         className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                          placeholder="Ex: 10" 
                        />
                      </div>
@@ -291,7 +291,7 @@ export function MarketIntelligence() {
                          type="number" 
                          value={kitForm.modulePower || ''} 
                          onChange={e => setKitForm({...kitForm, modulePower: Number(e.target.value)})} 
-                         className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 bg-white transition-colors" 
+                         className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                          placeholder="Ex: 550" 
                        />
                      </div>
@@ -304,7 +304,7 @@ export function MarketIntelligence() {
                          type="text" 
                          value={kitForm.batteryBrand || ''} 
                          onChange={e => setKitForm({...kitForm, batteryBrand: e.target.value})} 
-                         className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 bg-white transition-colors" 
+                         className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                          placeholder="Ex: Moura" 
                        />
                      </div>
@@ -314,7 +314,7 @@ export function MarketIntelligence() {
                          type="text" 
                          value={kitForm.batteryPower || ''} 
                          onChange={e => setKitForm({...kitForm, batteryPower: e.target.value})} 
-                         className="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-primary outline-none font-bold text-gray-900 bg-white transition-colors" 
+                         className="w-full glass-input p-3 rounded-xl font-bold text-gray-900"
                          placeholder="Ex: 5kW" 
                        />
                      </div>
@@ -331,7 +331,7 @@ export function MarketIntelligence() {
 
                <button 
                  onClick={handleSaveKit} 
-                 className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl mt-6 shadow-md hover:bg-gray-800 transition-colors flex justify-center items-center gap-2"
+                 className="btn-liquid btn-dark-liquid w-full py-4 rounded-xl mt-6 font-bold"
                >
                  <ShieldCheck className="w-5 h-5" />
                  Atualizar Kit
@@ -345,8 +345,8 @@ export function MarketIntelligence() {
 
       {/* General View Modal */}
       {isGeneralViewOpen && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999] p-4 md:p-8" onClick={() => setIsGeneralViewOpen(false)}>
-          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-6xl h-full shadow-2xl relative flex flex-col cursor-default overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 glass-overlay flex justify-center items-center z-[9999] p-4 md:p-8" onClick={() => setIsGeneralViewOpen(false)}>
+          <div className="glass-modal rounded-3xl p-6 md:p-8 w-full max-w-6xl h-full relative flex flex-col cursor-default overflow-hidden animate-pop-in" onClick={e => e.stopPropagation()}>
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 shrink-0 gap-4 border-b border-gray-100 pb-6">
               <div className="flex items-center gap-4">
                  <div className="p-3 rounded-2xl bg-orange-100 text-orange-600 shadow-sm border border-orange-200">
@@ -361,7 +361,7 @@ export function MarketIntelligence() {
               </div>
               <button 
                 onClick={() => setIsGeneralViewOpen(false)} 
-                className="absolute top-6 right-6 p-2.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-full transition-colors"
+                className="icon-btn absolute top-6 right-6 p-2.5 rounded-full"
                 title="Fechar"
               >
                 <X className="w-6 h-6" />
@@ -383,13 +383,13 @@ export function MarketIntelligence() {
                 }).filter(c => c.price > 0).sort((a, b) => a.price - b.price);
 
                 return (
-                  <div key={kit} className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div key={kit} className="glass-tile p-6 rounded-3xl">
                      <h3 className="text-lg font-black text-gray-800 mb-6 border-l-4 border-primary pl-4">{kit}</h3>
                      
                      {compPrices.length > 0 ? (
                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                          {compPrices.map((c, idx) => (
-                           <div key={c.id} className={cn("p-5 rounded-2xl border flex flex-col justify-between relative overflow-hidden transition-all", idx === 0 ? "bg-emerald-50/40 border-emerald-300 shadow-sm" : "bg-gray-50/50 border-gray-200")}>
+                           <div key={c.id} className={cn("p-5 rounded-2xl border flex flex-col justify-between relative overflow-hidden transition-all", idx === 0 ? "bg-emerald-50/60 border-emerald-300 shadow-sm" : "glass-tile")}>
                               {idx === 0 && (
                                 <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-bl-xl uppercase tracking-wider shadow-sm flex items-center gap-1">
                                   <Award className="w-3 h-3" />

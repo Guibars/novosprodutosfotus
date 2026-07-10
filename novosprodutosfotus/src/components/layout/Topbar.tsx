@@ -113,7 +113,7 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
         <div className="flex items-center gap-4">
         <button 
           onClick={toggleSidebar}
-          className="p-2 text-gray-600 hover:bg-white/50 rounded-xl transition-colors"
+          className="icon-btn p-2 rounded-xl"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -138,11 +138,11 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
         <div className="relative">
           <button 
             onClick={() => setShowMessages(!showMessages)}
-            className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors relative"
+            className="icon-btn p-2 rounded-full relative"
           >
             <MessageSquare className="w-5 h-5" />
             {unreadMsgsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white/50"></span>
+              <span className="absolute top-1.5 right-1.5 flex w-2.5 h-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60"></span><span className="relative inline-flex rounded-full w-2.5 h-2.5 bg-red-500 border-2 border-white/60"></span></span>
             )}
           </button>
 
@@ -153,7 +153,7 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50"
+              className="absolute right-0 mt-2 w-80 glass-modal rounded-2xl overflow-hidden z-50"
             >
               <div className="p-4 border-b border-white/50 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
@@ -231,11 +231,11 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
         <div className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors relative"
+            className="icon-btn p-2 rounded-full relative"
           >
             <Bell className="w-5 h-5" />
             {unreadNotifsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white/50"></span>
+              <span className="absolute top-1.5 right-1.5 flex w-2.5 h-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60"></span><span className="relative inline-flex rounded-full w-2.5 h-2.5 bg-red-500 border-2 border-white/60"></span></span>
             )}
           </button>
 
@@ -246,7 +246,7 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50"
+              className="absolute right-0 mt-2 w-80 glass-modal rounded-2xl overflow-hidden z-50"
             >
               <div className="p-4 border-b border-white/50 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
@@ -326,7 +326,7 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
           <img 
             src={user?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.email || 'User'}`} 
             alt="User" 
-            className="w-10 h-10 rounded-full object-cover border border-gray-200"
+            className="w-10 h-10 rounded-full object-cover ring-2 ring-white/80 shadow-md"
             referrerPolicy="no-referrer"
           />
           <div className="hidden md:block">
