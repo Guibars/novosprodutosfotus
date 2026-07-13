@@ -5,7 +5,7 @@ import { db } from "../lib/firebase";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 
-const CATEGORIES = ["Carregador DC", "RSD", "Bateria"];
+const CATEGORIES = ["Carregador DC", "RSD", "Bateria", "BESS", "Driver"];
 const CDS = ["ES", "PE", "BA", "PA", "GO", "SP", "SC", "Fotus Galpão"];
 
 export function Inventory() {
