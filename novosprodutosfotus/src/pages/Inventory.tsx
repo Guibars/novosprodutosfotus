@@ -17,9 +17,13 @@ export function Inventory() {
   const [localStocks, setLocalStocks] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  // New product form
-  const [newProductName, setNewProductName] = useState("");
-  const [newProductCode, setNewProductCode] = useState("");
+  // Product form state
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [productForm, setProductForm] = useState({
+    name: "",
+    code: "",
+    power: ""
+  });
 
   useEffect(() => {
     // Fetch products for active category
@@ -79,22 +83,46 @@ export function Inventory() {
     }
   };
 
-  const handleAddProduct = async (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProductName.trim()) return;
+    if (!productForm.name.trim()) return;
 
     try {
-      const newDocRef = doc(collection(db, "inventory_products"));
-      await setDoc(newDocRef, {
-        category: activeCategory,
-        name: newProductName.trim(),
-        code: newProductCode.trim()
-      });
-      setNewProductName("");
-      setNewProductCode("");
+      if (editingProductId) {
+        await setDoc(doc(db, "inventory_products", editingProductId), {
+          category: activeCategory,
+          name: productForm.name.trim(),
+          code: productForm.code.trim(),
+          power: productForm.power.trim()
+        }, { merge: true });
+      } else {
+        const newDocRef = doc(collection(db, "inventory_products"));
+        await setDoc(newDocRef, {
+          category: activeCategory,
+          name: productForm.name.trim(),
+          code: productForm.code.trim(),
+          power: productForm.power.trim()
+        });
+      }
+      setProductForm({ name: "", code: "", power: "" });
+      setEditingProductId(null);
     } catch (error) {
-      console.error("Error adding product", error);
+      console.error("Error saving product", error);
     }
+  };
+
+  const handleEditProduct = (product: any) => {
+    setProductForm({
+      name: product.name || "",
+      code: product.code || "",
+      power: product.power || ""
+    });
+    setEditingProductId(product.id);
+  };
+
+  const handleCancelEdit = () => {
+    setProductForm({ name: "", code: "", power: "" });
+    setEditingProductId(null);
   };
 
   const handleDeleteProduct = async (productId: string) => {
@@ -220,16 +248,23 @@ export function Inventory() {
                 </div>
               </div>
 
-              <div className="flex-1 space-y-4">
-                {products.map(product => {
+              <div className="flex-1 flex flex-col">
+                {products.map((product, index) => {
                   const key = `${product.id}_${cd}`;
                   const qty = isEditing ? (localStocks[key] ?? "") : (stocks[key] || 0);
 
                   return (
-                    <div key={product.id} className="flex items-center justify-between gap-4 group">
+                    <div key={product.id} className={cn("flex items-center justify-between gap-4 group py-3", index !== products.length - 1 ? "border-b border-gray-100" : "")}>
                       <div className="min-w-0 flex-1">
                         <div className="font-medium text-gray-900 truncate" title={product.name}>{product.name}</div>
-                        {product.code && <div className="text-xs text-gray-400 font-mono">{product.code}</div>}
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {product.code && <span className="text-[11px] text-gray-400 font-mono">{product.code}</span>}
+                          {product.power && (
+                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                              {product.power} kW
+                            </span>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="shrink-0 w-24">
@@ -279,36 +314,58 @@ export function Inventory() {
             </div>
             
             <div className="p-6 overflow-y-auto flex-1">
-              <form onSubmit={handleAddProduct} className="flex items-end gap-3 mb-8 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex-1">
+              <form onSubmit={handleSaveProduct} className="flex flex-wrap items-end gap-3 mb-8 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex-1 min-w-[200px]">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nome do Produto</label>
                   <input
                     type="text"
                     required
-                    value={newProductName}
-                    onChange={e => setNewProductName(e.target.value)}
+                    value={productForm.name}
+                    onChange={e => setProductForm(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Ex: Carregador Beny 40kW"
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                   />
                 </div>
-                <div className="w-1/3">
+                <div className="w-full sm:w-[120px]">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Potência (kW)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={productForm.power}
+                    onChange={e => setProductForm(prev => ({ ...prev, power: e.target.value }))}
+                    placeholder="Ex: 40"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-mono"
+                  />
+                </div>
+                <div className="w-full sm:w-1/4">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Código (Opcional)</label>
                   <input
                     type="text"
-                    value={newProductCode}
-                    onChange={e => setNewProductCode(e.target.value)}
+                    value={productForm.code}
+                    onChange={e => setProductForm(prev => ({ ...prev, code: e.target.value }))}
                     placeholder="Ex: BNY-40K"
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-mono"
                   />
                 </div>
-                <button 
-                  type="submit"
-                  disabled={!newProductName.trim()}
-                  className="bg-gray-900 hover:bg-gray-800 text-white h-[42px] px-5 rounded-xl font-medium transition-colors flex items-center gap-2 shrink-0 disabled:opacity-50"
-                >
-                  <Plus className="w-4 h-4" />
-                  Adicionar
-                </button>
+                <div className="flex items-center gap-2">
+                  {editingProductId && (
+                    <button 
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 h-[42px] px-4 rounded-xl font-medium transition-colors flex items-center gap-2 shrink-0 shadow-sm"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button 
+                    type="submit"
+                    disabled={!productForm.name.trim()}
+                    className="bg-gray-900 hover:bg-gray-800 text-white h-[42px] px-5 rounded-xl font-medium transition-colors flex items-center gap-2 shrink-0 disabled:opacity-50"
+                  >
+                    {editingProductId ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    {editingProductId ? "Salvar" : "Adicionar"}
+                  </button>
+                </div>
               </form>
 
               <div className="space-y-3">
@@ -317,23 +374,39 @@ export function Inventory() {
                   <div className="text-center py-6 text-gray-500 text-sm">Nenhum produto cadastrado nesta categoria.</div>
                 ) : (
                   products.map(product => (
-                    <div key={product.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white hover:border-gray-200 transition-colors">
+                    <div key={product.id} className={cn("flex items-center justify-between p-4 rounded-xl border transition-colors", editingProductId === product.id ? "border-primary bg-primary/5" : "border-gray-100 bg-white hover:border-gray-200")}>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
                           <Box className="w-5 h-5 text-gray-400" />
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900">{product.name}</div>
+                          <div className="font-bold text-gray-900 flex items-center gap-2">
+                            {product.name}
+                            {product.power && (
+                              <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                                {product.power} kW
+                              </span>
+                            )}
+                          </div>
                           {product.code && <div className="text-xs text-gray-500 font-mono">{product.code}</div>}
                         </div>
                       </div>
-                      <button 
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remover Produto"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => handleEditProduct(product)}
+                          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          title="Editar Produto"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Remover Produto"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
