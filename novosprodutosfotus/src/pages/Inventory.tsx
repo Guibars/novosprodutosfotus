@@ -3,6 +3,7 @@ import { Package, Plus, Save, Box, MapPin, Edit3, X, Check, Trash2, ChevronDown 
 import { collection, onSnapshot, doc, setDoc, deleteDoc, query, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { cn } from "../lib/utils";
+import { motion, AnimatePresence } from "motion/react";
 
 const CATEGORIES = ["Carregador DC", "RSD"];
 const CDS = ["ES", "PE", "BA", "PA", "GO", "SP", "SC", "Fotus Galpão"];
@@ -21,8 +22,10 @@ export function Inventory() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [productForm, setProductForm] = useState({
     name: "",
+    brand: "",
     code: "",
-    power: ""
+    power: "",
+    subCategory: ""
   });
 
   useEffect(() => {
@@ -87,24 +90,30 @@ export function Inventory() {
     e.preventDefault();
     if (!productForm.name.trim()) return;
 
+    const finalSubCategory = productForm.subCategory || (activeCategory === "RSD" ? "Módulo RSD" : "");
+
     try {
       if (editingProductId) {
         await setDoc(doc(db, "inventory_products", editingProductId), {
           category: activeCategory,
           name: productForm.name.trim(),
+          brand: productForm.brand.trim(),
           code: productForm.code.trim(),
-          power: productForm.power.trim()
+          power: productForm.power.trim(),
+          subCategory: finalSubCategory
         }, { merge: true });
       } else {
         const newDocRef = doc(collection(db, "inventory_products"));
         await setDoc(newDocRef, {
           category: activeCategory,
           name: productForm.name.trim(),
+          brand: productForm.brand.trim(),
           code: productForm.code.trim(),
-          power: productForm.power.trim()
+          power: productForm.power.trim(),
+          subCategory: finalSubCategory
         });
       }
-      setProductForm({ name: "", code: "", power: "" });
+      setProductForm({ name: "", brand: "", code: "", power: "", subCategory: "" });
       setEditingProductId(null);
     } catch (error) {
       console.error("Error saving product", error);
@@ -114,14 +123,16 @@ export function Inventory() {
   const handleEditProduct = (product: any) => {
     setProductForm({
       name: product.name || "",
+      brand: product.brand || "",
       code: product.code || "",
-      power: product.power || ""
+      power: product.power || "",
+      subCategory: product.subCategory || (activeCategory === "RSD" ? "Módulo RSD" : "")
     });
     setEditingProductId(product.id);
   };
 
   const handleCancelEdit = () => {
-    setProductForm({ name: "", code: "", power: "" });
+    setProductForm({ name: "", brand: "", code: "", power: "", subCategory: "" });
     setEditingProductId(null);
   };
 
@@ -235,9 +246,16 @@ export function Inventory() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {CDS.map((cd) => (
-            <div key={cd} className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col h-full">
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {CDS.map((cd, cdIndex) => (
+            <motion.div 
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: cdIndex * 0.05 }}
+              key={cd} 
+              className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col h-full"
+            >
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-50">
                 <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5 text-gray-500" />
@@ -249,21 +267,41 @@ export function Inventory() {
               </div>
 
               <div className="flex-1 flex flex-col">
+                <AnimatePresence mode="popLayout">
                 {products.map((product, index) => {
                   const key = `${product.id}_${cd}`;
                   const qty = isEditing ? (localStocks[key] ?? "") : (stocks[key] || 0);
 
                   return (
-                    <div key={product.id} className={cn("flex items-center justify-between gap-4 group py-3", index !== products.length - 1 ? "border-b border-gray-100" : "")}>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-900 truncate" title={product.name}>{product.name}</div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {product.code && <span className="text-[11px] text-gray-400 font-mono">{product.code}</span>}
+                    <motion.div 
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      key={product.id} 
+                      className={cn("flex items-center justify-between gap-4 group py-3", index !== products.length - 1 ? "border-b border-gray-100" : "")}
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="font-semibold text-gray-900 leading-tight">
+                          {product.name}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                          {product.brand && (
+                            <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded tracking-wider uppercase">
+                              {product.brand}
+                            </span>
+                          )}
+                          {product.subCategory && (
+                            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
+                              {product.subCategory}
+                            </span>
+                          )}
                           {product.power && (
                             <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                               {product.power} kW
                             </span>
                           )}
+                          {product.code && <span className="text-[10px] text-gray-400 font-mono">{product.code}</span>}
                         </div>
                       </div>
                       
@@ -287,13 +325,14 @@ export function Inventory() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
+                </AnimatePresence>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* Product Management Modal */}
@@ -314,57 +353,99 @@ export function Inventory() {
             </div>
             
             <div className="p-6 overflow-y-auto flex-1">
-              <form onSubmit={handleSaveProduct} className="flex flex-wrap items-end gap-3 mb-8 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nome do Produto</label>
-                  <input
-                    type="text"
-                    required
-                    value={productForm.name}
-                    onChange={e => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Ex: Carregador Beny 40kW"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
-                  />
+              <form onSubmit={handleSaveProduct} className="flex flex-col gap-4 mb-8 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="flex flex-wrap items-end gap-3">
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nome do Produto</label>
+                    <input
+                      type="text"
+                      required
+                      value={productForm.name}
+                      onChange={e => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Ex: Carregador 40kW"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                    />
+                  </div>
+                  <div className="w-full sm:w-[120px]">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Marca</label>
+                    <input
+                      type="text"
+                      value={productForm.brand}
+                      onChange={e => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
+                      placeholder="Ex: Beny"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                    />
+                  </div>
+                  <div className="w-full sm:w-[100px]">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Potência (kW)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={productForm.power}
+                      onChange={e => setProductForm(prev => ({ ...prev, power: e.target.value }))}
+                      placeholder="Ex: 40"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-mono"
+                    />
+                  </div>
+                  <div className="w-full sm:w-1/4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Código (Opcional)</label>
+                    <input
+                      type="text"
+                      value={productForm.code}
+                      onChange={e => setProductForm(prev => ({ ...prev, code: e.target.value }))}
+                      placeholder="Ex: BNY-40K"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-mono"
+                    />
+                  </div>
                 </div>
-                <div className="w-full sm:w-[120px]">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Potência (kW)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={productForm.power}
-                    onChange={e => setProductForm(prev => ({ ...prev, power: e.target.value }))}
-                    placeholder="Ex: 40"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-mono"
-                  />
-                </div>
-                <div className="w-full sm:w-1/4">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Código (Opcional)</label>
-                  <input
-                    type="text"
-                    value={productForm.code}
-                    onChange={e => setProductForm(prev => ({ ...prev, code: e.target.value }))}
-                    placeholder="Ex: BNY-40K"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-mono"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  {editingProductId && (
+
+                <div className="flex items-center justify-between">
+                  {activeCategory === "RSD" ? (
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="subCategory"
+                          value="Módulo RSD"
+                          checked={productForm.subCategory === "Módulo RSD" || !productForm.subCategory}
+                          onChange={e => setProductForm(prev => ({ ...prev, subCategory: e.target.value }))}
+                          className="w-4 h-4 text-primary focus:ring-primary border-gray-300"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Módulo RSD</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="subCategory"
+                          value="Unidade de Controle"
+                          checked={productForm.subCategory === "Unidade de Controle"}
+                          onChange={e => setProductForm(prev => ({ ...prev, subCategory: e.target.value }))}
+                          className="w-4 h-4 text-primary focus:ring-primary border-gray-300"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Unidade de Controle</span>
+                      </label>
+                    </div>
+                  ) : <div></div>}
+
+                  <div className="flex items-center gap-2 shrink-0 ml-auto">
+                    {editingProductId && (
+                      <button 
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 h-[42px] px-4 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                     <button 
-                      type="button"
-                      onClick={handleCancelEdit}
-                      className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 h-[42px] px-4 rounded-xl font-medium transition-colors flex items-center gap-2 shrink-0 shadow-sm"
+                      type="submit"
+                      disabled={!productForm.name.trim()}
+                      className="bg-gray-900 hover:bg-gray-800 text-white h-[42px] px-5 rounded-xl font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
-                      <X className="w-4 h-4" />
+                      {editingProductId ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                      {editingProductId ? "Salvar" : "Adicionar"}
                     </button>
-                  )}
-                  <button 
-                    type="submit"
-                    disabled={!productForm.name.trim()}
-                    className="bg-gray-900 hover:bg-gray-800 text-white h-[42px] px-5 rounded-xl font-medium transition-colors flex items-center gap-2 shrink-0 disabled:opacity-50"
-                  >
-                    {editingProductId ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                    {editingProductId ? "Salvar" : "Adicionar"}
-                  </button>
+                  </div>
                 </div>
               </form>
 
@@ -380,15 +461,27 @@ export function Inventory() {
                           <Box className="w-5 h-5 text-gray-400" />
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900 flex items-center gap-2">
+                          <div className="font-bold text-gray-900 leading-tight">
                             {product.name}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            {product.brand && (
+                              <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded tracking-wider uppercase">
+                                {product.brand}
+                              </span>
+                            )}
+                            {product.subCategory && (
+                              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
+                                {product.subCategory}
+                              </span>
+                            )}
                             {product.power && (
                               <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                                 {product.power} kW
                               </span>
                             )}
+                            {product.code && <span className="text-[10px] text-gray-400 font-mono">{product.code}</span>}
                           </div>
-                          {product.code && <div className="text-xs text-gray-500 font-mono">{product.code}</div>}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
