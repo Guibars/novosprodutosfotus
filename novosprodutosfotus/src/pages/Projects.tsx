@@ -55,7 +55,7 @@ export function Projects() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Projetos</h1>
@@ -63,7 +63,7 @@ export function Projects() {
         </div>
         <button 
           onClick={() => setIsProjectModalOpen(true)}
-          className="btn-liquid btn-secondary-liquid px-4 py-2 rounded-xl"
+          className="flex items-center gap-2 bg-secondary hover:bg-secondary-hover text-white px-4 py-2 rounded-xl font-medium transition-colors"
         >
           <Plus className="w-5 h-5" />
           Novo Projeto
@@ -91,7 +91,7 @@ export function Projects() {
               transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.2) }}
               key={project.id} 
               onClick={() => navigate(`/projects/${project.id}`)}
-              className="glass-card rounded-[2rem] p-6 cursor-pointer group relative"
+              className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 hover:bg-white/60 hover:shadow-2xl hover:shadow-black/5 transition-all duration-300 cursor-pointer group relative"
             >
             <div className="flex justify-between items-start mb-4">
               <div className={`w-12 h-12 rounded-xl ${project.color} flex items-center justify-center text-white font-bold text-xl`}>
@@ -145,8 +145,8 @@ export function Projects() {
 
       {/* Delete Confirmation Modal */}
       {projectToDelete && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-sm animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Excluir Projeto</h2>
             <p className="text-sm text-gray-600 mb-6">Digite a senha para confirmar a exclusão deste projeto.</p>
             
@@ -165,13 +165,13 @@ export function Projects() {
               <div className="flex items-center justify-end gap-3 mt-8">
                 <button 
                   onClick={() => setProjectToDelete(null)}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={confirmDelete}
-                  className="btn-liquid btn-danger-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-red-500/30"
                 >
                   Excluir
                 </button>
@@ -183,8 +183,8 @@ export function Projects() {
 
       {/* Edit Project Modal */}
       {editingProject && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-md animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Editar Projeto</h2>
             <form onSubmit={handleSaveEdit} className="space-y-5">
               <div>
@@ -225,13 +225,13 @@ export function Projects() {
                 <button 
                   type="button" 
                   onClick={() => setEditingProject(null)}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="btn-liquid btn-secondary-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
                 >
                   Salvar Alterações
                 </button>

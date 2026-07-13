@@ -169,12 +169,12 @@ export function ProjectDetails() {
   const progress = Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100) || 0;
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
+          <button 
             onClick={() => navigate('/projects')}
-            className="icon-btn p-2 rounded-xl"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -185,7 +185,7 @@ export function ProjectDetails() {
         </div>
         <button 
           onClick={() => setIsMessaging(true)}
-          className="btn-liquid px-4 py-2 rounded-xl bg-primary/15 hover:bg-primary/25 text-primary border border-primary/20"
+          className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl font-medium transition-colors"
         >
           <MessageSquare className="w-5 h-5" />
           Enviar Mensagem
@@ -194,7 +194,7 @@ export function ProjectDetails() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="glass-panel rounded-[2rem] p-6">
+          <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">Progresso Geral</h3>
               <span className="font-bold text-secondary">{progress}%</span>
@@ -214,7 +214,7 @@ export function ProjectDetails() {
               : 0;
 
             return (
-              <div key={phase} className="glass-panel rounded-[2rem] overflow-hidden">
+              <div key={phase} className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] overflow-hidden shadow-xl shadow-black/5">
                 <div className="p-6 border-b border-white/50 flex items-center justify-between bg-white/20">
                   <div>
                     <h3 className="font-semibold text-gray-900 text-lg">{phase}</h3>
@@ -227,7 +227,7 @@ export function ProjectDetails() {
                   </div>
                   <button 
                     onClick={() => setAddingTaskPhase(phase)}
-                    className="btn-liquid btn-white-liquid px-3 py-1.5 rounded-lg text-sm"
+                    className="flex items-center gap-2 bg-white/50 hover:bg-white text-gray-700 px-3 py-1.5 rounded-lg font-medium transition-colors text-sm shadow-sm"
                   >
                     <Plus className="w-4 h-4" />
                     Adicionar
@@ -258,8 +258,8 @@ export function ProjectDetails() {
                         className="min-w-[150px] px-3 py-2 glass-input rounded-lg text-sm"
                       />
                       <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => addTask(phase)} className="btn-liquid btn-secondary-liquid px-4 py-2 rounded-lg text-sm">Salvar</button>
-                        <button onClick={() => setAddingTaskPhase(null)} className="btn-liquid btn-white-liquid px-4 py-2 rounded-lg text-sm">Cancelar</button>
+                        <button onClick={() => addTask(phase)} className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-medium hover:bg-secondary-hover shadow-sm">Salvar</button>
+                        <button onClick={() => setAddingTaskPhase(null)} className="px-4 py-2 bg-white/50 border border-white/50 text-gray-700 rounded-lg text-sm font-medium hover:bg-white/80">Cancelar</button>
                       </div>
                     </div>
                   )}
@@ -368,7 +368,7 @@ export function ProjectDetails() {
                                 </button>
                                 <button
                                   onClick={() => saveObservation(task.id)}
-                                  className="btn-liquid btn-primary-liquid px-3 py-1.5 text-xs rounded-lg"
+                                  className="px-3 py-1.5 text-xs font-medium bg-primary text-white hover:bg-primary-hover shadow-sm shadow-primary/20 rounded-lg transition-colors"
                                 >
                                   Salvar Observação
                                 </button>
@@ -387,7 +387,7 @@ export function ProjectDetails() {
 
         <div className="space-y-6">
           {/* Links Section */}
-          <div className="glass-panel rounded-[2rem] overflow-hidden">
+          <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] overflow-hidden shadow-xl shadow-black/5">
             <div className="p-6 border-b border-white/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <LinkIcon className="w-5 h-5 text-gray-500" />
@@ -395,7 +395,7 @@ export function ProjectDetails() {
               </div>
               <button 
                 onClick={() => setIsAddingLink(true)}
-                className="icon-btn p-1.5 rounded-lg bg-white/50"
+                className="p-1.5 bg-white/50 hover:bg-white text-gray-700 rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -403,7 +403,7 @@ export function ProjectDetails() {
             
             <div className="p-4 space-y-3">
               {isAddingLink && (
-                <form onSubmit={addLink} className="glass-tile p-3 rounded-xl space-y-3">
+                <form onSubmit={addLink} className="bg-white/50 p-3 rounded-xl space-y-3 border border-white/50">
                   <input 
                     type="text" 
                     required
@@ -421,8 +421,8 @@ export function ProjectDetails() {
                     className="w-full px-3 py-2 glass-input rounded-lg text-sm"
                   />
                   <div className="flex items-center gap-2">
-                    <button type="submit" className="btn-liquid btn-primary-liquid flex-1 py-2 rounded-lg text-sm">Adicionar</button>
-                    <button type="button" onClick={() => setIsAddingLink(false)} className="btn-liquid btn-white-liquid flex-1 py-2 rounded-lg text-sm">Cancelar</button>
+                    <button type="submit" className="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover">Adicionar</button>
+                    <button type="button" onClick={() => setIsAddingLink(false)} className="flex-1 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">Cancelar</button>
                   </div>
                 </form>
               )}
@@ -454,8 +454,8 @@ export function ProjectDetails() {
 
       {/* Assign Task Modal */}
       {assigningTask && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-sm animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Atribuir Tarefa</h2>
             <form onSubmit={handleAssign} className="space-y-5">
               <div>
@@ -482,13 +482,13 @@ export function ProjectDetails() {
                 <button 
                   type="button" 
                   onClick={() => setAssigningTask(null)}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="btn-liquid btn-primary-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors shadow-lg shadow-primary/30"
                 >
                   Atribuir
                 </button>
@@ -500,8 +500,8 @@ export function ProjectDetails() {
 
       {/* Send Message Modal */}
       {isMessaging && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-md animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Enviar Mensagem</h2>
             <form onSubmit={sendMessage} className="space-y-5">
               <div>
@@ -533,13 +533,13 @@ export function ProjectDetails() {
                 <button 
                   type="button" 
                   onClick={() => setIsMessaging(false)}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="btn-liquid btn-primary-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors shadow-lg shadow-primary/30"
                 >
                   Enviar
                 </button>
@@ -551,8 +551,8 @@ export function ProjectDetails() {
 
       {/* Delete Task Confirmation Modal */}
       {taskToDelete && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-sm animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-sm shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Excluir Tarefa</h2>
             <p className="text-sm text-gray-600 mb-6">Digite a senha para confirmar a exclusão desta tarefa.</p>
             
@@ -571,13 +571,13 @@ export function ProjectDetails() {
               <div className="flex items-center justify-end gap-3 mt-8">
                 <button 
                   onClick={() => setTaskToDelete(null)}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={confirmDeleteTask}
-                  className="btn-liquid btn-danger-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-red-500/30"
                 >
                   Excluir
                 </button>
@@ -589,8 +589,8 @@ export function ProjectDetails() {
 
       {/* Edit Task Modal */}
       {editingTask && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-md animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Editar Tarefa</h2>
             <form onSubmit={saveEditTask} className="space-y-5">
               <div>
@@ -629,13 +629,13 @@ export function ProjectDetails() {
                 <button 
                   type="button" 
                   onClick={() => setEditingTask(null)}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="btn-liquid btn-secondary-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
                 >
                   Salvar
                 </button>

@@ -20,6 +20,7 @@ import { Analytics } from "./pages/Analytics";
 import { Help } from "./pages/Help";
 import { Metrics } from "./pages/Metrics";
 import { Vacations } from "./pages/Vacations";
+import { Inventory } from "./pages/Inventory";
 import { ProjectProvider } from "./contexts/ProjectContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -28,12 +29,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-[125vh] flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
-        <p className="text-gray-500 font-medium animate-pulse">Carregando...</p>
-      </div>
-    );
+    return <div className="min-h-[125vh] flex items-center justify-center bg-gray-50">Carregando...</div>;
   }
   
   // If not logged in, redirect to login
@@ -61,6 +57,7 @@ export default function App() {
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/metrics" element={<Metrics />} />
+              <Route path="/inventory" element={<Inventory />} />
               <Route path="/transfer-board" element={<TransferBoard />} />
               <Route path="/follow-up" element={<FollowUp />} />
               <Route path="/market-intelligence" element={<MarketIntelligence />} />

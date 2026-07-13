@@ -131,7 +131,7 @@ export function Metrics() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-10 animate-fade-up">
+    <div className="space-y-8 max-w-7xl mx-auto pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -145,11 +145,11 @@ export function Metrics() {
             type="month" 
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="glass-input rounded-xl px-4 py-3 text-sm font-medium text-gray-700 w-full sm:w-auto"
+            className="bg-white/50 backdrop-blur-md border border-white/60 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none text-gray-700 w-full sm:w-auto"
           />
           <button 
             onClick={handleSave}
-            className="btn-liquid btn-secondary-liquid w-full sm:w-auto px-6 py-3 rounded-xl"
+            className="bg-secondary w-full sm:w-auto hover:bg-secondary-hover text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-secondary/20"
           >
             <Save className="w-5 h-5" />
             {isSaving ? "Salvando..." : "Salvar Alterações"}
@@ -166,7 +166,7 @@ export function Metrics() {
           const realAcumulado = data.quantidadeVendida;
           
           return (
-            <div key={product} className="glass-card hover-lift rounded-[2rem] p-5 flex flex-col gap-4">
+            <div key={product} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2rem] p-5 shadow-xl shadow-black/5 flex flex-col gap-4">
               <h3 className="font-bold text-gray-900 border-b border-gray-200 pb-2">{product}</h3>
               
               <div className="space-y-4">
@@ -176,7 +176,7 @@ export function Metrics() {
                     type="number" 
                     value={data.metaTrimestral || ""}
                     onChange={(e) => handleInputChange(product, "metaTrimestral", e.target.value)}
-                    className="w-full glass-input rounded-lg px-3 py-1.5 text-sm font-medium"
+                    className="w-full bg-white/50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none"
                     placeholder="0"
                   />
                 </div>
@@ -186,7 +186,7 @@ export function Metrics() {
                     type="number" 
                     value={data.metaMensal || ""}
                     onChange={(e) => handleInputChange(product, "metaMensal", e.target.value)}
-                    className="w-full glass-input rounded-lg px-3 py-1.5 text-sm font-medium"
+                    className="w-full bg-white/50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none"
                     placeholder="0"
                   />
                 </div>
@@ -252,7 +252,7 @@ export function Metrics() {
       </div>
 
       {/* Métricas Regionais (Mapa Interativo) */}
-      <div className="glass-panel rounded-[2rem] p-6 mt-8">
+      <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 mt-8">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -263,15 +263,15 @@ export function Metrics() {
               Defina o volume de vendas e a potência de equipamento mais vendida em cada região geográfica do Brasil para o mapa interativo.
             </p>
           </div>
-          <div className="glass-segment shrink-0 self-start lg:self-center">
+          <div className="flex flex-wrap gap-1 bg-gray-100/80 p-1 rounded-xl shrink-0 self-start lg:self-center">
             {['Carregador', 'RSD'].map(p => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setActiveProductTab(p)}
                 className={cn(
-                  "seg-btn px-3 py-1.5 text-xs font-bold",
-                  activeProductTab === p && "seg-btn-active"
+                  "px-3 py-1.5 text-xs font-bold rounded-lg transition-colors",
+                  activeProductTab === p ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-white"
                 )}
               >
                 {p}
@@ -286,7 +286,7 @@ export function Metrics() {
             const regionData = (productData.regioes && productData.regioes[region]) || { vendas: 0, potencia: "" };
             
             return (
-              <div key={region} className="glass-card rounded-2xl p-4 flex flex-col gap-3">
+              <div key={region} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-3">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                   <span className="font-bold text-sm text-gray-800">{region}</span>
                   <span className="text-[9px] uppercase font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Região</span>
@@ -298,7 +298,7 @@ export function Metrics() {
                       type="number"
                       value={regionData.vendas || ""}
                       onChange={(e) => handleRegionalInputChange(activeProductTab, region, "vendas", e.target.value)}
-                      className="w-full glass-input rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-900"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
                       placeholder="0"
                     />
                   </div>
@@ -308,7 +308,7 @@ export function Metrics() {
                       type="text"
                       value={regionData.potencia || ""}
                       onChange={(e) => handleRegionalInputChange(activeProductTab, region, "potencia", e.target.value)}
-                      className="w-full glass-input rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-700 focus:ring-2 focus:ring-primary/20 outline-none"
                       placeholder="Ex: 50 kWp, 10kW"
                     />
                   </div>

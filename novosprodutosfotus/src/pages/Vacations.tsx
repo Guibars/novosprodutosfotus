@@ -72,7 +72,7 @@ export function Vacations() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fade-up">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -87,7 +87,7 @@ export function Vacations() {
               setNewVacation(prev => ({...prev, type: 'ferias'}));
               setIsAdding(true);
             }}
-            className="btn-liquid btn-warning-liquid px-4 py-2 rounded-xl text-sm"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20 text-sm"
           >
             <Plus className="w-4 h-4" />
             Registrar Férias e Voos
@@ -97,7 +97,7 @@ export function Vacations() {
               setNewVacation(prev => ({...prev, type: 'viagem'}));
               setIsAdding(true);
             }}
-            className="btn-liquid btn-dark-liquid px-4 py-2 rounded-xl text-sm"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg shadow-gray-900/20 text-sm"
           >
             <Plane className="w-4 h-4" />
             Registrar Viagem Interna
@@ -106,13 +106,13 @@ export function Vacations() {
       </div>
 
       {isAdding && (
-         <div className="glass-panel rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row items-end gap-4 animate-pop-in">
+         <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl mb-8 flex flex-col md:flex-row items-end gap-4">
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-gray-700 mb-1">Colaborador</label>
               <select 
                 value={newVacation.userId}
                 onChange={(e) => setNewVacation({...newVacation, userId: e.target.value})}
-                className="w-full px-4 py-3 glass-input rounded-xl"
+                className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl"
               >
                 <option value="">Selecione um membro...</option>
                 {teamMembers.map((m: any) => (
@@ -126,7 +126,7 @@ export function Vacations() {
                 type="date"
                 value={newVacation.startDate}
                 onChange={(e) => setNewVacation({...newVacation, startDate: e.target.value})}
-                className="w-full px-4 py-3 glass-input rounded-xl"
+                className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl"
               />
             </div>
             <div className="flex-1 w-full">
@@ -135,20 +135,20 @@ export function Vacations() {
                 type="date"
                 value={newVacation.endDate}
                 onChange={(e) => setNewVacation({...newVacation, endDate: e.target.value})}
-                className="w-full px-4 py-3 glass-input rounded-xl"
+                className="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl"
               />
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <button 
                 onClick={() => setIsAdding(false)}
-                className="btn-liquid btn-white-liquid px-4 py-3 rounded-xl flex-1 md:flex-none"
+                className="px-4 py-3 text-gray-600 border border-gray-200 bg-white/50 rounded-xl hover:bg-gray-50 flex-1 md:flex-none"
               >
                 Cancelar
               </button>
               <button 
                 onClick={handleCreateVacation}
                 disabled={!newVacation.userId || !newVacation.startDate || !newVacation.endDate}
-                className="btn-liquid btn-warning-liquid px-4 py-3 rounded-xl flex-1 md:flex-none"
+                className="px-4 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 flex-1 md:flex-none font-medium flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20"
               >
                 <Save className="w-5 h-5" />
                 Salvar
@@ -174,7 +174,7 @@ export function Vacations() {
                 if (!member) return null;
 
                 return (
-                  <div key={vacation.id} className="glass-card hover-lift rounded-[2rem] p-6 flex flex-col relative overflow-hidden group">
+                  <div key={vacation.id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 flex flex-col relative overflow-hidden group transition-all hover:shadow-2xl">
                     <div className={cn(
                       "absolute top-0 right-0 left-0 h-2",
                       isCurrent ? "bg-orange-500" : isComing ? "bg-blue-400" : "bg-gray-300"
@@ -206,7 +206,7 @@ export function Vacations() {
                       </div>
                     </div>
 
-                    <div className="glass-tile rounded-xl p-4 flex flex-col gap-2 relative">
+                    <div className="bg-white/50 border border-gray-100 rounded-xl p-4 flex flex-col gap-2 relative">
                       <Palmtree className="absolute right-2 bottom-2 w-12 h-12 text-black opacity-5" />
                       <div className="flex items-center gap-2 relative z-10">
                         <CalendarIcon className="w-4 h-4 text-gray-400" />
@@ -246,7 +246,7 @@ export function Vacations() {
                 if (!member) return null;
 
                 return (
-                  <div key={vacation.id} className="glass-card hover-lift rounded-[2rem] p-6 flex flex-col relative overflow-hidden group">
+                  <div key={vacation.id} className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 flex flex-col relative overflow-hidden group transition-all hover:shadow-2xl">
                     <div className={cn(
                       "absolute top-0 right-0 left-0 h-2",
                       isCurrent ? "bg-gray-900" : isComing ? "bg-gray-500" : "bg-gray-300"
@@ -278,7 +278,7 @@ export function Vacations() {
                       </div>
                     </div>
 
-                    <div className="glass-tile rounded-xl p-4 flex flex-col gap-2 relative">
+                    <div className="bg-white/50 border border-gray-100 rounded-xl p-4 flex flex-col gap-2 relative">
                       <Plane className="absolute right-2 bottom-2 w-12 h-12 text-black opacity-5" />
                       <div className="flex items-center gap-2 relative z-10">
                         <CalendarIcon className="w-4 h-4 text-gray-400" />

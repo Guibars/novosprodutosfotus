@@ -69,7 +69,7 @@ export function Calendar() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Calendário</h1>
@@ -77,16 +77,16 @@ export function Calendar() {
         </div>
       </div>
 
-      <div className="glass-panel rounded-[2rem] p-6">
+      <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-gray-900">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
           <div className="flex gap-2">
-            <button onClick={prevMonth} className="icon-btn p-2.5 rounded-xl bg-white/50">
+            <button onClick={prevMonth} className="p-2 bg-white/50 hover:bg-white rounded-xl transition-colors">
               <ChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
-            <button onClick={nextMonth} className="icon-btn p-2.5 rounded-xl bg-white/50">
+            <button onClick={nextMonth} className="p-2 bg-white/50 hover:bg-white rounded-xl transition-colors">
               <ChevronRight className="w-5 h-5 text-gray-700" />
             </button>
           </div>
@@ -115,7 +115,7 @@ export function Calendar() {
                 onClick={() => handleDayClick(day)}
                 className={cn(
                   "h-28 rounded-2xl border p-2 flex flex-col transition-all cursor-pointer overflow-hidden",
-                  isToday ? "bg-primary/10 border-primary/40 ring-1 ring-primary/20" : "glass-tile hover:bg-white/80 hover:-translate-y-0.5 hover:shadow-lg",
+                  isToday ? "bg-primary/5 border-primary/30" : "bg-white/40 border-white/60 hover:bg-white/60",
                   tasks.length > 0 && "hover:ring-2 hover:ring-primary/20 hover:shadow-lg"
                 )}
               >
@@ -146,17 +146,17 @@ export function Calendar() {
       {/* Modal for daily tasks */}
       <AnimatePresence>
         {selectedDateTasks && (
-          <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-modal rounded-[2rem] p-8 w-full max-w-lg max-h-[80vh] flex flex-col"
+              className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col"
             >
               <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-4">Tarefas - {selectedDateTasks.date}</h2>
               <div className="overflow-y-auto pr-2 space-y-4">
                 {selectedDateTasks.tasks.map((task, idx) => (
-                  <div key={idx} className="glass-tile p-4 rounded-xl flex items-center gap-3">
+                  <div key={idx} className="bg-white/60 p-4 rounded-xl border border-white/40 shadow-sm flex items-center gap-3">
                     {task.isEvent ? (
                       <div className="w-5 h-5 flex items-center justify-center bg-[#eab308] rounded-full shrink-0 shadow-inner">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -181,7 +181,7 @@ export function Calendar() {
               <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
                 <button 
                   onClick={() => setSelectedDateTasks(null)}
-                  className="btn-liquid btn-white-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
                 >
                   Fechar
                 </button>

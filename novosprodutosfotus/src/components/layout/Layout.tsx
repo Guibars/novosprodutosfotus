@@ -62,9 +62,8 @@ export function Layout() {
   return (
     <div className="flex min-h-[125vh] relative overflow-hidden">
       {/* Liquid glass background blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] rounded-full bg-primary/25 blur-[120px] pointer-events-none animate-blob"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] rounded-full bg-secondary/25 blur-[120px] pointer-events-none animate-blob" style={{ animationDelay: '-6s' }}></div>
-      <div className="absolute top-[30%] right-[25%] w-[30%] h-[30%] rounded-full bg-accent/15 blur-[100px] pointer-events-none animate-blob" style={{ animationDelay: '-12s' }}></div>
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/20 blur-[120px] pointer-events-none"></div>
 
       <Sidebar isOpen={isSidebarOpen} />
       <div className={cn(
@@ -81,8 +80,8 @@ export function Layout() {
 
       {/* Global Add Project Modal */}
       {isProjectModalOpen && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-md animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Novo Projeto</h2>
             <form onSubmit={handleAddProject} className="space-y-5">
               <div>
@@ -110,13 +109,13 @@ export function Layout() {
                 <button 
                   type="button" 
                   onClick={() => setIsProjectModalOpen(false)}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
-                <button
+                <button 
                   type="submit"
-                  className="btn-liquid btn-secondary-liquid px-5 py-2.5 rounded-xl"
+                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
                 >
                   Criar Projeto
                 </button>
@@ -128,19 +127,19 @@ export function Layout() {
 
       {/* System Update Notification Modal */}
       {updatePopupData && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-[100] p-4">
-          <div className="glass-modal rounded-3xl p-8 w-full max-w-lg animate-pop-in relative overflow-hidden">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl animate-fade-in relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary"></div>
             <h2 className="text-3xl font-black text-gray-900 mb-2">Novidades da Versão {updatePopupData.version} ✨</h2>
             <p className="text-gray-500 mb-6 font-medium">Acabamos de lançar uma atualização no sistema.</p>
             
-            <div className="glass-tile rounded-2xl p-5 mb-8 max-h-[40vh] overflow-y-auto">
+            <div className="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100 max-h-[40vh] overflow-y-auto">
               <pre className="whitespace-pre-wrap font-sans text-gray-700 text-sm">{updatePopupData.notes}</pre>
             </div>
             
             <button 
               onClick={dismissUpdatePopup}
-              className="btn-liquid btn-dark-liquid w-full py-3.5 rounded-xl font-bold"
+              className="w-full py-3.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-gray-900/20 active:scale-[0.98]"
             >
               Entendi
             </button>

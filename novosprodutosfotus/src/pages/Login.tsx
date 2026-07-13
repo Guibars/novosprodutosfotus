@@ -74,8 +74,8 @@ export function Login() {
     <div className="min-h-[125vh] bg-gray-50 flex overflow-hidden relative">
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/15 blur-3xl animate-blob"></div>
-        <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full bg-secondary/15 blur-3xl animate-blob" style={{ animationDelay: '-8s' }}></div>
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-3xl"></div>
+        <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full bg-secondary/10 blur-3xl"></div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center z-10 p-8 transition-all duration-500" style={{ transform: showForm ? 'translateX(-10%)' : 'translateX(0)' }}>
@@ -94,7 +94,7 @@ export function Login() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setShowForm(true)}
-              className="btn-liquid btn-secondary-liquid px-8 py-3.5 rounded-full font-bold text-base mx-auto"
+              className="bg-secondary/80 backdrop-blur-md border border-white/30 hover:bg-secondary text-white px-6 py-3 rounded-full font-bold text-base shadow-xl shadow-secondary/20 transition-all hover:scale-105 flex items-center gap-2 mx-auto"
             >
               Acessar Plataforma
               <ArrowRight className="w-4 h-4" />
@@ -110,7 +110,7 @@ export function Login() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="w-full max-w-md glass-modal rounded-[3rem] z-20 flex flex-col p-8 sm:p-12 absolute right-4 md:right-12 top-12 bottom-12 overflow-y-auto"
+            className="w-full max-w-md bg-white/70 backdrop-blur-2xl rounded-[3rem] shadow-[10px_10px_30px_rgba(0,0,0,0.05),-10px_-10px_30px_rgba(255,255,255,0.8)] border border-white/60 z-20 flex flex-col p-8 sm:p-12 absolute right-4 md:right-12 top-12 bottom-12 overflow-y-auto"
           >
             <div className="my-auto">
               <div className="mb-10">
@@ -144,7 +144,7 @@ export function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 glass-input rounded-xl"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     placeholder="seu@email.com"
                   />
                 </div>
@@ -162,7 +162,7 @@ export function Login() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 glass-input rounded-xl"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     placeholder="••••••••"
                   />
                 </div>
@@ -171,7 +171,7 @@ export function Login() {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="btn-liquid btn-primary-liquid w-full py-3 rounded-xl font-bold"
+                className="w-full bg-primary hover:bg-primary-hover text-white py-3 rounded-xl font-bold shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100"
               >
                 {loading ? "Aguarde..." : (isRegistering ? "Cadastrar" : "Entrar")}
               </button>
@@ -185,7 +185,7 @@ export function Login() {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="btn-liquid btn-white-liquid w-full py-3 rounded-xl font-bold"
+                className="w-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

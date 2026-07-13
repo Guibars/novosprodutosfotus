@@ -56,6 +56,9 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    match /inventory/{id} {
+      allow read, write: if isAuthenticated();
+    }
     match /inventory_products/{id} {
       allow read, write: if isAuthenticated();
     }

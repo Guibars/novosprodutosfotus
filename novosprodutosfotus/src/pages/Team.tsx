@@ -20,7 +20,7 @@ export function Team() {
   }, []);
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Time</h1>
         <p className="text-gray-500 mt-1">Conheça os membros da sua equipe e seus respectivos setores.</p>
@@ -33,7 +33,7 @@ export function Team() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teamMembers.map((member) => (
-            <div key={member.id} className="glass-card hover-lift rounded-[2rem] p-6 group">
+            <div key={member.id} className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 hover:bg-white/60 transition-colors group">
               <div className="flex items-start gap-4">
                 <img 
                   src={member.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${member.email}`} 
@@ -57,7 +57,7 @@ export function Team() {
           ))}
 
           {teamMembers.length === 0 && (
-            <div className="col-span-full p-12 text-center text-gray-500 glass-panel rounded-[2rem]">
+            <div className="col-span-full p-12 text-center text-gray-500 bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem]">
               Nenhum membro encontrado.
             </div>
           )}

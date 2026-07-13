@@ -147,11 +147,7 @@ export function Dashboard() {
   };
 
   const MetricCard = ({ title, value, subtitle, icon: Icon, colorClass, highlight }: any) => (
-    <div className={cn(
-      highlight
-        ? "rounded-[2rem] p-6 relative overflow-hidden text-white border border-white/30 shadow-xl shadow-secondary/25 hover-lift " + colorClass
-        : "glass-card hover-lift rounded-[2rem] p-6 relative overflow-hidden"
-    )}>
+    <div className={cn("bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5 relative overflow-hidden", highlight && "text-white " + colorClass)}>
       {highlight && <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>}
       <div className="flex justify-between items-start mb-4 relative z-10">
         <h3 className={cn("font-medium", highlight ? "text-white/80" : "text-gray-600")}>{title}</h3>
@@ -167,7 +163,7 @@ export function Dashboard() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Visão Projetos</h1>
@@ -176,7 +172,7 @@ export function Dashboard() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsProjectModalOpen(true)}
-            className="btn-liquid btn-secondary-liquid px-4 py-2 rounded-xl"
+            className="flex items-center gap-2 bg-secondary hover:bg-secondary-hover text-white px-4 py-2 rounded-xl font-medium transition-colors"
           >
             <Plus className="w-5 h-5" />
             Adicionar Projeto
@@ -216,25 +212,25 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 📦 Dados de Projetos */}
-        <div className="glass-panel rounded-[2rem] p-6">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
           <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <FolderGit2 className="w-6 h-6 text-primary" />
             Dados de Projetos
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div className="glass-tile p-4 rounded-2xl">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
               <p className="text-sm text-gray-500 mb-1">Total</p>
               <p className="text-2xl font-bold text-gray-900">{totalProjects}</p>
             </div>
-            <div className="glass-tile p-4 rounded-2xl">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
               <p className="text-sm text-gray-500 mb-1">Em Dev.</p>
               <p className="text-2xl font-bold text-primary">{inProgressProjects}</p>
             </div>
-            <div className="glass-tile p-4 rounded-2xl">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
               <p className="text-sm text-gray-500 mb-1">Concluídos</p>
               <p className="text-2xl font-bold text-success">{completedProjects}</p>
             </div>
-            <div className="glass-tile p-4 rounded-2xl">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
               <p className="text-sm text-gray-500 mb-1">Pendentes</p>
               <p className="text-2xl font-bold text-gray-700">{pendingProjects}</p>
             </div>
@@ -249,27 +245,27 @@ export function Dashboard() {
         </div>
 
         {/* ✅ Dados de Tarefas */}
-        <div className="glass-panel rounded-[2rem] p-6">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
           <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <LayoutList className="w-6 h-6 text-secondary" />
             Dados de Tarefas
           </h2>
           <div className="grid grid-cols-2 gap-4">
-            <div className="glass-tile p-4 rounded-2xl relative overflow-hidden group">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50 relative overflow-hidden group">
               <p className="text-sm text-gray-500 mb-1">Total Cadastradas</p>
               <p className="text-3xl font-bold text-gray-900">{totalTasks}</p>
               <div className="absolute right-0 bottom-0 p-4 opacity-10">
                 <LayoutList className="w-16 h-16" />
               </div>
             </div>
-            <div className="glass-tile p-4 rounded-2xl relative overflow-hidden group">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50 relative overflow-hidden group">
               <p className="text-sm text-gray-500 mb-1">Concluídas</p>
               <p className="text-3xl font-bold text-success">{completedTasks}</p>
               <div className="absolute right-0 bottom-0 p-4 opacity-10">
                 <CheckCircle2 className="w-16 h-16 text-success" />
               </div>
             </div>
-            <div className="glass-tile p-4 rounded-2xl">
+            <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
               <p className="text-sm text-gray-500 mb-1">Pendentes</p>
               <p className="text-2xl font-bold text-primary">{pendingTasks}</p>
             </div>
@@ -286,7 +282,7 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Analytics Chart */}
-        <div className="glass-panel rounded-[2rem] p-6 lg:col-span-1 flex flex-col justify-between">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 shadow-xl shadow-black/5 flex flex-col justify-between">
           <div>
             <h3 className="font-semibold text-gray-900 mb-1">Tarefas Concluídas por Projeto</h3>
             <p className="text-xs text-gray-500 mb-6">Projetos em aberto</p>
@@ -314,7 +310,7 @@ export function Dashboard() {
         </div>
 
         {/* Reminders */}
-        <div className="glass-panel rounded-[2rem] p-6 lg:col-span-1 flex flex-col h-[340px]">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 flex flex-col shadow-xl shadow-black/5 h-[340px]">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900">Lembretes</h3>
             <button 
@@ -323,7 +319,7 @@ export function Dashboard() {
                 resetReminderForm();
                 setIsAddingReminder(true);
               }}
-              className="btn-liquid btn-white-liquid text-sm px-3 py-1 rounded-lg"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 border border-white/50 bg-white/30 px-3 py-1 rounded-lg transition-colors"
             >
               + Novo
             </button>
@@ -386,12 +382,12 @@ export function Dashboard() {
         </div>
 
         {/* Open Projects */}
-        <div className="glass-panel rounded-[2rem] p-6 lg:col-span-1 row-span-2">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 row-span-2 shadow-xl shadow-black/5">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-gray-900">Projetos em Aberto</h3>
             <button 
               onClick={() => setIsProjectModalOpen(true)}
-              className="btn-liquid btn-white-liquid text-sm px-3 py-1 rounded-lg"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 border border-white/50 bg-white/30 px-3 py-1 rounded-lg transition-colors"
             >
               + Novo
             </button>
@@ -426,7 +422,7 @@ export function Dashboard() {
         </div>
 
         {/* Team Collaboration */}
-        <div className="glass-panel rounded-[2rem] p-6 lg:col-span-1">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 shadow-xl shadow-black/5">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-gray-900">Colaboração do Time</h3>
             <button className="text-sm font-medium text-gray-600 hover:text-gray-900 border border-white/50 bg-white/30 px-3 py-1 rounded-lg transition-colors">
@@ -455,7 +451,7 @@ export function Dashboard() {
         </div>
 
         {/* Project Progress */}
-        <div className="glass-panel rounded-[2rem] p-6 lg:col-span-1 flex flex-col items-center justify-center">
+        <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 lg:col-span-1 flex flex-col items-center justify-center shadow-xl shadow-black/5">
           <h3 className="font-semibold text-gray-900 w-full mb-4">Progresso Geral</h3>
           <div className="relative w-48 h-48 flex items-center justify-center">
             {/* Simple CSS Donut Chart representation */}
@@ -492,8 +488,8 @@ export function Dashboard() {
 
       {/* Add Reminder Modal */}
       {isAddingReminder && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-[100] p-4">
-          <div className="glass-modal rounded-[2rem] p-8 w-full max-w-md animate-pop-in">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white/90 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingReminder ? "Editar Lembrete" : "Novo Lembrete"}</h2>
             <form onSubmit={handleAddReminder} className="space-y-4">
               <div>
@@ -503,7 +499,7 @@ export function Dashboard() {
                   required
                   value={newReminderTitle}
                   onChange={(e) => setNewReminderTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 glass-input rounded-xl"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all"
                   placeholder="Ex: Reunião de Alinhamento"
                 />
               </div>
@@ -513,7 +509,7 @@ export function Dashboard() {
                 <textarea 
                   value={newReminderObservation}
                   onChange={(e) => setNewReminderObservation(e.target.value)}
-                  className="w-full px-4 py-2.5 glass-input rounded-xl min-h-[80px] resize-none"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all min-h-[80px] resize-none"
                   placeholder="Anotações ou links importantes..."
                 />
               </div>
@@ -525,7 +521,7 @@ export function Dashboard() {
                     type="date" 
                     value={newReminderDate}
                     onChange={(e) => setNewReminderDate(e.target.value)}
-                    className="w-full px-4 py-2.5 glass-input rounded-xl"
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -534,7 +530,7 @@ export function Dashboard() {
                     type="time" 
                     value={newReminderTime}
                     onChange={(e) => setNewReminderTime(e.target.value)}
-                    className="w-full px-4 py-2.5 glass-input rounded-xl"
+                    className="w-full px-4 py-2.5 bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl outline-none transition-all"
                   />
                 </div>
               </div>
@@ -547,13 +543,13 @@ export function Dashboard() {
                     setEditingReminder(null);
                     resetReminderForm();
                   }}
-                  className="btn-liquid btn-ghost-liquid px-5 py-2 rounded-xl"
+                  className="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors"
                 >
                   Cancelar
                 </button>
-                <button
+                <button 
                   type="submit"
-                  className="btn-liquid btn-secondary-liquid px-5 py-2 rounded-xl"
+                  className="px-5 py-2 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
                 >
                   {editingReminder ? "Salvar" : "Criar Lembrete"}
                 </button>
