@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Package, Plus, Save, Box, MapPin, Edit3, X, Check, Trash2, ChevronDown } from "lucide-react";
+import { Package, Plus, Save, Box, MapPin, Edit3, X, Check, Trash2, ChevronDown, Search, Filter } from "lucide-react";
 import { collection, onSnapshot, doc, setDoc, deleteDoc, query, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 
-const CATEGORIES = ["Carregador DC", "RSD"];
+const CATEGORIES = ["Carregador DC", "RSD", "Bateria"];
 const CDS = ["ES", "PE", "BA", "PA", "GO", "SP", "SC", "Fotus Galpão"];
 
 export function Inventory() {
@@ -17,6 +17,16 @@ export function Inventory() {
   const [stocks, setStocks] = useState<any>({});
   const [localStocks, setLocalStocks] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [showOnlyInStock, setShowOnlyInStock] = useState(() => {
+    return localStorage.getItem("inventory_onlyInStock") === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("inventory_onlyInStock", showOnlyInStock.toString());
+  }, [showOnlyInStock]);
 
   // Product form state
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -146,88 +156,202 @@ export function Inventory() {
     }
   };
 
+  // Derived state for filtered products
+  const searchLower = searchQuery.toLowerCase();
+  const searchTerms = searchLower.split(' ').filter(t => t.length > 0);
+
+  const filteredCDs = CDS.map(cd => {
+    const cdProducts = products.filter(product => {
+      // 1. Search matching
+      const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => 
+        (product.name && product.name.toLowerCase().includes(term)) ||
+        (product.brand && product.brand.toLowerCase().includes(term)) ||
+        (product.code && product.code.toLowerCase().includes(term)) ||
+        (product.power && product.power.toString().includes(term)) ||
+        (product.subCategory && product.subCategory.toLowerCase().includes(term))
+      );
+      
+      // 2. Tag matching
+      const matchesTag = !selectedTag || (
+        (product.power ? `${product.power}kW` : null) === selectedTag ||
+        product.brand === selectedTag ||
+        product.subCategory === selectedTag
+      );
+
+      // 3. Stock matching
+      const key = `${product.id}_${cd}`;
+      const qty = isEditing ? (localStocks[key] ?? "") : (stocks[key] || 0);
+      const hasStock = qty !== "" && Number(qty) > 0;
+      
+      const matchesStock = !showOnlyInStock || hasStock;
+      
+      return matchesSearch && matchesTag && matchesStock;
+    });
+    
+    return { cd, products: cdProducts };
+  }).filter(cdData => cdData.products.length > 0);
+
+  // Generate quick filter tags
+  const quickTags = Array.from(new Set(products.flatMap(p => [
+    p.power ? `${p.power}kW` : null,
+    p.brand,
+    p.subCategory
+  ]).filter(Boolean)));
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Package className="w-8 h-8 text-primary" />
-            Controle de Estoque
-          </h1>
-          <p className="text-gray-500 mt-1">Gerencie o estoque distribuído por Centro de Distribuição.</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <Package className="w-8 h-8 text-primary" />
+              Controle de Estoque
+            </h1>
+            <p className="text-gray-500 mt-1">Gerencie o estoque distribuído por Centro de Distribuição.</p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Category Selector Pill */}
+            <div className="relative group">
+              <div className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2.5 rounded-full shadow-sm cursor-pointer hover:border-gray-300 transition-colors">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Produto:</span>
+                <span className="font-semibold text-gray-900">{activeCategory}</span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </div>
+              
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                {CATEGORIES.map(cat => (
+                  <div 
+                    key={cat}
+                    onClick={() => {
+                      setActiveCategory(cat);
+                      setIsEditing(false);
+                    }}
+                    className={cn(
+                      "px-4 py-3 cursor-pointer text-sm font-medium transition-colors hover:bg-gray-50",
+                      activeCategory === cat ? "text-primary bg-primary/5" : "text-gray-700"
+                    )}
+                  >
+                    {cat}
+                  </div>
+                ))}
+                <div 
+                  onClick={() => setIsProductModalOpen(true)}
+                  className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 border-t border-gray-100 flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Gerenciar Produtos
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button Pill */}
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setLocalStocks(stocks); // Reset changes
+                  }}
+                  className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-full font-medium transition-colors flex items-center gap-2 shadow-sm"
+                >
+                  <X className="w-4 h-4" />
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveInventory}
+                  disabled={isSaving}
+                  className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-full font-medium transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                >
+                  {isSaving ? (
+                    "Salvando..."
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Salvar
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-full font-medium transition-colors flex items-center gap-2 shadow-lg shadow-gray-900/20"
+              >
+                <Edit3 className="w-4 h-4" />
+                Atualizar
+              </button>
+            )}
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Category Selector Pill */}
-          <div className="relative group">
-            <div className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2.5 rounded-full shadow-sm cursor-pointer hover:border-gray-300 transition-colors">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Produto:</span>
-              <span className="font-semibold text-gray-900">{activeCategory}</span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+
+        {/* Filters and Search */}
+        <div className="bg-white p-3 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text"
+                placeholder="Buscar por nome, marca, potência (ex: 60)..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 border-transparent focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-2xl text-sm font-medium transition-all"
+              />
             </div>
             
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-              {CATEGORIES.map(cat => (
-                <div 
-                  key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setIsEditing(false);
-                  }}
-                  className={cn(
-                    "px-4 py-3 cursor-pointer text-sm font-medium transition-colors hover:bg-gray-50",
-                    activeCategory === cat ? "text-primary bg-primary/5" : "text-gray-700"
-                  )}
-                >
-                  {cat}
-                </div>
-              ))}
-              <div 
-                onClick={() => setIsProductModalOpen(true)}
-                className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 border-t border-gray-100 flex items-center gap-2"
+            <div className="flex items-center bg-gray-100 p-1 rounded-2xl w-full sm:w-auto shrink-0">
+              <button
+                onClick={() => setShowOnlyInStock(false)}
+                className={cn(
+                  "flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
+                  !showOnlyInStock
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                )}
               >
-                <Plus className="w-4 h-4" />
-                Gerenciar Produtos
-              </div>
+                Todos os Itens
+              </button>
+              <button
+                onClick={() => setShowOnlyInStock(true)}
+                className={cn(
+                  "flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap",
+                  showOnlyInStock 
+                    ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                    : "text-gray-500 hover:text-gray-700"
+                )}
+              >
+                Em Estoque
+              </button>
             </div>
           </div>
 
-          {/* Action Button Pill */}
-          {isEditing ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setLocalStocks(stocks); // Reset changes
-                }}
-                className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-full font-medium transition-colors flex items-center gap-2 shadow-sm"
-              >
-                <X className="w-4 h-4" />
-                Cancelar
-              </button>
-              <button
-                onClick={saveInventory}
-                disabled={isSaving}
-                className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-full font-medium transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
-              >
-                {isSaving ? (
-                  "Salvando..."
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Salvar
-                  </>
-                )}
-              </button>
+          {quickTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-3 px-1">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mr-1">Tags:</span>
+              {quickTags.map(tag => {
+                const isActive = selectedTag === tag;
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      if (isActive) {
+                        setSelectedTag(null);
+                      } else {
+                        setSelectedTag(tag as string);
+                      }
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold transition-all border",
+                      isActive
+                        ? "bg-primary/10 text-primary border-primary/20"
+                        : "bg-gray-50 text-gray-600 border-gray-100 hover:border-gray-200 hover:bg-gray-100"
+                    )}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
             </div>
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-full font-medium transition-colors flex items-center gap-2 shadow-lg shadow-gray-900/20"
-            >
-              <Edit3 className="w-4 h-4" />
-              Atualizar
-            </button>
           )}
         </div>
       </div>
@@ -245,13 +369,21 @@ export function Inventory() {
             Cadastrar Primeiro Produto
           </button>
         </div>
+      ) : filteredCDs.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-300">
+          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Nenhum resultado encontrado</h3>
+          <p className="text-gray-500">Não há produtos em estoque correspondentes à sua busca nos CDs.</p>
+        </div>
       ) : (
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {CDS.map((cd, cdIndex) => (
+          <AnimatePresence mode="popLayout">
+          {filteredCDs.map(({ cd, products: cdProducts }, cdIndex) => (
             <motion.div 
               layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: cdIndex * 0.05 }}
               key={cd} 
               className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col h-full"
@@ -268,7 +400,7 @@ export function Inventory() {
 
               <div className="flex-1 flex flex-col">
                 <AnimatePresence mode="popLayout">
-                {products.map((product, index) => {
+                {cdProducts.map((product, index) => {
                   const key = `${product.id}_${cd}`;
                   const qty = isEditing ? (localStocks[key] ?? "") : (stocks[key] || 0);
 
@@ -279,7 +411,7 @@ export function Inventory() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       key={product.id} 
-                      className={cn("flex items-center justify-between gap-4 group py-3", index !== products.length - 1 ? "border-b border-gray-100" : "")}
+                      className={cn("flex items-center justify-between gap-4 group py-3", index !== cdProducts.length - 1 ? "border-b border-gray-100" : "")}
                     >
                       <div className="min-w-0 flex-1 pr-2">
                         <div className="font-semibold text-gray-900 leading-tight">
@@ -332,6 +464,7 @@ export function Inventory() {
               </div>
             </motion.div>
           ))}
+          </AnimatePresence>
         </motion.div>
       )}
 
