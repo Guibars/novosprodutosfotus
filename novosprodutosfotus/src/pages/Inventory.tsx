@@ -230,6 +230,8 @@ export function Inventory() {
                     onClick={() => {
                       setActiveCategory(cat);
                       setIsEditing(false);
+                      setSelectedTag(null);
+                      setSearchQuery("");
                     }}
                     className={cn(
                       "px-4 py-3 cursor-pointer text-sm font-medium transition-colors hover:bg-gray-50",
@@ -503,15 +505,32 @@ export function Inventory() {
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                     />
                   </div>
-                  <div className="w-full sm:w-[120px]">
+                  <div className="w-full sm:w-[160px]">
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Marca</label>
-                    <input
-                      type="text"
-                      value={productForm.brand}
-                      onChange={e => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
-                      placeholder="Ex: Beny"
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
-                    />
+                    {activeCategory === "Inversor" ? (
+                      <select
+                        value={productForm.brand}
+                        onChange={e => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm bg-white"
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="Deye">Deye</option>
+                        <option value="GoodWe">GoodWe</option>
+                        <option value="Solis">Solis</option>
+                        <option value="Solplanet">Solplanet</option>
+                        {productForm.brand && !["Deye", "GoodWe", "Solis", "Solplanet"].includes(productForm.brand) && (
+                          <option value={productForm.brand}>{productForm.brand}</option>
+                        )}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={productForm.brand}
+                        onChange={e => setProductForm(prev => ({ ...prev, brand: e.target.value }))}
+                        placeholder="Ex: Beny"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                      />
+                    )}
                   </div>
                   <div className="w-full sm:w-[100px]">
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Potência (kW)</label>
