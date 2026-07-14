@@ -5,7 +5,7 @@ import { db } from "../lib/firebase";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 
-const CATEGORIES = ["Carregador DC", "RSD", "Bateria", "BESS", "Driver"];
+const CATEGORIES = ["Carregador DC", "RSD", "Bateria", "BESS", "Driver", "Inversor"];
 const CDS = ["ES", "PE", "BA", "PA", "GO", "SP", "SC", "Fotus Galpão"];
 
 export function Inventory() {
@@ -100,7 +100,9 @@ export function Inventory() {
     e.preventDefault();
     if (!productForm.name.trim()) return;
 
-    const finalSubCategory = productForm.subCategory || (activeCategory === "RSD" ? "Módulo RSD" : "");
+    const finalSubCategory = productForm.subCategory || 
+      (activeCategory === "RSD" ? "Módulo RSD" : 
+      (activeCategory === "Inversor" ? "Monofásico 127V" : ""));
 
     try {
       if (editingProductId) {
@@ -136,7 +138,9 @@ export function Inventory() {
       brand: product.brand || "",
       code: product.code || "",
       power: product.power || "",
-      subCategory: product.subCategory || (activeCategory === "RSD" ? "Módulo RSD" : "")
+      subCategory: product.subCategory || 
+        (activeCategory === "RSD" ? "Módulo RSD" : 
+        (activeCategory === "Inversor" ? "Monofásico 127V" : ""))
     });
     setEditingProductId(product.id);
   };
@@ -534,7 +538,7 @@ export function Inventory() {
 
                 <div className="flex items-center justify-between">
                   {activeCategory === "RSD" ? (
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -557,6 +561,21 @@ export function Inventory() {
                         />
                         <span className="text-sm font-medium text-gray-700">Unidade de Controle</span>
                       </label>
+                    </div>
+                  ) : activeCategory === "Inversor" ? (
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider hidden sm:block">Tensão:</label>
+                      <select 
+                        value={productForm.subCategory || "Monofásico 127V"}
+                        onChange={e => setProductForm(prev => ({ ...prev, subCategory: e.target.value }))}
+                        className="px-3 py-2 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium bg-white"
+                      >
+                        <option value="Monofásico 127V">Monofásico 127V</option>
+                        <option value="Monofásico 220V">Monofásico 220V</option>
+                        <option value="Split Phase/Bifásico 127V/220V">Split Phase/Bifásico 127V/220V</option>
+                        <option value="Trifásico 220V">Trifásico 220V</option>
+                        <option value="Trifásico 380V">Trifásico 380V</option>
+                      </select>
                     </div>
                   ) : <div></div>}
 
