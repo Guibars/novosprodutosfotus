@@ -8,7 +8,7 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 
 export function Layout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isProjectModalOpen, setIsProjectModalOpen, addProject } = useProjects();
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDate, setNewProjectDate] = useState("");
@@ -60,19 +60,15 @@ export function Layout() {
   };
 
   return (
-    <div className="flex min-h-[125vh] relative overflow-hidden">
-      {/* Liquid glass background blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/20 blur-[120px] pointer-events-none"></div>
-
+    <div className="flex h-screen bg-slate-50/90 relative overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} />
       <div className={cn(
-        "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300",
+        "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300 h-full",
         isSidebarOpen ? "pl-72" : "pl-[5.5rem]"
       )}>
         <Topbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="w-full">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col">
+          <div className="w-full mx-auto flex flex-col flex-1">
             <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
           </div>
         </main>
@@ -80,42 +76,42 @@ export function Layout() {
 
       {/* Global Add Project Modal */}
       {isProjectModalOpen && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Novo Projeto</h2>
-            <form onSubmit={handleAddProject} className="space-y-5">
+        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Novo Projeto</h2>
+            <form onSubmit={handleAddProject} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Projeto</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Nome do Projeto</label>
                 <input 
                   type="text" 
                   required
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
-                  className="w-full px-4 py-3 glass-input rounded-xl"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/15 rounded-xl text-sm transition-all outline-none"
                   placeholder="Ex: Novo App Mobile"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prazo</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Prazo</label>
                 <input 
                   type="date" 
                   required
                   value={newProjectDate}
                   onChange={(e) => setNewProjectDate(e.target.value)}
-                  className="w-full px-4 py-3 glass-input rounded-xl"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/15 rounded-xl text-sm transition-all outline-none"
                 />
               </div>
-              <div className="flex items-center justify-end gap-3 mt-8">
+              <div className="flex items-center justify-end gap-3 mt-6">
                 <button 
                   type="button" 
                   onClick={() => setIsProjectModalOpen(false)}
-                  className="px-5 py-2.5 text-gray-600 hover:bg-white/50 rounded-xl font-medium transition-colors"
+                  className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-semibold transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl font-medium transition-colors shadow-lg shadow-secondary/30"
+                  className="px-5 py-2.5 bg-secondary hover:bg-secondary-hover text-white rounded-xl text-sm font-semibold transition-all shadow-md shadow-secondary/20"
                 >
                   Criar Projeto
                 </button>

@@ -16,27 +16,25 @@
 
 @layer base {
   html {
-    zoom: 0.8;
-    min-height: 125vh;
+    scroll-behavior: smooth;
   }
   body {
-    @apply text-gray-900 font-sans antialiased min-h-[125vh];
-    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-    background-image: radial-gradient(at 0% 0%, hsla(42,96%,53%,0.15) 0px, transparent 50%),
-                      radial-gradient(at 100% 100%, hsla(208,83%,30%,0.15) 0px, transparent 50%);
-    background-attachment: fixed;
+    @apply text-slate-900 font-sans antialiased bg-slate-50/80 min-h-screen selection:bg-primary/20 selection:text-slate-900;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.05)];
+    @apply bg-white/75 backdrop-blur-md border border-white/80 shadow-[0_2px_12px_rgba(13,81,142,0.04)] transition-all;
   }
   .glass-panel {
-    @apply bg-white/50 backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.05)];
+    @apply bg-white/80 backdrop-blur-lg border border-white/90 shadow-[0_4px_24px_rgba(13,81,142,0.06)] transition-all;
+  }
+  .glass-card {
+    @apply bg-white/85 backdrop-blur-md border border-slate-200/70 shadow-[0_2px_10px_rgba(15,23,42,0.03)] hover:shadow-[0_4px_16px_rgba(13,81,142,0.08)] transition-all;
   }
   .glass-input {
-    @apply bg-white/50 backdrop-blur-md border border-white/60 focus:bg-white/80 transition-all outline-none focus:ring-2 focus:ring-primary/30;
+    @apply bg-white/80 backdrop-blur-sm border border-slate-200/90 focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/15 text-slate-800 placeholder:text-slate-400 transition-all outline-none;
   }
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
@@ -54,10 +52,10 @@
     background: transparent;
   }
   .scrollbar-minimal::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
+    @apply bg-slate-300 rounded-full;
   }
   .scrollbar-minimal::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+    @apply bg-slate-400;
   }
   
   .custom-scrollbar::-webkit-scrollbar {
@@ -77,5 +75,6 @@
     background-color: #94a3b8;
   }
 }
+
 
 

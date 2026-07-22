@@ -47,6 +47,7 @@ export function TransferBoard() {
 
   const [isViewAllModalOpen, setIsViewAllModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [onlyMyTransfers, setOnlyMyTransfers] = useState(false);
 
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
   const [draggedStageId, setDraggedStageId] = useState<string | null>(null);
@@ -309,85 +310,113 @@ Atenciosamente.`;
 
   // Filtered Cards for Board
   const getFilteredCards = (stageId: string) => {
-    return cards.filter(c => 
-      c.stageId === stageId && 
-      (!searchTerm || 
-       (c.title || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-       (c.productCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-       (c.extraProducts || []).some((ep: any) => (ep.code || "").toLowerCase().includes(searchTerm.toLowerCase())))
-    );
+    return cards.filter(c => {
+      if (c.stageId !== stageId) return false;
+
+      if (onlyMyTransfers) {
+        const userEmail = (user?.email || '').toLowerCase();
+        const userName = (user?.displayName || '').toLowerCase();
+        const userUid = user?.uid;
+
+        const isCreatedByUid = c.createdByUid && c.createdByUid === userUid;
+        const isCreatedByNameOrEmail = c.createdBy && (
+          c.createdBy.toLowerCase() === userEmail ||
+          c.createdBy.toLowerCase() === userName
+        );
+        const isAssigned = c.assignedTo && (c.assignedTo === userUid || c.assignedTo === userEmail);
+
+        if (!isCreatedByUid && !isCreatedByNameOrEmail && !isAssigned) {
+          return false;
+        }
+      }
+
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const matchTitle = (c.title || "").toLowerCase().includes(term);
+        const matchProduct = (c.productCode || "").toLowerCase().includes(term);
+        const matchConsultant = (c.consultantName || "").toLowerCase().includes(term);
+        const matchExtra = (c.extraProducts || []).some((ep: any) => (ep.code || "").toLowerCase().includes(term));
+        if (!matchTitle && !matchProduct && !matchConsultant && !matchExtra) return false;
+      }
+
+      return true;
+    });
   };
 
   return (
-    <div className="h-full flex flex-col space-y-6 max-w-[1600px] mx-auto pb-10 overflow-hidden">
-      <div className="flex justify-between items-end shrink-0 gap-4 flex-wrap">
+    <div className="flex-1 flex flex-col min-h-[600px] h-full space-y-3">
+      {/* Header Bar */}
+      <div className="flex justify-between items-center shrink-0 gap-3 flex-wrap bg-white/70 p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Quadro de Transferência</h1>
-          <p className="text-sm text-gray-500 mt-1">Gerencie os pedidos e etapas de transferência</p>
+          <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">Quadro de Transferência</h1>
+          <p className="text-xs text-slate-500 font-medium mt-1">Gerencie pedidos e etapas de transferência em tempo real</p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+
+        {/* Compact Analytics Bar */}
+        <div className="hidden lg:flex items-center gap-4 px-3 py-1.5 bg-slate-100/80 rounded-xl border border-slate-200/60 text-xs font-bold text-slate-700">
+          <div className="flex items-center gap-1.5">
+            <Package className="w-3.5 h-3.5 text-blue-600" />
+            <span>Total: <strong className="text-slate-900 font-black">{cards.length}</strong></span>
+          </div>
+          <span className="text-slate-300">•</span>
+          <div className="flex items-center gap-1.5">
+            <Inbox className="w-3.5 h-3.5 text-orange-600" />
+            <span>Aberto: <strong className="text-slate-900 font-black">{openCardsCount}</strong></span>
+          </div>
+          <span className="text-slate-300">•</span>
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Finalizadas: <strong className="text-slate-900 font-black">{transferredCardsCount}</strong></span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* User Filter Toggle */}
+          <button 
+            onClick={() => setOnlyMyTransfers(!onlyMyTransfers)}
+            className={cn(
+              "px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border",
+              onlyMyTransfers 
+                ? "bg-amber-500 text-white border-amber-500 shadow-xs ring-2 ring-amber-500/20" 
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            )}
+            title="Filtrar apenas as transferências criadas por você ou sob sua responsabilidade"
+          >
+            <User className="w-3.5 h-3.5" />
+            {onlyMyTransfers ? "Minhas Transferências (Ativo)" : "Minhas Transferências"}
+          </button>
+
+          <div className="relative w-44 md:w-56">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Buscar por n° pedido..." 
+              placeholder="Buscar pedido ou cód..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-shadow"
+              className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-primary outline-none"
             />
           </div>
+
           <button 
             onClick={() => setIsViewAllModalOpen(true)}
-            className="bg-white border border-gray-200 text-gray-700 font-bold px-4 py-2 flex items-center gap-2 rounded-xl text-sm shadow-sm hover:bg-gray-50 transition-all shrink-0"
+            className="bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs hover:bg-slate-50 transition-all shrink-0"
           >
-            <ListFilter className="w-4 h-4" />
+            <ListFilter className="w-3.5 h-3.5" />
             Ver Tudo
           </button>
+
           <button 
             onClick={openAddStageModal}
-            className="bg-gray-900 text-white px-4 py-2 flex items-center gap-2 rounded-xl text-sm font-bold shadow-md hover:bg-gray-800 transition-all shrink-0"
+            className="bg-slate-900 text-white px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-bold shadow-xs hover:bg-slate-800 transition-all shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             Nova Etapa
           </button>
         </div>
       </div>
 
-      {/* Analytics Transferências */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <Package className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total de Pedidos</p>
-            <p className="text-3xl font-black text-gray-900">{cards.length}</p>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-            <Inbox className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Em Aberto (Aguardando)</p>
-            <p className="text-3xl font-black text-gray-900">{openCardsCount}</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Pedidos Transferidos</p>
-            <p className="text-3xl font-black text-gray-900">{transferredCardsCount}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Board */}
-      <div className="flex-1 flex gap-6 overflow-x-auto pb-4 items-start pt-2 px-1 custom-scrollbar snap-x snap-mandatory">
+      {/* Board Columns */}
+      <div className="flex-1 flex gap-3 overflow-x-auto items-stretch pb-2 pt-1 px-1 custom-scrollbar min-h-0">
         {stages.map(stage => {
           const stageCards = getFilteredCards(stage.id);
           return (
@@ -396,38 +425,40 @@ Atenciosamente.`;
               draggable
               onDragStart={(e) => handleStageDragStart(e, stage.id)}
               className={cn(
-                "rounded-3xl w-[85vw] sm:w-80 md:flex-1 md:min-w-[250px] shrink-0 flex flex-col max-h-[75vh] border-2 transition-all shadow-sm cursor-grab active:cursor-grabbing snap-center",
+                "rounded-2xl w-[280px] min-w-[270px] shrink-0 flex flex-col h-full max-h-full border transition-all shadow-2xs cursor-grab active:cursor-grabbing overflow-hidden",
                 draggedStageId === stage.id ? "opacity-30 border-dashed scale-95" : "",
                 stage.isCompletedStage 
-                  ? "border-emerald-200 bg-emerald-50/50" 
+                  ? "border-emerald-200/90 bg-emerald-50/40" 
                   : stage.isCancelledStage 
-                    ? "border-red-200 bg-red-50/50" 
-                    : "border-transparent bg-gray-100"
+                    ? "border-red-200/90 bg-red-50/40" 
+                    : "border-slate-200/90 bg-slate-100/80"
               )}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
             >
-              <div className="p-4 flex items-center justify-between border-b border-gray-200/50 shrink-0 group">
+              {/* Stage Header */}
+              <div className="p-2.5 px-3 flex items-center justify-between border-b border-slate-200/60 bg-white/90 shrink-0 group">
                 <div 
                   onClick={() => openEditStageModal(stage)}
-                  className="cursor-pointer hover:opacity-80 transition-opacity flex-1"
+                  className="cursor-pointer hover:opacity-80 transition-opacity flex-1 min-w-0 pr-2"
                   title="Editar Etapa"
                 >
-                  <h3 className={cn("font-bold flex items-center gap-2", stage.isCompletedStage ? "text-emerald-900" : stage.isCancelledStage ? "text-red-900" : "text-gray-800")}>
-                    {stage.name} 
-                    <span className={cn("text-xs px-2 py-0.5 rounded-full font-bold", stage.isCompletedStage ? "bg-emerald-200 text-emerald-800" : stage.isCancelledStage ? "bg-red-200 text-red-800" : "bg-gray-200 text-gray-600")}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h3 className={cn("font-extrabold text-xs uppercase tracking-tight truncate", stage.isCompletedStage ? "text-emerald-900" : stage.isCancelledStage ? "text-red-900" : "text-slate-800")}>
+                      {stage.name}
+                    </h3>
+                    <span className={cn("text-[10px] px-1.5 py-0.2 rounded-full font-extrabold shrink-0", stage.isCompletedStage ? "bg-emerald-200 text-emerald-800" : stage.isCancelledStage ? "bg-red-200 text-red-800" : "bg-slate-200 text-slate-700")}>
                       {stageCards.length}
                     </span>
-                  </h3>
-                  {stage.isCompletedStage && <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-1">Transferências Finalizadas</p>}
-                  {stage.isCancelledStage && <p className="text-[9px] font-bold text-red-600 uppercase tracking-wider mt-1">Pedidos Cancelados</p>}
+                  </div>
                 </div>
-                <button onClick={() => handleDeleteStage(stage.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2">
-                  <Trash2 className="w-4 h-4" />
+                <button onClick={() => handleDeleteStage(stage.id)} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px]">
+              {/* Cards Scroll Container */}
+              <div className="p-2 flex-1 overflow-y-auto space-y-2 min-h-0 custom-scrollbar">
                 {stageCards.map(card => {
                   const assignee = profiles.find(p => p.id === card.assignedTo);
                   const creator = profiles.find(p => p.id === card.createdByUid);
@@ -439,87 +470,95 @@ Atenciosamente.`;
                       onDragStart={(e) => handleDragStart(e, card.id)}
                       onClick={() => openEditCardModal(card)}
                       className={cn(
-                        "p-4 rounded-xl shadow-sm border cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:shadow-lg transition-all group relative duration-300 ease-out",
+                        "p-2.5 rounded-xl shadow-2xs border cursor-grab active:cursor-grabbing hover:border-secondary transition-all group relative duration-200 ease-out",
                         stage.isCompletedStage 
-                          ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-200 hover:border-emerald-400" 
+                          ? "bg-white border-emerald-200 hover:border-emerald-400" 
                           : stage.isCancelledStage 
-                            ? "bg-gradient-to-br from-red-50 to-white border-red-200 hover:border-red-400"
-                            : "bg-white border-gray-200 hover:border-primary/40",
+                            ? "bg-white border-red-200 hover:border-red-400"
+                            : "bg-white border-slate-200/90",
                         draggedCardId === card.id ? "opacity-30 border-dashed scale-90" : ""
                       )}
                     >
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteCard(card.id); }} 
-                        className="absolute top-3 right-3 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white border border-gray-50 rounded-md shadow-sm"
-                        title="Excluir Card"
-                      >
-                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                      
-                      {!stage.isCompletedStage && !stage.isCancelledStage && (
+                      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-xs p-0.5 rounded-md border border-slate-100 shadow-2xs">
+                        {!stage.isCompletedStage && !stage.isCancelledStage && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleCompleteTransfer(card.id); }} 
+                            className="p-1 text-slate-400 hover:text-emerald-600 rounded hover:bg-emerald-50"
+                            title="Finalizar Transferência"
+                          >
+                             <CheckCircle2 className="w-3 h-3" />
+                          </button>
+                        )}
                         <button 
-                          onClick={(e) => { e.stopPropagation(); handleCompleteTransfer(card.id); }} 
-                          className="absolute top-3 right-11 text-gray-300 hover:text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-white border border-gray-50 rounded-md shadow-sm"
-                          title="Finalizar Transferência"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteCard(card.id); }} 
+                          className="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-red-50"
+                          title="Excluir Card"
                         >
-                           <CheckCircle2 className="w-4 h-4" />
+                           <Trash2 className="w-3 h-3" />
                         </button>
-                      )}
-                      
-                      <div className="flex gap-2 flex-wrap mb-2">
+                      </div>
+
+                      {/* Product Codes Badges */}
+                      <div className="flex gap-1 flex-wrap mb-1 pr-12">
                         {card.productCode && (
-                          <div className="text-[10px] font-bold text-orange-600 uppercase tracking-wider bg-orange-100 inline-block px-2 py-0.5 rounded-md flex items-center gap-1">
-                            <Package className="w-3 h-3" /> Cód: {card.productCode}
+                          <div className="text-[8px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
+                            <Package className="w-2 h-2" /> CÓD: {card.productCode}
                           </div>
                         )}
                         {card.extraProducts?.map((ep: any, idx: number) => (
                            ep.code && (
-                             <div key={idx} className="text-[10px] font-bold text-orange-600 uppercase tracking-wider bg-orange-100 inline-block px-2 py-0.5 rounded-md flex items-center gap-1">
-                               <Package className="w-3 h-3" /> Cód: {ep.code}
+                             <div key={idx} className="text-[8px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
+                               <Package className="w-2 h-2" /> CÓD: {ep.code}
                              </div>
                            )
                         ))}
                       </div>
-                      
-                      <h4 className="font-bold text-gray-900 text-sm leading-tight pr-6">{card.title}</h4>
-                      
+
+                      {/* Order Title */}
+                      <h4 className="font-extrabold text-slate-900 text-[10px] leading-tight pr-5 truncate">{card.title}</h4>
+
+                      {/* Created Date */}
                       {card.createdAt?.toDate && (
-                        <div className="text-[10px] text-gray-400 font-medium mt-1 mb-1">
+                        <div className="text-[8px] text-slate-400 font-medium mt-0.5">
                           {new Date(card.createdAt.toDate()).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
                         </div>
                       )}
 
+                      {/* Consultant */}
                       {card.consultantName && (
-                        <div className="text-[10px] text-gray-600 font-bold bg-gray-100 px-2 py-1 rounded-md inline-flex items-center gap-1 mt-2 mb-1">
-                          <User className="w-3 h-3" />
+                        <div className="text-[9px] text-slate-700 font-bold bg-slate-100/90 px-1 py-0.5 rounded inline-flex items-center gap-1 mt-1 truncate max-w-full">
+                          <User className="w-2.5 h-2.5 text-slate-500" />
                           Consultor: {card.consultantName}
                         </div>
                       )}
-                      
+
+                      {/* Equipment / Observations snippet */}
                       {card.observations && (
-                        <p className="text-xs text-gray-500 mt-2 line-clamp-2 italic flex items-start gap-1">
-                          <MessageSquare className="w-3 h-3 mt-0.5 shrink-0" />
-                          {card.observations}
+                        <p className="text-[9px] text-slate-500 mt-1 line-clamp-1 italic flex items-center gap-1">
+                          <MessageSquare className="w-2 h-2 shrink-0 text-slate-400" />
+                          <span className="truncate">{card.observations}</span>
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-                        <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400">
-                          <User className="w-3 h-3" />
+                      {/* Footer Info */}
+                      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100 text-[9px]">
+                        <div className="flex items-center gap-1 text-slate-500 truncate max-w-[140px]">
+                          <User className="w-2 h-2 text-slate-400 shrink-0" />
                           {assignee ? (
-                            <span className="text-gray-700 font-bold bg-gray-100 px-1.5 py-0.5 rounded-md">{assignee.name || assignee.full_name || assignee.email}</span>
+                            <span className="text-slate-700 font-bold bg-slate-100 px-1 py-0.2 rounded truncate">{assignee.name || assignee.full_name || assignee.email}</span>
                           ) : (
-                            <span>Não atribuído</span>
+                            <span className="text-slate-400 italic">Sem resp.</span>
                           )}
                         </div>
+
                         {creator && (
-                          <div className="flex items-center gap-1.5" title={`Criado por ${creator.full_name || creator.name || creator.email}`}>
-                            <img src={creator.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${creator.email}`} alt="Criador" className="w-5 h-5 rounded-full bg-gray-100 border border-gray-200" referrerPolicy="no-referrer" />
+                          <div className="flex items-center gap-1 shrink-0" title={`Criado por ${creator.full_name || creator.name || creator.email}`}>
+                            <img src={creator.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${creator.email}`} alt="Criador" className="w-3.5 h-3.5 rounded-full bg-slate-100 border border-slate-200" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         {!creator && card.createdBy && (
-                          <div className="flex items-center gap-1.5" title={`Criado por ${card.createdBy}`}>
-                            <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${card.createdBy}`} alt="Criador" className="w-5 h-5 rounded-full bg-gray-100 border border-gray-200" referrerPolicy="no-referrer" />
+                          <div className="flex items-center gap-1 shrink-0" title={`Criado por ${card.createdBy}`}>
+                            <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${card.createdBy}`} alt="Criador" className="w-3.5 h-3.5 rounded-full bg-slate-100 border border-slate-200" referrerPolicy="no-referrer" />
                           </div>
                         )}
                       </div>
@@ -528,23 +567,22 @@ Atenciosamente.`;
                 })}
               </div>
 
-              <div className="p-3 shrink-0 opacity-80 hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => openAddCardModal(stage.id)}
-                  className="w-full py-2.5 flex items-center justify-center gap-2 text-gray-500 font-bold text-sm bg-black/5 hover:bg-black/10 rounded-xl transition-colors border border-transparent hover:border-black/5"
-                >
-                  <Plus className="w-4 h-4" />
-                  Adicionar Pedido
-                </button>
-              </div>
+              {/* Add Card Button inside column */}
+              <button 
+                onClick={() => openAddCardModal(stage.id)}
+                className="p-2 text-center text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition-colors border-t border-slate-200/60 shrink-0 bg-white/50 flex items-center justify-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Adicionar Pedido
+              </button>
             </div>
           )
         })}
 
         {stages.length === 0 && !loading && (
-          <div className="w-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-3xl text-gray-400 gap-4">
-             <p className="font-bold">Nenhuma etapa configurada.</p>
-             <button onClick={openAddStageModal} className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">Criar Primeira Etapa</button>
+          <div className="w-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 gap-3">
+             <p className="font-bold text-sm">Nenhuma etapa configurada.</p>
+             <button onClick={openAddStageModal} className="bg-primary hover:bg-primary/90 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs">Criar Primeira Etapa</button>
           </div>
         )}
       </div>

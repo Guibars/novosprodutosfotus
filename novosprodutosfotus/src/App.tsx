@@ -10,7 +10,6 @@ import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { TransferBoard } from "./pages/TransferBoard";
 import { FollowUp } from "./pages/FollowUp";
-import { MarketIntelligence } from "./pages/MarketIntelligence";
 import { Projects } from "./pages/Projects";
 import { ProjectDetails } from "./pages/ProjectDetails";
 import { Team } from "./pages/Team";
@@ -60,7 +59,6 @@ export default function App() {
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/transfer-board" element={<TransferBoard />} />
               <Route path="/follow-up" element={<FollowUp />} />
-              <Route path="/market-intelligence" element={<MarketIntelligence />} />
               <Route path="/vacations" element={<Vacations />} />
               <Route path="/help" element={<Help />} />
             </Route>

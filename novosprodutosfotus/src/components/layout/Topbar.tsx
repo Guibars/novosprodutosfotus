@@ -109,182 +109,182 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
 
   return (
     <div className="px-4 pt-4 sticky top-0 z-20">
-      <header className="h-20 glass border border-white/50 rounded-[2rem] flex items-center justify-between px-8 shadow-xl shadow-black/5">
-        <div className="flex items-center gap-4">
-        <button 
-          onClick={toggleSidebar}
-          className="p-2 text-gray-600 hover:bg-white/50 rounded-xl transition-colors"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        <div className="relative w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Pesquisar tarefa ou projeto..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 glass-input rounded-xl text-sm"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-gray-500 bg-white/50 border border-white/50 rounded">
-              <span className="text-xs">⌘</span>F
-            </kbd>
+      <header className="h-16 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-between px-6 shadow-sm">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={toggleSidebar}
+            className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="relative w-72 sm:w-80 md:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Pesquisar tarefa ou projeto..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/15 rounded-xl text-sm transition-all outline-none"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-slate-400 bg-white border border-slate-200 rounded">
+                <span className="text-xs">⌘</span>F
+              </kbd>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <button 
-            onClick={() => setShowMessages(!showMessages)}
-            className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors relative"
-          >
-            <MessageSquare className="w-5 h-5" />
-            {unreadMsgsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white/50"></span>
-            )}
-          </button>
-
-          <AnimatePresence>
-          {showMessages && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50"
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <button 
+              onClick={() => setShowMessages(!showMessages)}
+              className="p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors relative"
             >
-              <div className="p-4 border-b border-white/50 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">Mensagens</h3>
-                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadMsgsCount} novas</span>
-                  </div>
-                  <button 
-                    onClick={() => setShowMessages(false)}
-                    className="p-1 hover:bg-white/50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                {messages.length > 0 && (
-                  <button 
-                    onClick={deleteAllMessages}
-                    className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center justify-center gap-1 w-full bg-white/50 hover:bg-red-50 py-1.5 rounded-lg transition-colors border border-white/50"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Apagar todas
-                  </button>
-                )}
-              </div>
-              <div className="max-h-96 overflow-y-auto">
-                {messages.length > 0 ? (
-                  messages.map(msg => (
-                    <div 
-                      key={msg.id} 
-                      className={`p-4 border-b border-white/50 hover:bg-white/50 transition-colors flex gap-3 ${!msg.read ? 'bg-primary/5' : ''}`}
-                    >
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-primary mb-1">De: {msg.sender_name}</p>
-                        <p className={`text-sm ${!msg.read ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
-                          {msg.content}
-                        </p>
-                        {msg.project_name && (
-                          <p className="text-xs text-secondary mt-1 font-medium">Projeto: {msg.project_name}</p>
-                        )}
-                        <p className="text-xs text-gray-400 mt-1">
-                          {new Date(msg.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center gap-1">
-                        {!msg.read && (
-                          <button 
-                            onClick={() => markMsgAsRead(msg.id)}
-                            className="text-primary hover:bg-primary/10 p-1.5 rounded-lg h-fit transition-colors"
-                            title="Marcar como lido"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => deleteMessage(msg.id)}
-                          className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg h-fit transition-colors"
-                          title="Excluir mensagem"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+              <MessageSquare className="w-5 h-5" />
+              {unreadMsgsCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full border-2 border-white"></span>
+              )}
+            </button>
+
+            <AnimatePresence>
+            {showMessages && (
+              <motion.div 
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50"
+              >
+                <div className="p-4 border-b border-slate-100 flex flex-col gap-2.5 bg-slate-50/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-900 text-sm">Mensagens</h3>
+                      <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/80 px-2 py-0.5 rounded-full">{unreadMsgsCount} novas</span>
                     </div>
-                  ))
-                ) : (
-                  <div className="p-8 text-center text-gray-500 text-sm">
-                    Nenhuma mensagem no momento.
+                    <button 
+                      onClick={() => setShowMessages(false)}
+                      className="p-1 hover:bg-slate-200/60 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-          </AnimatePresence>
-        </div>
-
-        <div className="relative">
-          <button 
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors relative"
-          >
-            <Bell className="w-5 h-5" />
-            {unreadNotifsCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white/50"></span>
+                  {messages.length > 0 && (
+                    <button 
+                      onClick={deleteAllMessages}
+                      className="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center justify-center gap-1 w-full bg-white hover:bg-rose-50 py-1.5 rounded-lg transition-colors border border-slate-200"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Apagar todas
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {messages.length > 0 ? (
+                    messages.map(msg => (
+                      <div 
+                        key={msg.id} 
+                        className={`p-3.5 border-b border-slate-100 hover:bg-slate-50 transition-colors flex gap-3 ${!msg.read ? 'bg-amber-50/30' : ''}`}
+                      >
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-secondary mb-0.5">De: {msg.sender_name}</p>
+                          <p className={`text-xs ${!msg.read ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>
+                            {msg.content}
+                          </p>
+                          {msg.project_name && (
+                            <p className="text-[11px] text-secondary mt-1 font-medium">Projeto: {msg.project_name}</p>
+                          )}
+                          <p className="text-[10px] text-slate-400 mt-1">
+                            {new Date(msg.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          {!msg.read && (
+                            <button 
+                              onClick={() => markMsgAsRead(msg.id)}
+                              className="text-amber-600 hover:bg-amber-100 p-1 rounded-md transition-colors"
+                              title="Marcar como lido"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => deleteMessage(msg.id)}
+                            className="text-rose-500 hover:bg-rose-50 p-1 rounded-md transition-colors"
+                            title="Excluir mensagem"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-slate-400 text-xs font-medium">
+                      Nenhuma mensagem no momento.
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             )}
-          </button>
+            </AnimatePresence>
+          </div>
 
-          <AnimatePresence>
-          {showNotifications && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-2xl overflow-hidden z-50"
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors relative"
             >
-              <div className="p-4 border-b border-white/50 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">Notificações</h3>
-                    <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-md">{unreadNotifsCount} novas</span>
-                  </div>
-                  <button 
-                    onClick={() => setShowNotifications(false)}
-                    className="p-1 hover:bg-white/50 rounded-lg text-gray-400 hover:text-gray-900 transition-colors"
-                  >
+              <Bell className="w-5 h-5" />
+              {unreadNotifsCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full border-2 border-white"></span>
+              )}
+            </button>
+
+            <AnimatePresence>
+            {showNotifications && (
+              <motion.div 
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50"
+              >
+                <div className="p-4 border-b border-slate-100 flex flex-col gap-2.5 bg-slate-50/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-900 text-sm">Notificações</h3>
+                      <span className="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/80 px-2 py-0.5 rounded-full">{unreadNotifsCount} novas</span>
+                    </div>
+                    <button 
+                      onClick={() => setShowNotifications(false)}
+                      className="p-1 hover:bg-slate-200/60 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
+                    >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 {notifications.length > 0 && (
                   <button 
                     onClick={deleteAllNotifications}
-                    className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center justify-center gap-1 w-full bg-white/50 hover:bg-red-50 py-1.5 rounded-lg transition-colors border border-white/50"
+                    className="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center justify-center gap-1 w-full bg-white hover:bg-rose-50 py-1.5 rounded-lg transition-colors border border-slate-200"
                   >
                     <Trash2 className="w-3 h-3" />
                     Apagar todas
                   </button>
                 )}
               </div>
-              <div className="max-h-96 overflow-y-auto">
+              <div className="max-h-80 overflow-y-auto">
                 {notifications.length > 0 ? (
                   notifications.map(notification => {
                     const isRead = notification.read_by?.includes(user?.uid);
                     return (
                       <div 
                         key={notification.id} 
-                        className={`p-4 border-b border-white/50 hover:bg-white/50 transition-colors flex gap-3 ${!isRead ? 'bg-primary/5' : ''}`}
+                        className={`p-3.5 border-b border-slate-100 hover:bg-slate-50 transition-colors flex gap-3 ${!isRead ? 'bg-amber-50/30' : ''}`}
                       >
                         <div className="flex-1">
-                          <p className={`text-sm ${!isRead ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
+                          <p className={`text-xs ${!isRead ? 'font-semibold text-slate-900' : 'text-slate-600'}`}>
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-[10px] text-slate-400 mt-1">
                             {new Date(notification.created_at).toLocaleString()}
                           </p>
                         </div>
@@ -292,25 +292,25 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
                           {!isRead && (
                             <button 
                               onClick={() => markNotifAsRead(notification.id, notification.read_by)}
-                              className="text-primary hover:bg-primary/10 p-1.5 rounded-lg h-fit transition-colors"
+                              className="text-amber-600 hover:bg-amber-100 p-1 rounded-md transition-colors"
                               title="Marcar como lido"
                             >
-                              <Check className="w-4 h-4" />
+                              <Check className="w-3.5 h-3.5" />
                             </button>
                           )}
                           <button 
                             onClick={() => deleteNotification(notification.id)}
-                            className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg h-fit transition-colors"
+                            className="text-rose-500 hover:bg-rose-50 p-1 rounded-md transition-colors"
                             title="Excluir notificação"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="p-8 text-center text-gray-500 text-sm">
+                  <div className="p-6 text-center text-slate-400 text-xs font-medium">
                     Nenhuma notificação no momento.
                   </div>
                 )}
@@ -320,27 +320,27 @@ export function Topbar({ toggleSidebar }: { toggleSidebar: () => void }) {
           </AnimatePresence>
         </div>
         
-        <div className="h-8 w-px bg-white/50 mx-2"></div>
+        <div className="h-6 w-px bg-slate-200 mx-1"></div>
         
-        <div className="flex items-center gap-3 p-1.5 rounded-xl text-left">
+        <div className="flex items-center gap-2.5 p-1 text-left">
           <img 
             src={user?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.email || 'User'}`} 
             alt="User" 
-            className="w-10 h-10 rounded-full object-cover border border-gray-200"
+            className="w-9 h-9 rounded-xl object-cover border border-slate-200"
             referrerPolicy="no-referrer"
           />
           <div className="hidden md:block">
-            <p className="text-sm font-semibold text-gray-900">{user?.displayName || user?.email?.split('@')[0] || 'Usuário'}</p>
-            <p className="text-[10px] font-medium text-primary uppercase tracking-wider">{profile?.role || 'Membro'}</p>
+            <p className="text-xs font-bold text-slate-900">{user?.displayName || user?.email?.split('@')[0] || 'Usuário'}</p>
+            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">{profile?.role || 'Membro'}</p>
           </div>
         </div>
         
         <button 
           onClick={signOut}
           title="Sair"
-          className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors relative ml-2"
+          className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors relative ml-1"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-4 h-4" />
         </button>
       </div>
     </header>
