@@ -152,10 +152,10 @@ export function Dashboard() {
 
   const MetricCard = ({ title, value, subtitle, icon: Icon, highlight, accent = "text-secondary", tint = "bg-secondary/10" }: any) => (
     <div className={cn(
-      "surface surface-hover p-4 relative overflow-hidden animate-fade-rise",
-      highlight && "border-0 text-white bg-gradient-to-br from-secondary via-secondary to-accent shadow-[0_14px_34px_-12px_rgba(13,81,142,0.5)]"
+      "surface surface-hover p-4 relative overflow-hidden",
+      highlight && "sheen border-0 text-white bg-gradient-to-br from-secondary via-secondary to-accent shadow-[0_14px_34px_-12px_rgba(13,81,142,0.5)]"
     )}>
-      {highlight && <div className="absolute -right-8 -top-10 w-32 h-32 bg-primary/25 rounded-full blur-2xl pointer-events-none"></div>}
+      {highlight && <div className="absolute -right-8 -top-10 w-32 h-32 bg-primary/30 rounded-full blur-2xl pointer-events-none glow-pulse"></div>}
       <div className="flex items-center justify-between mb-3 relative z-10">
         <span className={cn("eyebrow", highlight && "text-white/70")}>{title}</span>
         <div className={cn("p-1.5 rounded-lg", highlight ? "bg-white/15 text-primary" : cn(tint, accent))}>
@@ -186,7 +186,7 @@ export function Dashboard() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger">
         <MetricCard
           title="Conclusão Geral"
           value={`${overallCompletionRate}%`}
@@ -444,7 +444,8 @@ export function Dashboard() {
                     <p className="text-xs text-slate-400 truncate">{member.role || 'Membro'}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-50 text-green-600 border border-green-100 shrink-0">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-50 text-green-600 border border-green-100 shrink-0 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 live-dot"></span>
                   Ativo
                 </span>
               </div>

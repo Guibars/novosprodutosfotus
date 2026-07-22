@@ -584,49 +584,70 @@ export function Inventory() {
         /* Compact Grid View by CD */
         <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           <AnimatePresence mode="popLayout">
-            {filteredCDs.map(({ cd, products: cdProducts }, cdIndex) => (
-              <motion.div 
+            {filteredCDs.map(({ cd, products: cdProducts }, cdIndex) => {
+              const cdMax = Math.max(1, ...cdProducts.map(p => {
+                const k = `${p.id}_${cd}`;
+                return Number(isEditing ? (localStocks[k] ?? 0) : (stocks[k] || 0)) || 0;
+              }));
+              const cdTotal = cdProducts.reduce((sum, p) => {
+                const k = `${p.id}_${cd}`;
+                return sum + (Number(isEditing ? (localStocks[k] ?? 0) : (stocks[k] || 0)) || 0);
+              }, 0);
+
+              return (
+              <motion.div
                 layout
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ delay: cdIndex * 0.03 }}
-                key={cd} 
-                className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex flex-col h-full hover:border-slate-300 transition-all"
+                transition={{ delay: cdIndex * 0.03, type: "spring", damping: 26, stiffness: 320 }}
+                key={cd}
+                className="surface surface-hover p-4 flex flex-col h-full"
               >
                 {/* CD Card Header */}
                 <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                      <MapPin className="w-3.5 h-3.5 text-secondary" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center shrink-0 shadow-sm shadow-secondary/25">
+                      <MapPin className="w-4 h-4 text-white" />
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900 text-sm leading-tight">{cd}</h3>
-                      <p className="text-[10px] text-slate-400 font-medium">Centro de Distribuição</p>
+                      <p className="text-[10px] text-slate-400 font-medium">{cdTotal} unidades no total</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-extrabold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-extrabold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">
                     {cdProducts.length} {cdProducts.length === 1 ? 'item' : 'itens'}
                   </span>
                 </div>
 
                 {/* CD Product Items */}
-                <div className="flex-1 flex flex-col gap-2">
+                <div className="flex-1 flex flex-col gap-1.5">
                   {cdProducts.map((product) => {
                     const key = `${product.id}_${cd}`;
                     const qty = isEditing ? (localStocks[key] ?? "") : (stocks[key] || 0);
                     const qtyNum = Number(qty) || 0;
+                    const pct = Math.min(100, Math.max(qtyNum > 0 ? 10 : 0, Math.round((qtyNum / cdMax) * 100)));
 
                     return (
-                      <div 
-                        key={product.id} 
-                        className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-white hover:border-slate-200 transition-all flex items-center justify-between gap-2"
+                      <div
+                        key={product.id}
+                        className="relative p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-secondary/30 hover:shadow-[0_8px_20px_-14px_rgba(13,81,142,0.5)] transition-all duration-300 overflow-hidden flex items-center justify-between gap-2"
                       >
-                        <div className="min-w-0 flex-1">
+                        {/* Barra proporcional de estoque ao fundo (visualização do nível) */}
+                        {!isEditing && qtyNum > 0 && (
+                          <span
+                            className={cn(
+                              "absolute left-0 top-0 bottom-0 pointer-events-none transition-all duration-500",
+                              qtyNum > 10 ? "bg-gradient-to-r from-emerald-400/[0.14] to-transparent" : "bg-gradient-to-r from-amber-400/[0.14] to-transparent"
+                            )}
+                            style={{ width: `${pct}%` }}
+                          />
+                        )}
+                        <div className="relative min-w-0 flex-1">
                           <div className="font-semibold text-slate-900 text-xs truncate leading-tight">
                             {product.name}
                           </div>
-                          
+
                           <div className="flex flex-wrap items-center gap-1 mt-1">
                             {product.brand && (
                               <span className="text-[9px] font-bold text-slate-700 bg-white border border-slate-200 px-1 py-0.5 rounded uppercase tracking-wider">
@@ -646,7 +667,7 @@ export function Inventory() {
                           </div>
                         </div>
 
-                        <div className="shrink-0">
+                        <div className="relative shrink-0">
                           {isEditing ? (
                             <input
                               type="number"
@@ -658,9 +679,9 @@ export function Inventory() {
                             />
                           ) : (
                             <div className={cn(
-                              "px-2 py-1 rounded-lg font-bold text-center text-[11px] whitespace-nowrap",
-                              qtyNum > 10 ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60" : 
-                              qtyNum > 0 ? "bg-amber-50 text-amber-700 border border-amber-200/60" : "bg-slate-100 text-slate-400"
+                              "px-2 py-1 rounded-lg font-extrabold text-center text-[11px] whitespace-nowrap border",
+                              qtyNum > 10 ? "bg-emerald-50 text-emerald-700 border-emerald-200/70" :
+                              qtyNum > 0 ? "bg-amber-50 text-amber-700 border-amber-200/70" : "bg-slate-100 text-slate-400 border-transparent"
                             )}>
                               {qtyNum} un
                             </div>
@@ -671,7 +692,8 @@ export function Inventory() {
                   })}
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </AnimatePresence>
         </motion.div>
       )}
