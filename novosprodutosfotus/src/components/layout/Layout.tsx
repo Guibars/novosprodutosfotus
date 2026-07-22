@@ -60,15 +60,15 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50/90 relative overflow-hidden">
+    <div className="flex h-screen bg-transparent relative overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} />
       <div className={cn(
         "flex-1 flex flex-col min-w-0 z-10 transition-all duration-300 h-full",
         isSidebarOpen ? "pl-72" : "pl-[5.5rem]"
       )}>
         <Topbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col">
-          <div className="w-full mx-auto flex flex-col flex-1">
+        <main className="flex-1 overflow-y-auto p-4 md:p-5 flex flex-col">
+          <div className="w-full max-w-[1600px] mx-auto flex flex-col flex-1">
             <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
           </div>
         </main>

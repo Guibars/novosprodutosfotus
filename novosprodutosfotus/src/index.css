@@ -5,7 +5,7 @@
   --color-primary-hover: #e0a213;
   --color-secondary: #0D518E;
   --color-secondary-hover: #0b457a;
-  
+
   --color-dark: #131413;
   --color-light: #DADBDA;
   --color-success: #86BC29;
@@ -17,9 +17,35 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Densidade global — tudo no app usa unidades rem, então ajustar a fonte
+       raiz redimensiona proporcionalmente paddings, textos, cantos, sidebar etc.
+       Os breakpoints do Tailwind NÃO são afetados (media queries usam o 16px
+       padrão do navegador), então o layout responsivo continua idêntico. */
+    font-size: 15px;
   }
+
+  /* Notebooks 13"–16" (incluindo escala de tela do Windows a 125%/150%):
+     aperta a interface para caber confortavelmente. */
+  @media (max-width: 1600px) {
+    html { font-size: 14px; }
+  }
+  @media (max-width: 1360px) {
+    html { font-size: 13.5px; }
+  }
+  /* Monitores externos grandes: um respiro a mais, sem exagerar. */
+  @media (min-width: 1920px) {
+    html { font-size: 15.5px; }
+  }
+
   body {
-    @apply text-slate-900 font-sans antialiased bg-slate-50/80 min-h-screen selection:bg-primary/20 selection:text-slate-900;
+    @apply text-slate-900 font-sans antialiased min-h-screen selection:bg-primary/20 selection:text-slate-900;
+    background-color: #f5f7fb;
+    /* Fundo sutil de marca (dourado + azul Fotus) — quase imperceptível,
+       dá profundidade sem competir com os cards. */
+    background-image:
+      radial-gradient(1100px 620px at 100% -8%, rgba(250, 181, 21, 0.06), transparent 60%),
+      radial-gradient(1000px 700px at -8% 108%, rgba(13, 81, 142, 0.07), transparent 55%);
+    background-attachment: fixed;
   }
 }
 
@@ -36,6 +62,25 @@
   .glass-input {
     @apply bg-white/80 backdrop-blur-sm border border-slate-200/90 focus:bg-white focus:border-secondary focus:ring-2 focus:ring-secondary/15 text-slate-800 placeholder:text-slate-400 transition-all outline-none;
   }
+
+  /* ── Novo conceito visual: superfícies limpas e compactas ───────────────
+     Cards sólidos (sem blur pesado) que ficam nítidos mesmo em telas
+     menores. Sombra em duas camadas para dar profundidade sutil. */
+  .surface {
+    @apply bg-white border border-slate-200/70 rounded-2xl shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-16px_rgba(13,81,142,0.16)];
+  }
+  .surface-hover {
+    @apply transition-all duration-200 hover:shadow-[0_2px_6px_rgba(16,24,40,0.05),0_16px_34px_-14px_rgba(13,81,142,0.24)] hover:-translate-y-0.5;
+  }
+  /* Tile interno (mini-métrica dentro de um card) */
+  .stat-tile {
+    @apply bg-slate-50/70 border border-slate-200/60 rounded-xl transition-colors hover:bg-slate-50;
+  }
+  /* Rótulo pequeno em caixa alta acima de um valor/seção */
+  .eyebrow {
+    @apply text-[0.65rem] font-bold uppercase tracking-[0.12em] text-slate-400;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
@@ -43,7 +88,7 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
   }
-  
+
   .scrollbar-minimal::-webkit-scrollbar {
     width: 4px;
     height: 4px;
@@ -57,7 +102,7 @@
   .scrollbar-minimal::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-400;
   }
-  
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -74,7 +119,13 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: #94a3b8;
   }
+
+  /* Animação de entrada suave para os cards do dashboard */
+  @keyframes fade-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-rise {
+    animation: fade-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }
-
-
-
