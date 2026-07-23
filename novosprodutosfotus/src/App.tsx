@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
@@ -22,26 +22,6 @@ import { Vacations } from "./pages/Vacations";
 import { Inventory } from "./pages/Inventory";
 import { ProjectProvider } from "./contexts/ProjectContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-
-// Ao carregar/recarregar a página, sempre inicia no Cockpit de Novos Produtos.
-// Roda apenas uma vez por carregamento real da página (um refresh remonta o App
-// e reavalia este módulo); a navegação interna do app não é afetada.
-let didInitialLanding = false;
-function InitialLanding() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!didInitialLanding) {
-      didInitialLanding = true;
-      // Não redireciona quem chega direto na tela de login.
-      if (location.pathname !== "/login") {
-        navigate("/analytics", { replace: true });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return null;
-}
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -64,7 +44,6 @@ export default function App() {
     <AuthProvider>
       <ProjectProvider>
         <BrowserRouter>
-          <InitialLanding />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>

@@ -41,7 +41,8 @@ export function TransferBoard() {
     consultantName: ""
   });
 
-  const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'card' | 'stage' } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'card' | 'stage' | 'cancelled_cards', stageId?: string } | null>(null);
+  const [clearingCancelled, setClearingCancelled] = useState(false);
 
   const [generatedEmailPreview, setGeneratedEmailPreview] = useState<string | null>(null);
 
@@ -285,6 +286,10 @@ Atenciosamente.`;
     }
   };
 
+  const handleDeleteAllCancelledInStage = (stageId: string) => {
+    setItemToDelete({ id: stageId, type: 'cancelled_cards', stageId });
+  };
+
   const confirmDelete = async () => {
     if (!itemToDelete) return;
     
@@ -293,6 +298,13 @@ Atenciosamente.`;
       if (isCardModalOpen && editingCardId === itemToDelete.id) {
         setIsCardModalOpen(false);
       }
+    } else if (itemToDelete.type === 'cancelled_cards') {
+      setClearingCancelled(true);
+      const stageCards = cards.filter(c => c.stageId === (itemToDelete.stageId || itemToDelete.id));
+      for (const c of stageCards) {
+        await deleteDoc(doc(db, 'transfer_cards', c.id));
+      }
+      setClearingCancelled(false);
     } else {
       const stageCards = cards.filter(c => c.stageId === itemToDelete.id);
       for (const c of stageCards) {
@@ -345,71 +357,86 @@ Atenciosamente.`;
 
   return (
     <div className="flex-1 flex flex-col min-h-[600px] h-full space-y-3">
-      {/* Header Bar */}
-      <div className="flex justify-between items-center shrink-0 gap-3 flex-wrap bg-white/70 p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
+      {/* Header Bar - Apple Toolbar Style */}
+      <div className="flex justify-between items-center shrink-0 gap-3 flex-wrap bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200/70 shadow-2xs">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">Quadro de Transferência</h1>
-          <p className="text-xs text-slate-500 font-medium mt-1">Gerencie pedidos e etapas de transferência em tempo real</p>
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-none">Quadro de Transferência</h1>
+          <p className="text-[11px] text-slate-500 font-normal mt-1">Gerencie pedidos e etapas de transferência em tempo real</p>
         </div>
 
-        {/* Compact Analytics Bar */}
-        <div className="hidden lg:flex items-center gap-4 px-3 py-1.5 bg-slate-100/80 rounded-xl border border-slate-200/60 text-xs font-bold text-slate-700">
+        {/* Compact Analytics Bar - Monochromatic Apple Pill */}
+        <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 bg-slate-100/80 rounded-xl border border-slate-200/60 text-xs font-medium text-slate-600">
           <div className="flex items-center gap-1.5">
-            <Package className="w-3.5 h-3.5 text-blue-600" />
-            <span>Total: <strong className="text-slate-900 font-black">{cards.length}</strong></span>
+            <Package className="w-3.5 h-3.5 text-slate-500" />
+            <span>Total: <strong className="text-slate-900 font-semibold">{cards.length}</strong></span>
           </div>
           <span className="text-slate-300">•</span>
           <div className="flex items-center gap-1.5">
-            <Inbox className="w-3.5 h-3.5 text-orange-600" />
-            <span>Aberto: <strong className="text-slate-900 font-black">{openCardsCount}</strong></span>
+            <Inbox className="w-3.5 h-3.5 text-amber-500" />
+            <span>Aberto: <strong className="text-slate-900 font-semibold">{openCardsCount}</strong></span>
           </div>
           <span className="text-slate-300">•</span>
           <div className="flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Finalizadas: <strong className="text-slate-900 font-black">{transferredCardsCount}</strong></span>
+            <span>Finalizadas: <strong className="text-slate-900 font-semibold">{transferredCardsCount}</strong></span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* User Filter Toggle */}
+          {/* User Filter Toggle - Apple Segment Toggle */}
           <button 
             onClick={() => setOnlyMyTransfers(!onlyMyTransfers)}
             className={cn(
-              "px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border",
+              "px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium transition-all shrink-0 border",
               onlyMyTransfers 
-                ? "bg-amber-500 text-white border-amber-500 shadow-xs ring-2 ring-amber-500/20" 
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                ? "bg-slate-900 text-white border-slate-900 shadow-2xs" 
+                : "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50"
             )}
             title="Filtrar apenas as transferências criadas por você ou sob sua responsabilidade"
           >
             <User className="w-3.5 h-3.5" />
-            {onlyMyTransfers ? "Minhas Transferências (Ativo)" : "Minhas Transferências"}
+            {onlyMyTransfers ? "Minhas Transferências" : "Minhas Transferências"}
           </button>
 
-          <div className="relative w-44 md:w-56">
+          {/* Search Input - Apple Input */}
+          <div className="relative w-40 md:w-52">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Buscar pedido ou cód..." 
+              placeholder="Buscar..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-primary outline-none"
+              className="w-full pl-8 pr-3 py-1.5 bg-slate-100/80 focus:bg-white border border-transparent focus:border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
             />
           </div>
 
           <button 
             onClick={() => setIsViewAllModalOpen(true)}
-            className="bg-white border border-slate-200 text-slate-700 font-bold px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs hover:bg-slate-50 transition-all shrink-0"
+            className="bg-white border border-slate-200/80 text-slate-700 font-medium px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs hover:bg-slate-50 transition-all shrink-0 shadow-2xs"
           >
-            <ListFilter className="w-3.5 h-3.5" />
+            <ListFilter className="w-3.5 h-3.5 text-slate-500" />
             Ver Tudo
           </button>
 
           <button 
-            onClick={openAddStageModal}
-            className="bg-slate-900 text-white px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-bold shadow-xs hover:bg-slate-800 transition-all shrink-0"
+            onClick={() => {
+              if (stages.length > 0) {
+                openAddCardModal(stages[0].id);
+              } else {
+                openAddStageModal();
+              }
+            }}
+            className="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium shadow-xs transition-all shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
+            Criar Pedido
+          </button>
+
+          <button 
+            onClick={openAddStageModal}
+            className="bg-slate-100 hover:bg-slate-200/70 text-slate-700 px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium transition-all shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5 text-slate-500" />
             Nova Etapa
           </button>
         </div>
@@ -428,33 +455,63 @@ Atenciosamente.`;
                 "rounded-2xl w-[280px] min-w-[270px] shrink-0 flex flex-col h-full max-h-full border transition-all shadow-2xs cursor-grab active:cursor-grabbing overflow-hidden",
                 draggedStageId === stage.id ? "opacity-30 border-dashed scale-95" : "",
                 stage.isCompletedStage 
-                  ? "border-emerald-200/90 bg-emerald-50/40" 
+                  ? "border-emerald-200/80 bg-emerald-50/30" 
                   : stage.isCancelledStage 
-                    ? "border-red-200/90 bg-red-50/40" 
-                    : "border-slate-200/90 bg-slate-100/80"
+                    ? "border-rose-200/80 bg-rose-50/30" 
+                    : "border-slate-200/80 bg-slate-100/70"
               )}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
             >
-              {/* Stage Header */}
-              <div className="p-2.5 px-3 flex items-center justify-between border-b border-slate-200/60 bg-white/90 shrink-0 group">
+              {/* Stage Header - Apple Minimalist Style */}
+              <div className="p-2.5 px-3 flex items-center justify-between border-b border-slate-200/60 bg-white/90 shrink-0 group gap-1">
                 <div 
                   onClick={() => openEditStageModal(stage)}
-                  className="cursor-pointer hover:opacity-80 transition-opacity flex-1 min-w-0 pr-2"
-                  title="Editar Etapa"
+                  className="cursor-pointer hover:opacity-80 transition-opacity flex-1 min-w-0 pr-1"
+                  title="Clique para editar esta etapa"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <h3 className={cn("font-extrabold text-xs uppercase tracking-tight truncate", stage.isCompletedStage ? "text-emerald-900" : stage.isCancelledStage ? "text-red-900" : "text-slate-800")}>
+                    <h3 className={cn("font-semibold text-xs tracking-tight truncate", stage.isCompletedStage ? "text-emerald-900" : stage.isCancelledStage ? "text-rose-900" : "text-slate-900")}>
                       {stage.name}
                     </h3>
-                    <span className={cn("text-[10px] px-1.5 py-0.2 rounded-full font-extrabold shrink-0", stage.isCompletedStage ? "bg-emerald-200 text-emerald-800" : stage.isCancelledStage ? "bg-red-200 text-red-800" : "bg-slate-200 text-slate-700")}>
+                    <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0", stage.isCompletedStage ? "bg-emerald-100 text-emerald-800" : stage.isCancelledStage ? "bg-rose-100 text-rose-800" : "bg-slate-200/70 text-slate-700")}>
                       {stageCards.length}
                     </span>
                   </div>
                 </div>
-                <button onClick={() => handleDeleteStage(stage.id)} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+
+                {/* Header Action Icons */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {/* Clear Cancelled cards button - Subtle Trash Button */}
+                  {stage.isCancelledStage && stageCards.length > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteAllCancelledInStage(stage.id); }}
+                      className="flex items-center gap-1 text-[11px] font-medium text-rose-500 hover:text-rose-600 px-2 py-1 bg-rose-50/50 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Esvaziar todos os pedidos cancelados"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Limpar</span>
+                    </button>
+                  )}
+
+                  {/* Add card button */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openAddCardModal(stage.id); }}
+                    className="flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-600 px-2 py-1 bg-blue-50/50 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Adicionar novo pedido nesta etapa"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Novo</span>
+                  </button>
+
+                  <button 
+                    onClick={() => handleDeleteStage(stage.id)} 
+                    className="text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-slate-100 rounded-lg"
+                    title="Excluir esta etapa"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Cards Scroll Container */}
@@ -470,12 +527,12 @@ Atenciosamente.`;
                       onDragStart={(e) => handleDragStart(e, card.id)}
                       onClick={() => openEditCardModal(card)}
                       className={cn(
-                        "p-2.5 rounded-xl shadow-2xs border cursor-grab active:cursor-grabbing hover:border-secondary transition-all group relative duration-200 ease-out",
+                        "p-2.5 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.03)] border cursor-grab active:cursor-grabbing hover:border-slate-300 hover:shadow-xs transition-all group relative duration-150 ease-out",
                         stage.isCompletedStage 
-                          ? "bg-white border-emerald-200 hover:border-emerald-400" 
+                          ? "bg-white border-emerald-200/80 hover:border-emerald-300" 
                           : stage.isCancelledStage 
-                            ? "bg-white border-red-200 hover:border-red-400"
-                            : "bg-white border-slate-200/90",
+                            ? "bg-white border-rose-200/80 hover:border-rose-300"
+                            : "bg-white border-slate-200/80",
                         draggedCardId === card.id ? "opacity-30 border-dashed scale-90" : ""
                       )}
                     >
@@ -491,7 +548,7 @@ Atenciosamente.`;
                         )}
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDeleteCard(card.id); }} 
-                          className="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-red-50"
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50"
                           title="Excluir Card"
                         >
                            <Trash2 className="w-3 h-3" />
@@ -501,13 +558,13 @@ Atenciosamente.`;
                       {/* Product Codes Badges */}
                       <div className="flex gap-1 flex-wrap mb-1 pr-12">
                         {card.productCode && (
-                          <div className="text-[8px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
+                          <div className="text-[8px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
                             <Package className="w-2 h-2" /> CÓD: {card.productCode}
                           </div>
                         )}
                         {card.extraProducts?.map((ep: any, idx: number) => (
                            ep.code && (
-                             <div key={idx} className="text-[8px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
+                             <div key={idx} className="text-[8px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
                                <Package className="w-2 h-2" /> CÓD: {ep.code}
                              </div>
                            )
@@ -515,7 +572,7 @@ Atenciosamente.`;
                       </div>
 
                       {/* Order Title */}
-                      <h4 className="font-extrabold text-slate-900 text-[10px] leading-tight pr-5 truncate">{card.title}</h4>
+                      <h4 className="font-semibold text-slate-900 text-[11px] leading-tight pr-5 truncate">{card.title}</h4>
 
                       {/* Created Date */}
                       {card.createdAt?.toDate && (
@@ -526,8 +583,8 @@ Atenciosamente.`;
 
                       {/* Consultant */}
                       {card.consultantName && (
-                        <div className="text-[9px] text-slate-700 font-bold bg-slate-100/90 px-1 py-0.5 rounded inline-flex items-center gap-1 mt-1 truncate max-w-full">
-                          <User className="w-2.5 h-2.5 text-slate-500" />
+                        <div className="text-[9px] text-slate-700 font-medium bg-slate-100/80 px-1.5 py-0.5 rounded inline-flex items-center gap-1 mt-1 truncate max-w-full">
+                          <User className="w-2.5 h-2.5 text-slate-400" />
                           Consultor: {card.consultantName}
                         </div>
                       )}
@@ -545,7 +602,7 @@ Atenciosamente.`;
                         <div className="flex items-center gap-1 text-slate-500 truncate max-w-[140px]">
                           <User className="w-2 h-2 text-slate-400 shrink-0" />
                           {assignee ? (
-                            <span className="text-slate-700 font-bold bg-slate-100 px-1 py-0.2 rounded truncate">{assignee.name || assignee.full_name || assignee.email}</span>
+                            <span className="text-slate-700 font-medium bg-slate-100 px-1 py-0.2 rounded truncate">{assignee.name || assignee.full_name || assignee.email}</span>
                           ) : (
                             <span className="text-slate-400 italic">Sem resp.</span>
                           )}
@@ -567,13 +624,13 @@ Atenciosamente.`;
                 })}
               </div>
 
-              {/* Add Card Button inside column */}
+              {/* Add Card Button inside column - Apple Minimalist Line Button */}
               <button 
                 onClick={() => openAddCardModal(stage.id)}
-                className="p-2 text-center text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition-colors border-t border-slate-200/60 shrink-0 bg-white/50 flex items-center justify-center gap-1"
+                className="mx-2 mb-2 py-2 px-3 text-center text-[11px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 bg-slate-100/50 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Adicionar Pedido
+                Adicionar novo pedido
               </button>
             </div>
           )
@@ -581,30 +638,38 @@ Atenciosamente.`;
 
         {stages.length === 0 && !loading && (
           <div className="w-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl text-slate-400 gap-3">
-             <p className="font-bold text-sm">Nenhuma etapa configurada.</p>
-             <button onClick={openAddStageModal} className="bg-primary hover:bg-primary/90 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs">Criar Primeira Etapa</button>
+             <p className="font-semibold text-sm">Nenhuma etapa configurada.</p>
+             <button onClick={openAddStageModal} className="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-xl text-xs font-medium shadow-xs">Criar Primeira Etapa</button>
           </div>
         )}
       </div>
 
-      {/* Modals */}
+      {/* Modals - Apple Dialog Style */}
       {itemToDelete && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[110] p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
-            <h2 className="text-xl font-black text-gray-900 mb-2">Confirmar Exclusão</h2>
-            <p className="text-sm text-gray-500 mb-6">Esta ação não pode ser desfeita. Deseja continuar?</p>
-            <div className="flex gap-3">
+        <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-md flex justify-center items-center z-[110] p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-slate-200/80 relative">
+            <h2 className="text-base font-bold text-slate-900 mb-1">
+              {itemToDelete.type === 'cancelled_cards' ? 'Esvaziar Pedidos Cancelados' : 'Confirmar Exclusão'}
+            </h2>
+            <p className="text-xs text-slate-500 mb-6">
+              {itemToDelete.type === 'cancelled_cards'
+                ? 'Deseja excluir permanentemente todos os pedidos na etapa Cancelados? Esta ação não poderá ser desfeita.'
+                : 'Esta ação não poderá ser desfeita. Deseja continuar?'}
+            </p>
+            <div className="flex gap-2">
               <button 
                 onClick={() => setItemToDelete(null)} 
-                className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition-colors"
+                disabled={clearingCancelled}
+                className="flex-1 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button 
                 onClick={confirmDelete} 
-                className="flex-1 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors"
+                disabled={clearingCancelled}
+                className="flex-1 py-2 text-xs font-medium bg-rose-500 text-white rounded-xl hover:bg-rose-600 transition-colors flex items-center justify-center gap-1 disabled:opacity-50 shadow-xs"
               >
-                Excluir
+                {clearingCancelled ? 'Esvaziando...' : itemToDelete.type === 'cancelled_cards' ? 'Esvaziar' : 'Excluir'}
               </button>
             </div>
           </div>

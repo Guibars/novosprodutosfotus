@@ -69,40 +69,40 @@ export function Calendar() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Calendário</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Visão geral de tarefas por prazo.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Calendário</h1>
+          <p className="text-gray-500 mt-1">Visão geral de tarefas por prazo.</p>
         </div>
       </div>
 
-      <div className="surface p-4 sm:p-5 max-w-5xl">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base sm:text-lg font-bold text-slate-800">
+      <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-xl shadow-black/5">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
-          <div className="flex gap-1.5">
-            <button onClick={prevMonth} className="p-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/70 rounded-lg transition-colors hover-lift">
-              <ChevronLeft className="w-4 h-4 text-slate-600" />
+          <div className="flex gap-2">
+            <button onClick={prevMonth} className="p-2 bg-white/50 hover:bg-white rounded-xl transition-colors">
+              <ChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
-            <button onClick={nextMonth} className="p-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/70 rounded-lg transition-colors hover-lift">
-              <ChevronRight className="w-4 h-4 text-slate-600" />
+            <button onClick={nextMonth} className="p-2 bg-white/50 hover:bg-white rounded-xl transition-colors">
+              <ChevronRight className="w-5 h-5 text-gray-700" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2">
+        <div className="grid grid-cols-7 gap-4 mb-4">
           {weekDays.map(day => (
-            <div key={day} className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div key={day} className="text-center text-sm font-semibold text-gray-500 uppercase tracking-widest">
               {day}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-7 gap-4">
           {Array.from({ length: startingDay }).map((_, idx) => (
-            <div key={`empty-${idx}`} className="h-16 sm:h-20 rounded-lg bg-slate-50/40 border border-slate-100"></div>
+            <div key={`empty-${idx}`} className="h-28 rounded-2xl bg-white/10 border border-white/20"></div>
           ))}
           {Array.from({ length: daysInMonth }).map((_, idx) => {
             const day = idx + 1;
@@ -110,31 +110,30 @@ export function Calendar() {
             const isToday = day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
 
             return (
-              <div
-                key={day}
+              <div 
+                key={day} 
                 onClick={() => handleDayClick(day)}
                 className={cn(
-                  "relative h-16 sm:h-20 rounded-lg border p-1 sm:p-1.5 flex flex-col transition-all duration-300 cursor-pointer overflow-hidden [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
-                  isToday ? "bg-primary/[0.07] border-primary/40" : "bg-white border-slate-200/70 hover:bg-slate-50",
-                  tasks.length > 0 && "hover:border-secondary/40 hover:shadow-[0_10px_24px_-14px_rgba(13,81,142,0.5)] hover:-translate-y-0.5"
+                  "h-28 rounded-2xl border p-2 flex flex-col transition-all cursor-pointer overflow-hidden",
+                  isToday ? "bg-primary/5 border-primary/30" : "bg-white/40 border-white/60 hover:bg-white/60",
+                  tasks.length > 0 && "hover:ring-2 hover:ring-primary/20 hover:shadow-lg"
                 )}
               >
-                {isToday && <span className="absolute -top-3 -right-3 w-10 h-10 bg-primary/25 blur-lg rounded-full glow-pulse pointer-events-none" />}
                 <div className={cn(
-                  "text-[11px] font-bold mb-0.5 w-5 h-5 flex items-center justify-center rounded-full shrink-0 relative z-10",
-                  isToday ? "bg-primary text-white shadow-sm shadow-primary/30" : "text-slate-600"
+                  "text-sm font-bold mb-1 w-7 h-7 flex items-center justify-center rounded-full",
+                  isToday ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-700"
                 )}>
                   {day}
                 </div>
-                <div className="flex-1 flex flex-col gap-0.5 overflow-hidden relative z-10">
-                  {tasks.slice(0, 2).map((t, i) => (
-                    <div key={i} className={cn("text-[8px] sm:text-[9px] truncate px-1 py-0.5 rounded font-semibold text-white leading-tight", t.projectColor)}>
+                <div className="flex-1 flex flex-col gap-1 overflow-auto no-scrollbar">
+                  {tasks.slice(0, 3).map((t, i) => (
+                    <div key={i} className={cn("text-[10px] truncate px-1.5 py-0.5 rounded font-medium", t.projectColor, t.isEvent ? "text-white shadow-sm" : "text-white")}>
                       {t.isEvent ? t.fullTitle : t.title}
                     </div>
                   ))}
-                  {tasks.length > 2 && (
-                    <div className="text-[8px] sm:text-[9px] text-slate-400 font-bold px-0.5">
-                      +{tasks.length - 2} mais
+                  {tasks.length > 3 && (
+                    <div className="text-[10px] text-gray-500 font-medium px-1">
+                      +{tasks.length - 3} mais
                     </div>
                   )}
                 </div>
@@ -147,43 +146,42 @@ export function Calendar() {
       {/* Modal for daily tasks */}
       <AnimatePresence>
         {selectedDateTasks && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ scale: 0.94, opacity: 0, y: 8 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.94, opacity: 0, y: 8 }}
-              transition={{ type: "spring", damping: 24, stiffness: 300 }}
-              className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col"
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2rem] p-8 w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col"
             >
-              <h2 className="text-base font-bold text-slate-900 mb-4 border-b border-slate-100 pb-3">Tarefas · {selectedDateTasks.date}</h2>
-              <div className="overflow-y-auto pr-1.5 space-y-2.5 scrollbar-minimal">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-4">Tarefas - {selectedDateTasks.date}</h2>
+              <div className="overflow-y-auto pr-2 space-y-4">
                 {selectedDateTasks.tasks.map((task, idx) => (
-                  <div key={idx} className="bg-slate-50/70 p-3 rounded-xl border border-slate-200/60 flex items-center gap-3">
+                  <div key={idx} className="bg-white/60 p-4 rounded-xl border border-white/40 shadow-sm flex items-center gap-3">
                     {task.isEvent ? (
                       <div className="w-5 h-5 flex items-center justify-center bg-[#eab308] rounded-full shrink-0 shadow-inner">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
                     ) : (
-                      task.completed ? <CheckCircle2 className="w-5 h-5 text-success shrink-0" /> : <Circle className="w-5 h-5 text-slate-300 shrink-0" />
+                      task.completed ? <CheckCircle2 className="w-5 h-5 text-success shrink-0" /> : <Circle className="w-5 h-5 text-gray-400 shrink-0" />
                     )}
                     <div className="min-w-0">
-                      <p className={cn("font-semibold text-sm text-slate-900 truncate flex items-center gap-2", task.completed && "line-through text-slate-400")}>
+                      <p className={cn("font-semibold text-gray-900 truncate flex items-center gap-2", task.completed && "line-through text-gray-500")}>
                         {task.fullTitle || task.title}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={cn("text-[9px] uppercase font-bold text-white px-2 py-0.5 rounded-full inline-block", task.projectColor)}>
+                        <span className={cn("text-[10px] uppercase font-bold text-white px-2 py-0.5 rounded-full inline-block", task.projectColor)}>
                           {task.projectName}
                         </span>
-                        {!task.isEvent && <span className="text-xs text-slate-400">{task.sector}</span>}
+                        {!task.isEvent && <span className="text-xs text-gray-500">{task.sector}</span>}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
-                <button
+              <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+                <button 
                   onClick={() => setSelectedDateTasks(null)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors"
+                  className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
                 >
                   Fechar
                 </button>
