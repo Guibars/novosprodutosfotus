@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, addDoc, updateDoc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Plus, X, Trash2, Package, Tag, MessageSquare, User, TrendingUp, Inbox, Search, CheckCircle2, ListFilter, Copy } from 'lucide-react';
+import { Plus, X, Trash2, Package, Tag, MessageSquare, User, TrendingUp, Inbox, Search, CheckCircle2, ListFilter, Copy, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,6 +11,8 @@ export function TransferBoard() {
   const [cards, setCards] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({});
 
   const [isAddStageModalOpen, setIsAddStageModalOpen] = useState(false);
   const [editingStageId, setEditingStageId] = useState<string | null>(null);
@@ -152,7 +154,8 @@ export function TransferBoard() {
     if (!cardData.title.trim()) return;
     if (editingCardId) {
       await updateDoc(doc(db, 'transfer_cards', editingCardId), {
-        ...cardData
+        ...cardData,
+        updatedAt: serverTimestamp()
       });
     } else {
       await addDoc(collection(db, 'transfer_cards'), {
@@ -160,7 +163,8 @@ export function TransferBoard() {
         stageId: addingToStageId,
         createdBy: user?.displayName || user?.email || 'Unknown',
         createdByUid: user?.uid || null,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
     }
     setIsCardModalOpen(false);
@@ -214,7 +218,8 @@ export function TransferBoard() {
     const card = cards.find(c => c.id === cardIdToMove);
     if (card && card.stageId !== targetStageId) {
       await updateDoc(doc(db, 'transfer_cards', cardIdToMove), {
-        stageId: targetStageId
+        stageId: targetStageId,
+        updatedAt: serverTimestamp()
       });
     }
     setDraggedCardId(null);
@@ -240,7 +245,8 @@ export function TransferBoard() {
       targetStage = { id: newDocRef.id };
     }
     await updateDoc(doc(db, 'transfer_cards', cardId), {
-      stageId: targetStage.id
+      stageId: targetStage.id,
+      updatedAt: serverTimestamp()
     });
     if (editingCardId === cardId) {
       setIsCardModalOpen(false);
@@ -321,8 +327,18 @@ Atenciosamente.`;
   const openCardsCount = cards.length - transferredCardsCount;
 
   // Filtered Cards for Board
+  const getCardTimestamp = (card: any) => {
+    const ts = card.updatedAt || card.createdAt;
+    if (!ts) return 0;
+    if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+    if (ts.seconds) return ts.seconds * 1000;
+    if (ts instanceof Date) return ts.getTime();
+    if (typeof ts === 'number') return ts;
+    return new Date(ts).getTime() || 0;
+  };
+
   const getFilteredCards = (stageId: string) => {
-    return cards.filter(c => {
+    const filtered = cards.filter(c => {
       if (c.stageId !== stageId) return false;
 
       if (onlyMyTransfers) {
@@ -353,26 +369,31 @@ Atenciosamente.`;
 
       return true;
     });
+
+    // Sort by most recently created / moved / updated first
+    return filtered.sort((a, b) => getCardTimestamp(b) - getCardTimestamp(a));
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-[600px] h-full space-y-3">
-      {/* Header Bar - Apple Toolbar Style */}
-      <div className="flex justify-between items-center shrink-0 gap-3 flex-wrap bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200/70 shadow-2xs">
+      {/* Header Bar - Material Design 3 Tonal Toolbar */}
+      <div className="flex justify-between items-center shrink-0 gap-3 flex-wrap bg-white/90 backdrop-blur-md p-3.5 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-none">Quadro de Transferência</h1>
-          <p className="text-[11px] text-slate-500 font-normal mt-1">Gerencie pedidos e etapas de transferência em tempo real</p>
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-none flex items-center gap-2">
+            Quadro de Transferência
+          </h1>
+          <p className="text-[11px] text-slate-500 font-normal mt-1">Gerencie pedidos e etapas em tempo real com controle visual</p>
         </div>
 
-        {/* Compact Analytics Bar - Monochromatic Apple Pill */}
-        <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 bg-slate-100/80 rounded-xl border border-slate-200/60 text-xs font-medium text-slate-600">
+        {/* MD3 Analytics Bar - Tonal Surface Pill */}
+        <div className="hidden lg:flex items-center gap-3 px-3.5 py-1.5 bg-slate-100/90 rounded-full border border-slate-200/70 text-xs font-medium text-slate-700 shadow-2xs">
           <div className="flex items-center gap-1.5">
-            <Package className="w-3.5 h-3.5 text-slate-500" />
+            <Package className="w-3.5 h-3.5 text-indigo-600" />
             <span>Total: <strong className="text-slate-900 font-semibold">{cards.length}</strong></span>
           </div>
           <span className="text-slate-300">•</span>
           <div className="flex items-center gap-1.5">
-            <Inbox className="w-3.5 h-3.5 text-amber-500" />
+            <Inbox className="w-3.5 h-3.5 text-amber-600" />
             <span>Aberto: <strong className="text-slate-900 font-semibold">{openCardsCount}</strong></span>
           </div>
           <span className="text-slate-300">•</span>
@@ -383,39 +404,40 @@ Atenciosamente.`;
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* User Filter Toggle - Apple Segment Toggle */}
+          {/* User Filter Toggle - MD3 Filter Chip */}
           <button 
             onClick={() => setOnlyMyTransfers(!onlyMyTransfers)}
             className={cn(
-              "px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium transition-all shrink-0 border",
+              "px-3.5 py-1.5 flex items-center gap-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border shadow-2xs",
               onlyMyTransfers 
-                ? "bg-slate-900 text-white border-slate-900 shadow-2xs" 
-                : "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50"
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-500/20" 
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
             )}
             title="Filtrar apenas as transferências criadas por você ou sob sua responsabilidade"
           >
             <User className="w-3.5 h-3.5" />
-            {onlyMyTransfers ? "Minhas Transferências" : "Minhas Transferências"}
+            <span>Minhas Transferências</span>
           </button>
 
-          {/* Search Input - Apple Input */}
+          {/* Search Input - MD3 Search Field */}
           <div className="relative w-40 md:w-52">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Buscar..." 
+              placeholder="Buscar pedido..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-slate-100/80 focus:bg-white border border-transparent focus:border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
+              className="w-full pl-8 pr-3 py-1.5 bg-slate-100/90 focus:bg-white border border-slate-200/70 focus:border-indigo-400 rounded-full text-xs focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
             />
           </div>
 
+          {/* MD3 Elevated Action Buttons */}
           <button 
             onClick={() => setIsViewAllModalOpen(true)}
-            className="bg-white border border-slate-200/80 text-slate-700 font-medium px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs hover:bg-slate-50 transition-all shrink-0 shadow-2xs"
+            className="bg-white border border-slate-200/90 text-slate-700 font-semibold px-3.5 py-1.5 flex items-center gap-1.5 rounded-full text-xs hover:bg-slate-50 transition-all shrink-0 shadow-2xs"
           >
             <ListFilter className="w-3.5 h-3.5 text-slate-500" />
-            Ver Tudo
+            <span>Ver Tudo</span>
           </button>
 
           <button 
@@ -426,78 +448,86 @@ Atenciosamente.`;
                 openAddStageModal();
               }
             }}
-            className="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium shadow-xs transition-all shrink-0"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 flex items-center gap-1.5 rounded-full text-xs font-semibold shadow-xs hover:shadow transition-all shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
-            Criar Pedido
+            <span>Criar Pedido</span>
           </button>
 
           <button 
             onClick={openAddStageModal}
-            className="bg-slate-100 hover:bg-slate-200/70 text-slate-700 px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium transition-all shrink-0"
+            className="bg-slate-200/80 hover:bg-slate-300/80 text-slate-800 px-3.5 py-1.5 flex items-center gap-1.5 rounded-full text-xs font-semibold transition-all shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 text-slate-500" />
-            Nova Etapa
+            <Plus className="w-3.5 h-3.5 text-slate-600" />
+            <span>Nova Etapa</span>
           </button>
         </div>
       </div>
 
       {/* Board Columns */}
-      <div className="flex-1 flex gap-3 overflow-x-auto items-stretch pb-2 pt-1 px-1 custom-scrollbar min-h-0">
+      <div className="flex-1 flex gap-2.5 overflow-x-auto items-stretch pb-2 pt-1 px-0.5 custom-scrollbar min-h-0">
         {stages.map(stage => {
           const stageCards = getFilteredCards(stage.id);
+          const isExpanded = !!expandedStages[stage.id];
+          const visibleCards = isExpanded ? stageCards : stageCards.slice(0, 5);
+          const hiddenCount = stageCards.length - 5;
+
           return (
             <div 
               key={stage.id} 
               draggable
               onDragStart={(e) => handleStageDragStart(e, stage.id)}
               className={cn(
-                "rounded-2xl w-[280px] min-w-[270px] shrink-0 flex flex-col h-full max-h-full border transition-all shadow-2xs cursor-grab active:cursor-grabbing overflow-hidden",
+                "rounded-3xl flex-1 min-w-[250px] sm:min-w-[260px] max-w-[320px] shrink-0 flex flex-col h-full max-h-full border transition-all shadow-2xs cursor-grab active:cursor-grabbing overflow-hidden",
                 draggedStageId === stage.id ? "opacity-30 border-dashed scale-95" : "",
                 stage.isCompletedStage 
-                  ? "border-emerald-200/80 bg-emerald-50/30" 
+                  ? "border-emerald-200/80 bg-emerald-50/20" 
                   : stage.isCancelledStage 
-                    ? "border-rose-200/80 bg-rose-50/30" 
+                    ? "border-rose-200/80 bg-rose-50/20" 
                     : "border-slate-200/80 bg-slate-100/70"
               )}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, stage.id)}
             >
-              {/* Stage Header - Apple Minimalist Style */}
-              <div className="p-2.5 px-3 flex items-center justify-between border-b border-slate-200/60 bg-white/90 shrink-0 group gap-1">
+              {/* Stage Header - Material Design 3 Tonal Container */}
+              <div className="p-2.5 px-3 flex items-center justify-between border-b border-slate-200/70 bg-white/90 backdrop-blur-xs shrink-0 group gap-1.5 min-h-[52px]">
                 <div 
                   onClick={() => openEditStageModal(stage)}
                   className="cursor-pointer hover:opacity-80 transition-opacity flex-1 min-w-0 pr-1"
                   title="Clique para editar esta etapa"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <h3 className={cn("font-semibold text-xs tracking-tight truncate", stage.isCompletedStage ? "text-emerald-900" : stage.isCancelledStage ? "text-rose-900" : "text-slate-900")}>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <h3 
+                      className={cn(
+                        "font-bold text-[12px] leading-tight break-words line-clamp-2", 
+                        stage.isCompletedStage ? "text-emerald-900" : stage.isCancelledStage ? "text-rose-900" : "text-slate-900"
+                      )}
+                      title={stage.name}
+                    >
                       {stage.name}
                     </h3>
-                    <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0", stage.isCompletedStage ? "bg-emerald-100 text-emerald-800" : stage.isCancelledStage ? "bg-rose-100 text-rose-800" : "bg-slate-200/70 text-slate-700")}>
+                    <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 shadow-2xs", stage.isCompletedStage ? "bg-emerald-100 text-emerald-900" : stage.isCancelledStage ? "bg-rose-100 text-rose-900" : "bg-slate-200/80 text-slate-800")}>
                       {stageCards.length}
                     </span>
                   </div>
                 </div>
 
-                {/* Header Action Icons */}
+                {/* Header Action Buttons - MD3 Pills */}
                 <div className="flex items-center gap-1 shrink-0">
-                  {/* Clear Cancelled cards button - Subtle Trash Button */}
                   {stage.isCancelledStage && stageCards.length > 0 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDeleteAllCancelledInStage(stage.id); }}
-                      className="flex items-center gap-1 text-[11px] font-medium text-rose-500 hover:text-rose-600 px-2 py-1 bg-rose-50/50 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-100/80 hover:bg-rose-200 px-2 py-1 rounded-full transition-all shadow-2xs shrink-0"
                       title="Esvaziar todos os pedidos cancelados"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3 h-3 text-rose-600" />
                       <span>Limpar</span>
                     </button>
                   )}
 
-                  {/* Add card button */}
                   <button
                     onClick={(e) => { e.stopPropagation(); openAddCardModal(stage.id); }}
-                    className="flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-600 px-2 py-1 bg-blue-50/50 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full transition-all border border-indigo-200/80 shadow-2xs shrink-0"
                     title="Adicionar novo pedido nesta etapa"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -506,7 +536,7 @@ Atenciosamente.`;
 
                   <button 
                     onClick={() => handleDeleteStage(stage.id)} 
-                    className="text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-slate-100 rounded-lg"
+                    className="text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded-full shrink-0"
                     title="Excluir esta etapa"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -516,7 +546,7 @@ Atenciosamente.`;
 
               {/* Cards Scroll Container */}
               <div className="p-2 flex-1 overflow-y-auto space-y-2 min-h-0 custom-scrollbar">
-                {stageCards.map(card => {
+                {visibleCards.map(card => {
                   const assignee = profiles.find(p => p.id === card.assignedTo);
                   const creator = profiles.find(p => p.id === card.createdByUid);
                   
@@ -527,63 +557,63 @@ Atenciosamente.`;
                       onDragStart={(e) => handleDragStart(e, card.id)}
                       onClick={() => openEditCardModal(card)}
                       className={cn(
-                        "p-2.5 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.03)] border cursor-grab active:cursor-grabbing hover:border-slate-300 hover:shadow-xs transition-all group relative duration-150 ease-out",
+                        "p-3 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-indigo-300 transition-all cursor-grab active:cursor-grabbing group relative duration-150 ease-out",
                         stage.isCompletedStage 
-                          ? "bg-white border-emerald-200/80 hover:border-emerald-300" 
+                          ? "border-emerald-200/80 hover:border-emerald-300" 
                           : stage.isCancelledStage 
-                            ? "bg-white border-rose-200/80 hover:border-rose-300"
-                            : "bg-white border-slate-200/80",
+                            ? "border-rose-200/80 hover:border-rose-300"
+                            : "",
                         draggedCardId === card.id ? "opacity-30 border-dashed scale-90" : ""
                       )}
                     >
-                      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-xs p-0.5 rounded-md border border-slate-100 shadow-2xs">
+                      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 backdrop-blur-xs p-1 rounded-full border border-slate-100 shadow-xs">
                         {!stage.isCompletedStage && !stage.isCancelledStage && (
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleCompleteTransfer(card.id); }} 
-                            className="p-1 text-slate-400 hover:text-emerald-600 rounded hover:bg-emerald-50"
+                            className="p-1 text-slate-400 hover:text-emerald-600 rounded-full hover:bg-emerald-50"
                             title="Finalizar Transferência"
                           >
-                             <CheckCircle2 className="w-3 h-3" />
+                             <CheckCircle2 className="w-3.5 h-3.5" />
                           </button>
                         )}
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDeleteCard(card.id); }} 
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50"
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded-full hover:bg-rose-50"
                           title="Excluir Card"
                         >
-                           <Trash2 className="w-3 h-3" />
+                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      {/* Product Codes Badges */}
-                      <div className="flex gap-1 flex-wrap mb-1 pr-12">
+                      {/* Product Codes Badges - MD3 Rounded Pills */}
+                      <div className="flex gap-1 flex-wrap mb-1.5 pr-12">
                         {card.productCode && (
-                          <div className="text-[8px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
-                            <Package className="w-2 h-2" /> CÓD: {card.productCode}
+                          <div className="text-[9.5px] font-bold text-amber-900 bg-amber-100/90 border border-amber-300/60 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                            <Package className="w-2.5 h-2.5 text-amber-700" /> CÓD: {card.productCode}
                           </div>
                         )}
                         {card.extraProducts?.map((ep: any, idx: number) => (
                            ep.code && (
-                             <div key={idx} className="text-[8px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-1 py-[1px] rounded flex items-center gap-1">
-                               <Package className="w-2 h-2" /> CÓD: {ep.code}
+                             <div key={idx} className="text-[9.5px] font-bold text-amber-900 bg-amber-100/90 border border-amber-300/60 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                               <Package className="w-2.5 h-2.5 text-amber-700" /> CÓD: {ep.code}
                              </div>
                            )
                         ))}
                       </div>
 
                       {/* Order Title */}
-                      <h4 className="font-semibold text-slate-900 text-[11px] leading-tight pr-5 truncate">{card.title}</h4>
+                      <h4 className="font-bold text-slate-900 text-[11px] leading-snug pr-5 line-clamp-2 tracking-tight">{card.title}</h4>
 
                       {/* Created Date */}
                       {card.createdAt?.toDate && (
-                        <div className="text-[8px] text-slate-400 font-medium mt-0.5">
+                        <div className="text-[8.5px] text-slate-400 font-medium mt-0.5">
                           {new Date(card.createdAt.toDate()).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
                         </div>
                       )}
 
-                      {/* Consultant */}
+                      {/* Consultant - MD3 Pill */}
                       {card.consultantName && (
-                        <div className="text-[9px] text-slate-700 font-medium bg-slate-100/80 px-1.5 py-0.5 rounded inline-flex items-center gap-1 mt-1 truncate max-w-full">
+                        <div className="text-[9.5px] text-slate-700 font-semibold bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-full inline-flex items-center gap-1 mt-1.5 truncate max-w-full">
                           <User className="w-2.5 h-2.5 text-slate-400" />
                           Consultor: {card.consultantName}
                         </div>
@@ -591,18 +621,18 @@ Atenciosamente.`;
 
                       {/* Equipment / Observations snippet */}
                       {card.observations && (
-                        <p className="text-[9px] text-slate-500 mt-1 line-clamp-1 italic flex items-center gap-1">
-                          <MessageSquare className="w-2 h-2 shrink-0 text-slate-400" />
+                        <p className="text-[9.5px] text-slate-500 mt-1 line-clamp-1 italic flex items-center gap-1">
+                          <MessageSquare className="w-2.5 h-2.5 shrink-0 text-slate-400" />
                           <span className="truncate">{card.observations}</span>
                         </p>
                       )}
 
                       {/* Footer Info */}
-                      <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100 text-[9px]">
+                      <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 text-[9.5px]">
                         <div className="flex items-center gap-1 text-slate-500 truncate max-w-[140px]">
-                          <User className="w-2 h-2 text-slate-400 shrink-0" />
+                          <User className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                           {assignee ? (
-                            <span className="text-slate-700 font-medium bg-slate-100 px-1 py-0.2 rounded truncate">{assignee.name || assignee.full_name || assignee.email}</span>
+                            <span className="text-slate-800 font-semibold bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-full truncate">{assignee.name || assignee.full_name || assignee.email}</span>
                           ) : (
                             <span className="text-slate-400 italic">Sem resp.</span>
                           )}
@@ -610,12 +640,12 @@ Atenciosamente.`;
 
                         {creator && (
                           <div className="flex items-center gap-1 shrink-0" title={`Criado por ${creator.full_name || creator.name || creator.email}`}>
-                            <img src={creator.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${creator.email}`} alt="Criador" className="w-3.5 h-3.5 rounded-full bg-slate-100 border border-slate-200" referrerPolicy="no-referrer" />
+                            <img src={creator.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${creator.email}`} alt="Criador" className="w-4 h-4 rounded-full bg-slate-100 border border-slate-200" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         {!creator && card.createdBy && (
                           <div className="flex items-center gap-1 shrink-0" title={`Criado por ${card.createdBy}`}>
-                            <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${card.createdBy}`} alt="Criador" className="w-3.5 h-3.5 rounded-full bg-slate-100 border border-slate-200" referrerPolicy="no-referrer" />
+                            <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${card.createdBy}`} alt="Criador" className="w-4 h-4 rounded-full bg-slate-100 border border-slate-200" referrerPolicy="no-referrer" />
                           </div>
                         )}
                       </div>
@@ -624,13 +654,33 @@ Atenciosamente.`;
                 })}
               </div>
 
-              {/* Add Card Button inside column - Apple Minimalist Line Button */}
+              {/* MD3 Expand Column Button if cards > 5 */}
+              {stageCards.length > 5 && (
+                <button
+                  onClick={() => setExpandedStages(prev => ({ ...prev, [stage.id]: !prev[stage.id] }))}
+                  className="mx-2 mb-1.5 py-1.5 px-3 text-center text-xs font-semibold text-indigo-700 bg-indigo-50/90 hover:bg-indigo-100/90 rounded-full border border-indigo-200/80 transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-2xs cursor-pointer"
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="w-3.5 h-3.5" />
+                      <span>Recolher (Mostrando todos os {stageCards.length})</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      <span>Ver mais {hiddenCount} {hiddenCount === 1 ? 'pedido' : 'pedidos'}</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Add Card Button inside column - MD3 Surface Button */}
               <button 
                 onClick={() => openAddCardModal(stage.id)}
-                className="mx-2 mb-2 py-2 px-3 text-center text-[11px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 bg-slate-100/50 rounded-xl transition-all flex items-center justify-center gap-1.5 shrink-0"
+                className="mx-2 mb-2 py-2 px-3 text-center text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/80 bg-slate-200/50 rounded-full transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Adicionar novo pedido
+                <span>Adicionar novo pedido</span>
               </button>
             </div>
           )

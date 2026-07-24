@@ -67,8 +67,8 @@ export function Layout() {
         isSidebarOpen ? "pl-72" : "pl-[5.5rem]"
       )}>
         <Topbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col">
-          <div className="w-full mx-auto flex flex-col flex-1">
+        <main className="flex-1 overflow-y-auto p-3 md:p-4 flex flex-col min-h-0">
+          <div className="w-full mx-auto flex flex-col flex-1 min-h-0">
             <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
           </div>
         </main>
